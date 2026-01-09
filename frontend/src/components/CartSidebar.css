@@ -1,0 +1,108 @@
+/* The sidebar container */
+.cart-sidebar {
+  position: fixed;
+  top: 0;
+  right: -400px; /* Hidden by default */
+  width: 350px;
+  height: 100vh;
+  background: white;
+  box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+  transition: right 0.3s ease-in-out;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+}
+
+/* When open, slide it in */
+.cart-sidebar.open {
+  right: 0;
+}
+
+.cart-header {
+  background-color: #ffd645;
+  padding: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.cart-items {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.cart-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+  padding: 15px 0;
+}
+
+.qty-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f0f0f0;
+  padding: 5px;
+  border-radius: 20px;
+}
+
+.qty-control button {
+  background: white;
+  border: none;
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.cart-footer {
+  padding: 20px;
+  background: #f9f9f9;
+  border-top: 1px solid #eee;
+}
+
+.total-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+.checkout-btn {
+  width: 100%;
+  background-color: #e91e63; /* Chaldal Pink */
+  color: white;
+  padding: 15px;
+  border: none;
+  border-radius: 5px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.checkout-btn:hover {
+  background-color: #d81b5c;
+}
+
+@media (max-width: 768px) {
+  .cart-sidebar {
+    right: -100vw; /* Push completely off-screen on mobile */
+    width: 85vw; /* Make it responsive */
+  }
+  
+  .cart-sidebar.open {
+    right: 0;
+  }
+}

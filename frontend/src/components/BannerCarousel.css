@@ -1,0 +1,84 @@
+.banner-carousel-container {
+  display: flex;
+  gap: 15px;
+  overflow-x: auto;
+  padding: 10px 5px 25px 5px;
+  scroll-behavior: smooth;
+  scrollbar-width: none; 
+  -ms-overflow-style: none;
+}
+
+.banner-carousel-container::-webkit-scrollbar {
+  display: none;
+}
+
+.banner-item {
+  flex: 0 0 auto;
+  width: 190px;
+  height: 290px;
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden; /* Ensures image doesn't spill out on zoom */
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  
+  /* Aligns text to the bottom */
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.banner-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+}
+
+/* --- UPDATED IMAGE STYLES --- */
+.banner-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;   /* Full width */
+  height: 100%;  /* Full height */
+  object-fit: cover; /* Crucial: Fills the box, cropping excess if needed */
+  z-index: 1;
+  transition: transform 0.5s ease; /* Slower, smoother zoom */
+  opacity: 0.9; /* Slight transparency to blend with gradient background */
+}
+
+/* Simple zoom effect on hover */
+.banner-item:hover .banner-image {
+  transform: scale(1.08);
+}
+
+/* --- Text Overlay (Keeps text readable) --- */
+.banner-content {
+  position: relative;
+  z-index: 2;
+  padding: 20px 15px;
+  /* Stronger gradient at bottom so text pops against busy images */
+  background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 50%, transparent 100%);
+  width: 100%;
+  text-align: left;
+}
+
+.banner-title {
+  color: white;
+  font-size: 20px;
+  font-weight: 800;
+  margin-bottom: 8px;
+  line-height: 1.2;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+.banner-shop-now {
+  color: #333;
+  font-size: 13px;
+  font-weight: 700;
+  background: #ffd645; /* Chaldal yellow button */
+  padding: 6px 14px;
+  border-radius: 20px;
+  display: inline-block;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}

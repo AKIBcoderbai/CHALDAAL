@@ -1,0 +1,136 @@
+.category-sidebar {
+  width: 240px;
+  background: white;
+  height: calc(100vh - 70px); /* Height minus header */
+  position: sticky;
+  top: 70px; /* Sticks right below header */
+  overflow-y: auto;
+  border-right: 1px solid #f0f0f0;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.02);
+}
+
+@media (max-width: 768px) {
+  .category-sidebar {
+    display: none; /* Hide sidebar on small screens */
+  }
+}
+
+@media (max-width: 480px) {
+  .category-sidebar {
+    display: none; /* Hide sidebar on small screens */
+  }
+}
+
+
+
+/* Custom Thin Scrollbar (Webkit only) */
+.category-sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+.category-sidebar::-webkit-scrollbar-thumb {
+  background-color: #ddd;
+  border-radius: 4px;
+}
+
+.menu-list {
+  flex: 1;
+  padding: 10px 0;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 20px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+  color: #555;
+  font-size: 14px;
+  border-left: 4px solid transparent; /* Hidden border for hover effect */
+}
+
+/* Hover Effect: Background + Slide text slightly */
+.menu-item:hover {
+  background-color: #fff9e6; /* Light yellow tint */
+  padding-left: 25px; /* Subtle slide animation */
+  color: #333;
+}
+
+/* Active State (Selected Category) */
+.menu-item.active {
+  background-color: #fff4ce; /* Chaldal yellow highlight */
+  border-left-color: #ffd645; /* Yellow Bar */
+  font-weight: 600;
+  color: #000;
+}
+
+.icon {
+  margin-right: 12px;
+  font-size: 18px;
+}
+
+.label {
+  flex: 1;
+}
+
+.arrow {
+  color: #ccc;
+  font-size: 18px;
+  opacity: 0;
+  transform: translateX(-5px);
+  transition: all 0.2s ease;
+}
+
+/* Show arrow on hover */
+.menu-item:hover .arrow {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.sidebar-footer {
+  padding: 20px;
+  border-top: 1px solid #eee;
+  font-size: 13px;
+  color: #888;
+  text-align: center;
+  background: #fdfdfd;
+}
+
+/* Mobile style for sidebar overlay */
+.sidebar-overlay {
+  display: none; /* Hidden on desktop */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1050; /* Above header */
+}
+
+/* 2. Responsive Rules */
+@media (max-width: 768px) {
+  /* Default state: Hidden */
+  .category-sidebar {
+    display: none; 
+    position: fixed;
+    top: 0;
+    left: -250px; /* Hidden to the left */
+    height: 100vh;
+    z-index: 1100; /* Topmost */
+    transition: left 0.3s ease;
+    width: 250px; /* Mobile width */
+  }
+
+  /* Active state: Visible (Slide in) */
+  .category-sidebar.mobile-open {
+    display: flex; /* Turn it back on */
+    left: 0; /* Slide in */
+  }
+
+  /* Show overlay when active */
+  .sidebar-overlay.active {
+    display: block;
+  }
+}
