@@ -1,23 +1,16 @@
 import { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import "./App.css";
-import { products } from "./data/products";
+// import { products } from "./data/products"; // <--- DELETE THIS LINE (We don't need fake file anymore)
 import ProductCard from "./components/ProductCard";
 import CartSidebar from "./components/CartSidebar";
 import CategorySidebar from "./components/CategorySidebar";
 import Checkout from "./pages/Checkout";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
-import {
-    FaBars,
-    FaSearch,
-    FaMapMarkerAlt,
-    FaUser,
-    FaShoppingBag,
-} from "react-icons/fa";
+import { FaBars, FaSearch, FaMapMarkerAlt, FaUser, FaShoppingBag } from "react-icons/fa";
 import { MdKeyboardArrowDown } from "react-icons/md";
 import BannerCarousel from "./components/BannerCarousel";
-
 
 export default function AppContent() {
     const navigate = useNavigate();
@@ -25,94 +18,78 @@ export default function AppContent() {
     const [isCartOpen, setIsCartOpen] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState("Grocery");
     const [user, setUser] = useState(null);
-    const [searchTerm, setSearchTerm] = useState("");   // Used for filtering (actual search)
-    const [inputValue, setInputValue] = useState("");   // Used for the Input Box text
-
-    //fetching data
-    const [fetchedProducts, setFetchedProducts] = useState([]);
-    const [isLoading, setIsLoading] = useState(false);
-    //hamburger fix
+    const [searchTerm, setSearchTerm] = useState("");
+    const [inputValue, setInputValue] = useState("");
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
+    // --- NEW: Real Data State ---
+    const [products, setProducts] = useState([]); // Stores the real DB data
+    const [isLoading, setIsLoading] = useState(false);
 
+    // --- FETCH FROM YOUR BACKEND ---
     useEffect(() => {
         const fetchProducts = async () => {
             try {
                 setIsLoading(true);
-                const response = await fetch("https://api.escuelajs.co/api/v1/products");
+                // Connect to your local backend
+                const response = await fetch("http://localhost:3000/api/products");
                 const data = await response.json();
-                console.log("Fetched Products:", data);
-                setFetchedProducts(data.map(item => ({
-                    id: item.id + 8,
-                    name: item.title,
-                    price: item.price * 40,
-                    image: item.images[0],
-                    category: item.category.name,
-                    unit: "1 pcs",
-                    originalPrice: Math.round(item.price * 1.1), // Assuming a 10% higher original price for demo
-                    stock: 100
-                })));
-            }
-            catch (error) {
-                console.error("Error fetching products:", error);
-            }
-            finally {
+                
+                console.log("Real DB Data:", data);
+
+                // Map DB fields to Frontend fields
+                const mappedData = data.map(item => ({
+                    id: item.product_id,
+                    name: item.name,
+                    price: item.price,
+                    originalPrice: item.original_price,
+                    image: item.image_url,    // DB uses 'image_url', Card uses 'image'
+                    category: item.category_name, // From the JOIN query
+                    unit: item.unit,
+                    stock: item.stock_quantity
+                }));
+
+                setProducts(mappedData);
+            } catch (error) {
+                console.error("Error connecting to backend:", error);
+            } finally {
                 setIsLoading(false);
             }
         }
         fetchProducts();
     }, [])
 
-    if (isLoading) return <h2>Loading Store...</h2>;
+    if (isLoading) return <div style={{padding: "50px", textAlign: "center"}}><h2>Loading Chaldal...</h2></div>;
 
+    // --- FILTERING LOGIC ---
     const displayedProducts = products.filter(p => {
+        // 1. If searching, ignore category and search everything
         if (searchTerm.length > 0) {
             return p.name.toLowerCase().includes(searchTerm.toLowerCase());
         }
-        return p.category === selectedCategory;
-    }
-    )
-
-    const apiDisplayedProducts = fetchedProducts.filter(p => {
-        if (searchTerm.length > 0) {
-            return p.name.toLowerCase().includes(searchTerm.toLowerCase());
-        }
+        // 2. Otherwise, show selected category
         return p.category === selectedCategory;
     });
 
-    console.log("API Products:", apiDisplayedProducts);
-
-    const handleInputChange = (e) => {
-        setInputValue(e.target.value);
-    };
-
-    const handleSearchKeyBtn = () => {
-        setSearchTerm(inputValue);
-    };
+    // --- HANDLERS ---
+    const handleInputChange = (e) => setInputValue(e.target.value);
+    
+    const handleSearchKeyBtn = () => setSearchTerm(inputValue);
 
     const handleSearchKey = (e) => {
-        if (e.key === "Enter") {
-            setSearchTerm(inputValue);
-        }
+        if (e.key === "Enter") setSearchTerm(inputValue);
     };
 
     const handleSelectCategory = (categoryName) => {
-        setSelectedCategory(categoryName); // 1. Change Category
-        setSearchTerm("");                 // 2. Clear the Search Filter
-        setInputValue("");                 // 3. Clear the Input Text Box
+        setSelectedCategory(categoryName); 
+        setSearchTerm("");                 
+        setInputValue("");                 
     };
-    // Filter Logic
 
-
-    // Cart Functions
     const handleAddToCart = (product) => {
         const exists = cart.find((item) => item.id === product.id);
         if (exists) {
-            setCart(
-                cart.map((item) =>
-                    item.id === product.id ? { ...exists, qty: exists.qty + 1 } : item
-                )
-            );
+            setCart(cart.map((item) => item.id === product.id ? { ...exists, qty: exists.qty + 1 } : item));
         } else {
             setCart([...cart, { ...product, qty: 1 }]);
         }
@@ -121,37 +98,48 @@ export default function AppContent() {
 
     const handleUpdateQty = (id, amount) => {
         setCart((prevCart) =>
-            prevCart
-                .map((item) =>
-                    item.id === id ? { ...item, qty: item.qty + amount } : item
-                )
-                .filter((item) => item.qty > 0)
+            prevCart.map((item) => item.id === id ? { ...item, qty: item.qty + amount } : item)
+                    .filter((item) => item.qty > 0)
         );
     };
+   
+    //updated with supabase
+   const handlePlaceOrder = async (customerData) => {
+        const totalAmount = cart.reduce((acc, item) => acc + (item.price * item.qty), 0) + 60; // +60 delivery charge
 
-    const handlePlaceOrder = (customerData) => {
-        console.log("ORDER PLACED!", { customer: customerData, items: cart });
-        alert("Order Placed Successfully!");
-        setCart([]);
-        navigate("/");
+        const orderPayload = {
+            customer: customerData,
+            items: cart,
+            total: totalAmount
+        };
+
+        try {
+            const response = await fetch("http://localhost:3000/api/orders", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(orderPayload)
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                alert(`Order Placed Successfully! Order ID: ${data.orderId}`);
+                setCart([]); // Clear Cart
+                navigate("/");
+            } else {
+                alert("Failed to place order. Please try again.");
+            }
+        } catch (error) {
+            console.error("Order Error:", error);
+            alert("Something went wrong!");
+        }
     };
 
     return (
         <div className="app-container">
-            {/* --- PROFESSIONAL HEADER START --- */}
             <header className="header">
-                {/* LEFT: Logo & Menu */}
-                <div
-                    className="logo-section"
-                    onClick={() => navigate("/")}
-                    style={{ cursor: "pointer" }}
-                >
-                    <FaBars className="menu-icon"
-                        onClick={() => setIsMenuOpen(!isMenuOpen)} />
-                    <span className="brand-logo"
-                        onClick={() => navigate("/")}
-                        style={{ cursor: "pointer", marginLeft: "10px" }}
-                    >Chaldal</span>
+                <div className="logo-section" style={{ cursor: "pointer" }}>
+                    <FaBars className="menu-icon" onClick={() => setIsMenuOpen(!isMenuOpen)} />
+                    <span className="brand-logo" onClick={() => navigate("/")} style={{ marginLeft: "10px" }}>Chaldal</span>
                 </div>
 
                 <div className="search-container">
@@ -160,103 +148,49 @@ export default function AppContent() {
                         type="text"
                         className="search-input"
                         value={inputValue}
-                        placeholder="Search for products (e.g. eggs, milk, potato)"
+                        placeholder="Search for products (e.g. eggs, milk)"
                         onChange={handleInputChange}
                         onKeyDown={handleSearchKey}
                     />
-                    <button onClick={handleSearchKeyBtn} className="search-btn-inside">
-                        <FaSearch />
-                    </button>
-                     <button className="mobile-search-btn">
-                        <FaSearch />
-                    </button>
+                    <button onClick={handleSearchKeyBtn} className="search-btn-inside"><FaSearch /></button>
+                </div>
 
-                </div> {/* CENTER: Search Bar */}
-
-
-                {/* RIGHT: Actions (Location, Login, Cart) */}
                 <div className="header-actions">
-                    {/* Location Selector */}
                     <div className="location-selector">
-                        <FaMapMarkerAlt style={{ color: "#ff6b6b" }} />
-                        <span>Dhaka</span>
-                        <MdKeyboardArrowDown />
+                        <FaMapMarkerAlt style={{ color: "#ff6b6b" }} /> <span>Dhaka</span> <MdKeyboardArrowDown />
                     </div>
-
-                    {/* Login / User Profile */}
                     {user ? (
-                        <div
-                            className="user-profile"
-                            style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "5px",
-                                fontWeight: "bold",
-                                color: "#444",
-                            }}
-                        >
-                            <FaUser /> <span>{user.name}</span>
-                        </div>
+                        <div className="user-profile"><FaUser /> <span>{user.name}</span></div>
                     ) : (
-                        <button className="login-btn" onClick={() => navigate("/login")}>
-                            Login
-                        </button>
+                        <button className="login-btn" onClick={() => navigate("/login")}>Login</button>
                     )}
-
-                    {/* Cart Badge (Moved here for better layout) */}
-                    <div
-                        className="cart-badge-btn"
-                        onClick={() => setIsCartOpen(true)}
-                        style={{
-                            background: "#ffeaa7",
-                            padding: "8px 15px",
-                            borderRadius: "4px",
-                            cursor: "pointer",
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "8px",
-                            border: "1px solid #fcce38",
-                        }}
-                    >
+                    <div className="cart-badge-btn" onClick={() => setIsCartOpen(true)}>
                         <FaShoppingBag style={{ color: "#d63031" }} />
-                        <span style={{ fontWeight: "bold", color: "#2d3436" }}>
-                            {cart.reduce((acc, item) => acc + item.qty, 0)} Items
-                        </span>
+                        <span>{cart.reduce((acc, item) => acc + item.qty, 0)} Items</span>
                     </div>
                 </div>
             </header>
-            {/* --- HEADER END --- */}
 
-            {/* ROUTES */}
             <Routes>
                 <Route path="/login" element={<Login onLogin={setUser} />} />
                 <Route path="/signup" element={<Signup onLogin={setUser} />} />
-
-                {/* HOME PAGE */}
-                {/* HOME ROUTE */}
                 <Route path="/" element={
                     <div className="main-layout" style={{ display: 'flex' }}>
                         <CategorySidebar
                             activeCategory={selectedCategory}
                             onSelectCategory={handleSelectCategory}
-                            isOpen={isMenuOpen}               // <--- NEW
-                            onClose={() => setIsMenuOpen(false)} // <--- NEW
+                            isOpen={isMenuOpen}
+                            onClose={() => setIsMenuOpen(false)}
                         />
-
-                        {/* CHANGED: Removed 'product-grid' class. added flex-direction column */}
                         <main style={{ flex: 1, background: '#f6f6f6', display: 'flex', flexDirection: 'column', overflowX: 'hidden' }}>
-
-                            {/* 1. CAROUSEL (Now takes full width naturally) */}
                             <BannerCarousel />
-
-                            {/* 2. PRODUCT GRID (Separate container for grid items) */}
+                            
+                            {/* PRODUCT GRID - NOW USING REAL DATA */}
                             <div className="product-grid">
-                                {displayedProducts.length > 0 || apiDisplayedProducts.length > 0 ? (
-                                    // --- TRICK: We repeat the list 4 times to simulate a full store ---
-                                    [...displayedProducts, ...displayedProducts, ...displayedProducts, ...displayedProducts, ...apiDisplayedProducts].map((product, index) => (
+                                {displayedProducts.length > 0 ? (
+                                    displayedProducts.map((product) => (
                                         <ProductCard
-                                            // Using index to create unique keys for duplicates
-                                            key={`${product.id}-${index}`}
+                                            key={product.id}
                                             product={product}
                                             cart={cart}
                                             onAddToCart={handleAddToCart}
@@ -266,33 +200,23 @@ export default function AppContent() {
                                 ) : (
                                     <div style={{ padding: '20px', color: '#666', gridColumn: '1 / -1' }}>
                                         <h3>No products found in {selectedCategory}</h3>
-                                        <p>Try clicking "Grocery" in the sidebar!</p>
+                                        <p>Check the database if you added products for this category!</p>
                                     </div>
                                 )}
                             </div>
                         </main>
                     </div>
                 } />
-
-                {/* CHECKOUT PAGE */}
-                <Route
-                    path="/checkout"
-                    element={<Checkout cart={cart} placeOrder={handlePlaceOrder} />}
-                />
+                <Route path="/checkout" element={<Checkout cart={cart} placeOrder={handlePlaceOrder} />} />
             </Routes>
 
-            {/* CART SIDEBAR */}
             <CartSidebar
                 isOpen={isCartOpen}
                 onClose={() => setIsCartOpen(false)}
                 cartItems={cart}
                 onUpdateQty={handleUpdateQty}
-                onCheckout={() => {
-                    setIsCartOpen(false);
-                    navigate("/checkout");
-                }}
+                onCheckout={() => { setIsCartOpen(false); navigate("/checkout"); }}
             />
         </div>
     );
-
 }

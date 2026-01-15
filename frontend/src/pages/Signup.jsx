@@ -4,53 +4,75 @@ import './Auth.css';
 
 const Signup = ({ onLogin }) => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({ name: '', email: '', password: '' });
+  const [formData, setFormData] = useState({
+    fullName: '',
+    email: '',
+    phone: '',
+    password: ''
+  });
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Simulate Signup Success
-    if (formData.name && formData.email) {
-      const newUser = { name: formData.name, email: formData.email };
-      onLogin(newUser);
-      navigate('/');
+    setError('');
+
+    try {
+      const response = await fetch("http://localhost:3000/api/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData)
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert("Account Created Successfully!");
+        // Optional: Auto-login after signup
+        onLogin({ name: data.user.full_name, email: data.user.email, id: data.user.user_id });
+        navigate('/');
+      } else {
+        setError(data.error || "Signup Failed");
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Server error. Is the backend running?");
     }
   };
 
   return (
     <div className="auth-container">
       <div className="auth-card">
-        <h2>Create Account</h2>
-        <p className="auth-subtitle">Start ordering groceries today</p>
+        <h2>Sign Up</h2>
+        <p className="auth-subtitle">Create your Chaldal account</p>
         
+        {error && <p style={{color: 'red', textAlign: 'center'}}>{error}</p>}
+
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label>Full Name</label>
-            <input 
-              type="text" 
-              placeholder="Ex: Shamsul Haque" 
-              onChange={(e) => setFormData({...formData, name: e.target.value})}
-            />
+            <input type="text" name="fullName" required placeholder="Ex: Sami" onChange={handleChange} />
           </div>
 
           <div className="form-group">
-            <label>Email / Phone</label>
-            <input 
-              type="text" 
-              placeholder="Enter email or phone" 
-              onChange={(e) => setFormData({...formData, email: e.target.value})}
-            />
+            <label>Email</label>
+            <input type="email" name="email" required placeholder="user@example.com" onChange={handleChange} />
+          </div>
+
+          <div className="form-group">
+            <label>Phone</label>
+            <input type="text" name="phone" placeholder="017..." onChange={handleChange} />
           </div>
           
           <div className="form-group">
             <label>Password</label>
-            <input 
-              type="password" 
-              placeholder="Set a password" 
-              onChange={(e) => setFormData({...formData, password: e.target.value})}
-            />
+            <input type="password" name="password" required placeholder="******" onChange={handleChange} />
           </div>
 
-          <button type="submit" className="auth-btn">Sign Up</button>
+          <button type="submit" className="auth-btn">Create Account</button>
         </form>
 
         <p className="switch-auth">

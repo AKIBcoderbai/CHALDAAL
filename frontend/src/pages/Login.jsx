@@ -1,21 +1,40 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import './Auth.css'; // We will use one CSS file for both Login/Signup
+import './Auth.css';
 
 const Login = ({ onLogin }) => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Simulate API Login
-    if (email && password) {
-      const mockUser = { name: "Sami", email: email };
-      onLogin(mockUser); // Update App state
-      navigate('/'); // Go back home
-    } else {
-      alert("Please enter email and password");
+    setError('');
+
+    try {
+      const response = await fetch("http://localhost:3000/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Update the global App state with real user info
+        onLogin({ 
+            name: data.user.name, 
+            email: data.user.email, 
+            id: data.user.id 
+        });
+        navigate('/');
+      } else {
+        setError(data.error || "Login Failed");
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Server connection failed");
     }
   };
 
@@ -25,12 +44,15 @@ const Login = ({ onLogin }) => {
         <h2>Login</h2>
         <p className="auth-subtitle">Welcome back to Chaldal Clone</p>
         
+        {error && <p style={{color: 'red', textAlign: 'center'}}>{error}</p>}
+        
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label>Email / Phone</label>
+            <label>Email</label>
             <input 
-              type="text" 
-              placeholder="Enter your number or email" 
+              type="email" 
+              placeholder="Enter your email" 
+              required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
@@ -41,6 +63,7 @@ const Login = ({ onLogin }) => {
             <input 
               type="password" 
               placeholder="Enter password" 
+              required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
