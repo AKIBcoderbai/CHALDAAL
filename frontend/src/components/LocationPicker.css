@@ -1,0 +1,127 @@
+/* The dark overlay that covers the entire screen */
+.location-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.6); /* Dark semi-transparent background */
+    backdrop-filter: blur(3px); /* Optional: Adds a professional blur to the background page */
+    z-index: 3000; /* Super high z-index to sit on top of everything (even sidebar) */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    animation: fadeIn 0.2s ease-out;
+}
+
+/* The white box (The Modal) */
+.location-modal {
+    background: white;
+    width: 90%;
+    max-width: 600px; /* Limits width for a nice compact look */
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    animation: scaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Header */
+.modal-header {
+    padding: 15px 20px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 18px;
+    color: #333;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 28px;
+    color: #888;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0 5px;
+}
+
+.close-btn:hover {
+    color: #333;
+}
+
+/* Map Area */
+.map-container {
+    height: 400px; /* Fixed height for the map */
+    width: 100%;
+    background: #e5e5e5;
+}
+
+/* Footer */
+.modal-footer {
+    padding: 15px 20px;
+    border-top: 1px solid #eee;
+    background: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.coords-preview {
+    margin: 0;
+    font-size: 13px;
+    color: #666;
+    font-weight: 500;
+}
+
+.confirm-location-btn {
+    background-color: #ff6b6b; /* Chaldal Red/Pink */
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.confirm-location-btn:hover {
+    background-color: #e65b5b;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes scaleUp {
+    from { transform: scale(0.95); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+/* Responsive adjustments for mobile */
+@media (max-width: 600px) {
+    .location-modal {
+        width: 95%;
+        height: 80vh; /* Taller on mobile */
+    }
+    
+    .map-container {
+        flex: 1; /* Map takes remaining space */
+        height: auto;
+    }
+    
+    .modal-footer {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+    }
+}

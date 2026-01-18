@@ -523,5 +523,107 @@ html {
     font-size: 22px;
   }
 }
+/* --- Fix for Long Addresses in Header --- */
 
+.location-selector {
+  /* Add a maximum width so it never breaks the layout */
+  max-width: 220px; 
+  position: relative; /* For tooltip context if needed */
+}
+
+.location-selector span {
+  /* These 3 lines create the "..." effect */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  
+  /* Ensure it takes available space but doesn't force expansion */
+  display: inline-block;
+  vertical-align: middle;
+  max-width: 100%; 
+}
+
+/* Optional: On Mobile, make it even smaller */
+@media (max-width: 768px) {
+  .location-selector {
+    max-width: 150px;
+  }
+}
+/* --- Location Selector Styles --- */
+.location-selector {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  position: relative; /* Anchors the tooltip */
+  max-width: 200px;   /* Fixed width to prevent layout shifting */
+  transition: background 0.2s;
+}
+
+.location-selector:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+/* The Truncated Text (e.g., "Dhaka, Ban...") */
+.address-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  flex: 1; /* Takes available space */
+}
+
+/* --- ✨ The Floating Tooltip Bubble --- */
+.custom-tooltip {
+  visibility: hidden;
+  opacity: 0;
+  
+  /* Positioning: Floats below the box */
+  position: absolute;
+  top: 110%; /* Just below the selector */
+  left: 50%;
+  transform: translateX(-50%); /* Centers it */
+  
+  /* Styling */
+  background-color: #333;
+  color: #fff;
+  text-align: center;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  width: max-content;
+  max-width: 280px; /* Maximum width of popup */
+  z-index: 2000; /* Sit on top of everything */
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  white-space: normal; /* Allow text to wrap inside the bubble */
+  line-height: 1.4;
+  
+  /* Animation */
+  transition: opacity 0.2s, top 0.2s;
+  pointer-events: none; /* Prevents flickering if mouse touches it */
+}
+
+/* The Triangle Arrow on top of the bubble */
+.custom-tooltip::after {
+  content: "";
+  position: absolute;
+  bottom: 100%; /* Top of tooltip */
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: transparent transparent #333 transparent;
+}
+
+/* Show Tooltip on Hover */
+.location-selector:hover .custom-tooltip {
+  visibility: visible;
+  opacity: 1;
+  top: 120%; /* Slight slide-down animation */
+}
 /* gello 

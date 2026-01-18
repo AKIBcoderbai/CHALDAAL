@@ -1,13 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react'; // Import useEffect
 import './Checkout.css';
 
-const Checkout = ({ cart, placeOrder }) => {
+// 1. Receive 'shippingAddress' prop
+const Checkout = ({ cart, placeOrder, shippingAddress }) => {
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
-    address: '',
-    paymentMethod: 'cod' // Default to Cash on Delivery
+    address: shippingAddress || '', // 2. Set default value from prop
+    paymentMethod: 'cod' 
   });
+
+  // 3. Optional: specific effect to update address if the user changes it in the header while on this page
+  useEffect(() => {
+    if(shippingAddress) {
+        setFormData(prev => ({ ...prev, address: shippingAddress }));
+    }
+  }, [shippingAddress]);
 
   const total = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
   const deliveryCharge = 60;
@@ -18,7 +26,7 @@ const Checkout = ({ cart, placeOrder }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    placeOrder(formData); // Call the function passed from App.jsx
+    placeOrder(formData); 
   };
 
   return (
@@ -26,7 +34,6 @@ const Checkout = ({ cart, placeOrder }) => {
       <h2>Checkout</h2>
       
       <div className="checkout-layout">
-        {/* LEFT: Shipping Form */}
         <form className="checkout-form" onSubmit={handleSubmit}>
           <h3>📍 Delivery Address</h3>
           
@@ -42,11 +49,24 @@ const Checkout = ({ cart, placeOrder }) => {
 
           <div className="form-group">
             <label>Full Address</label>
-            <textarea name="address" required placeholder="House, Road, Area..." onChange={handleChange}></textarea>
+            {/* The textarea now uses 'value={formData.address}' 
+               so it displays the auto-filled location but remains editable.
+            */}
+            <textarea 
+                name="address" 
+                required 
+                placeholder="House, Road, Area..." 
+                value={formData.address}
+                onChange={handleChange}
+            ></textarea>
+            <small style={{color: '#666', marginTop: '5px', display: 'block'}}>
+                * Pre-filled from your selected delivery location
+            </small>
           </div>
 
           <h3>💳 Payment Method</h3>
-          <div className="payment-options">
+           {/* ... (Payment options remain same) ... */}
+           <div className="payment-options">
             <label className={`payment-card ${formData.paymentMethod === 'cod' ? 'selected' : ''}`}>
               <input type="radio" name="paymentMethod" value="cod" checked onChange={handleChange} />
               <span>💵 Cash on Delivery</span>
@@ -60,7 +80,7 @@ const Checkout = ({ cart, placeOrder }) => {
           <button type="submit" className="confirm-btn">Confirm Order</button>
         </form>
 
-        {/* RIGHT: Order Summary */}
+        {/* ... (Order Summary remains same) ... */}
         <div className="order-summary">
           <h3>Order Summary</h3>
           <div className="summary-items">
@@ -78,6 +98,7 @@ const Checkout = ({ cart, placeOrder }) => {
             <span>Total:</span> <span>৳ {total + deliveryCharge}</span>
           </div>
         </div>
+
       </div>
     </div>
   );

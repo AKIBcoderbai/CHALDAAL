@@ -159,6 +159,88 @@ app.post('/api/login', async (req, res) => {
         res.status(500).send('Server Error');
     }
 });
+// --- ADD PRODUCT (SELLER) ---
+// ... (imports and db connection remain same)
+
+// 1. UPDATE REGISTER: Accept 'role' (customer/seller)
+app.post('/api/register', async (req, res) => {
+    try {
+        const { full_name, email, phone, password, role } = req.body;
+        // Default to 'customer' if role is not provided
+        const userRole = role || 'customer'; 
+        
+        const newUser = await pool.query(
+            "INSERT INTO users (full_name, email, phone, password, role) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+            [full_name, email, phone, password, userRole]
+        );
+        res.json(newUser.rows[0]);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send("Server Error");
+    }
+});
+
+// 2. UPDATE LOGIN: Return the role so frontend knows where to redirect
+app.post('/api/login', async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        const user = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
+
+        if (user.rows.length === 0) {
+            return res.status(401).json("Invalid Credential");
+        }
+
+        if (password !== user.rows[0].password) { // In real app, use bcrypt.compare()
+            return res.status(401).json("Invalid Credential");
+        }
+
+        // Return user info including ROLE
+        res.json(user.rows[0]); 
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send("Server Error");
+    }
+});
+
+// 3. NEW: Get Seller's Products
+app.get('/api/seller/products/:seller_id', async (req, res) => {
+    try {
+        const { seller_id } = req.params;
+        const products = await pool.query(
+            "SELECT * FROM products WHERE seller_id = $1 ORDER BY product_id DESC", 
+            [seller_id]
+        );
+        res.json(products.rows);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send("Server Error");
+    }
+});
+
+// 4. NEW: Get Seller Stats (Mock Logic for now, can be real SQL joins later)
+app.get('/api/seller/stats/:seller_id', async (req, res) => {
+    try {
+        const { seller_id } = req.params;
+        
+        // In a real app, you would JOIN 'order_items' and 'products' to calculate this.
+        // For now, we return realistic dummy data based on the seller's product count.
+        const productCount = await pool.query("SELECT COUNT(*) FROM products WHERE seller_id = $1", [seller_id]);
+        
+        const count = parseInt(productCount.rows[0].count);
+        
+        res.json({
+            total_products: count,
+            total_sales: count * 15, // Mock: 15 sales per product
+            total_profit: count * 450, // Mock: 450 taka profit
+            rating: 4.8
+        });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send("Server Error");
+    }
+});
+
+// ... (Keep the rest of the file same)
 // Start Server
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);

@@ -1,7 +1,8 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import './LocationPicker.css'; // <--- We will create this file next
 
 // Fix for default marker icon missing in Leaflet
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -54,7 +55,10 @@ const LocationPicker = ({ isOpen, onClose, onSelectLocation }) => {
     if (!isOpen) return null;
 
     return (
+        // The Overlay: Covers the whole screen with a semi-transparent dark layer
         <div className="location-modal-overlay">
+            
+            {/* The Modal: The actual white box containing the map */}
             <div className="location-modal">
                 <div className="modal-header">
                     <h3>Select Delivery Location</h3>
@@ -65,7 +69,7 @@ const LocationPicker = ({ isOpen, onClose, onSelectLocation }) => {
                     <MapContainer 
                         center={[23.8103, 90.4125]} 
                         zoom={13} 
-                        style={{ height: '400px', width: '100%' }}
+                        style={{ height: '100%', width: '100%' }} // Use 100% to fill the container
                     >
                         <TileLayer
                             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -76,9 +80,11 @@ const LocationPicker = ({ isOpen, onClose, onSelectLocation }) => {
                 </div>
 
                 <div className="modal-footer">
-                    <p>Lat: {position.lat.toFixed(4)}, Lng: {position.lng.toFixed(4)}</p>
+                    <p className="coords-preview">
+                        📍 Lat: {position.lat.toFixed(4)}, Lng: {position.lng.toFixed(4)}
+                    </p>
                     <button 
-                        className="confirm-btn"
+                        className="confirm-location-btn"
                         onClick={() => {
                             onSelectLocation(position);
                             onClose();
