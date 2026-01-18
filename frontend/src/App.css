@@ -1,16 +1,22 @@
 /* Basic Reset */
-* { box-sizing: border-box; margin: 0; padding: 0; }
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
 /* Replace or modify your existing body styles */
-body { 
-  font-family: 'Segoe UI', sans-serif; 
-  background-color: #f6f6f6; 
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #f6f6f6;
   margin: 0;
   padding: 0;
   width: 100%;
-  max-width: 100vw; /* Ensure it doesn't exceed viewport */
+  max-width: 100vw;
+  /* Ensure it doesn't exceed viewport */
   overflow-x: hidden;
-  position: relative; /* Better positioning context */
+  position: relative;
+  /* Better positioning context */
 }
 
 /* Also ensure html takes full width */
@@ -25,7 +31,8 @@ html {
 /* Header */
 .header {
   height: 65px;
-  background-color: #fcce38; /* Exact Chaldal Yellow */
+  background-color: #fcce38;
+  /* Exact Chaldal Yellow */
   padding: 0 20px;
   display: flex;
   align-items: center;
@@ -33,7 +40,7 @@ html {
   position: sticky;
   top: 0;
   z-index: 1000;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 /* Left: Menu & Logo */
@@ -43,11 +50,13 @@ html {
   gap: 15px;
   min-width: 150px;
 }
+
 .menu-icon {
   font-size: 24px;
   color: #444;
   cursor: pointer;
 }
+
 .brand-logo {
   font-family: 'Segoe UI', sans-serif;
   font-size: 26px;
@@ -55,6 +64,7 @@ html {
   color: #333;
   letter-spacing: -1px;
 }
+
 .cart-badge {
   background: white;
   padding: 8px 15px;
@@ -87,7 +97,7 @@ html {
 }
 
 .product-card:hover {
-  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
   border-color: #ffd645;
 }
 
@@ -123,7 +133,8 @@ html {
 
 .add-btn {
   background: transparent;
-  color: #e91e63; /* Chaldal pinkish accent */
+  color: #e91e63;
+  /* Chaldal pinkish accent */
   border: 1px solid #e91e63;
   padding: 5px 10px;
   border-radius: 4px;
@@ -135,6 +146,7 @@ html {
   background: #e91e63;
   color: white;
 }
+
 .logo-section {
   display: flex;
   align-items: center;
@@ -152,17 +164,19 @@ html {
   flex: 1;
   max-width: 700px;
   margin: 0 40px;
-  position: relative; /* For icon positioning */
+  position: relative;
+  /* For icon positioning */
 }
 
 .search-input {
   width: 100%;
-  padding: 12px 15px 12px 45px; /* Left padding for icon */
+  padding: 12px 15px 12px 45px;
+  /* Left padding for icon */
   border: none;
   border-radius: 4px;
   font-size: 15px;
   outline: none;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .search-icon-inside {
@@ -176,13 +190,14 @@ html {
 
 .search-btn-inside {
   position: absolute;
-  right:5px;
+  right: 5px;
   top: 50%;
   font-size: 18px;
   transform: translateY(-44%);
-  background: none; /* Chaldal Red/Pink */
+  background: none;
+  /* Chaldal Red/Pink */
   border: none;
-  color:gray;
+  color: gray;
   padding: 4px 10px;
   border-radius: 4px;
   cursor: pointer;
@@ -213,7 +228,8 @@ html {
 }
 
 .login-btn {
-  background: #ff6b6b; /* Chaldal Red/Pink */
+  background: #ff6b6b;
+  /* Chaldal Red/Pink */
   color: white;
   border: none;
   padding: 8px 24px;
@@ -225,20 +241,22 @@ html {
 
 /* --- Discount Badge --- */
 .product-card {
-  position: relative; /* Needed for absolute positioning of badge */
+  position: relative;
+  /* Needed for absolute positioning of badge */
 }
 
 .discount-badge {
   position: absolute;
   top: 10px;
   right: 10px;
-  background-color: #ff5722; /* Vivid Red/Orange */
+  background-color: #ff5722;
+  /* Vivid Red/Orange */
   color: white;
   padding: 3px 8px;
   border-radius: 12px;
   font-size: 11px;
   font-weight: bold;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
   z-index: 10;
 }
 
@@ -258,7 +276,8 @@ html {
 
 /* --- The Smart Counter Button --- */
 .action-area {
-  height: 35px; /* Fixed height to prevent card jumping */
+  height: 35px;
+  /* Fixed height to prevent card jumping */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -267,8 +286,10 @@ html {
 .add-btn {
   width: 100%;
   border: 1px solid #ffd645;
-  color: #d81b5c; /* Chaldal Pink Text */
-  background: rgba(255, 214, 69, 0.1); /* Very light yellow bg */
+  color: #d81b5c;
+  /* Chaldal Pink Text */
+  background: rgba(255, 214, 69, 0.1);
+  /* Very light yellow bg */
   transition: all 0.2s;
 }
 
@@ -281,11 +302,12 @@ html {
 .qty-counter {
   display: flex;
   align-items: center;
-  background: #ffd645; /* Yellow background for active state */
+  background: #ffd645;
+  /* Yellow background for active state */
   border-radius: 4px;
   overflow: hidden;
   width: 100%;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .qty-counter button {
@@ -303,7 +325,7 @@ html {
 }
 
 .qty-counter button:hover {
-  background: rgba(0,0,0,0.1);
+  background: rgba(0, 0, 0, 0.1);
 }
 
 .qty-counter span {
@@ -315,23 +337,28 @@ html {
 }
 
 .mobile-search-btn {
-    display: none;
-  }
+  display: none;
+}
 
 /* --- Animation Keyframes --- */
 @keyframes fadeIn {
-  from { 
-    opacity: 0; 
-    transform: translateY(10px); /* Start slightly lower */
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+    /* Start slightly lower */
   }
-  to { 
-    opacity: 1; 
-    transform: translateY(0);    /* End in normal position */
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    /* End in normal position */
   }
 }
+
 /* --- HERO BANNER --- */
 .hero-banner {
-  background-color: #fcce38; /* Blends with header */
+  background-color: #fcce38;
+  /* Blends with header */
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -350,7 +377,8 @@ html {
 }
 
 .hero-text .highlight {
-  color: #ff6b6b; /* Red accent */
+  color: #ff6b6b;
+  /* Red accent */
   font-weight: 800;
 }
 
@@ -359,39 +387,46 @@ html {
   object-fit: contain;
   margin-right: 40px;
 }
+
 /* --- Apply to Product Card --- */
 /* This targets the existing .product-card class you already have */
 .product-card {
   /* This tells the browser: "Run the fadeIn animation for 0.4 seconds" */
-  animation: fadeIn 0.4s ease-out forwards; 
+  animation: fadeIn 0.4s ease-out forwards;
 }
 
 /* //media query for search bar responsiveness */
 
 @media (max-width: 992px) {
+
   /* Reduce Hero Padding */
   .hero-banner {
     padding: 20px 30px;
-    height: auto; /* Allow height to grow if text wraps */
+    height: auto;
+    /* Allow height to grow if text wraps */
   }
 
   .hero-text h2 {
-    font-size: 28px; /* Slightly smaller text */
+    font-size: 28px;
+    /* Slightly smaller text */
   }
 
   /* Adjust Grid Padding */
   .product-grid {
-    padding: 20px; 
-    gap: 15px; /* Decrease gap between products */
+    padding: 20px;
+    gap: 15px;
+    /* Decrease gap between products */
   }
 }
 
 
 @media (max-width: 768px) {
+
   /* 1. Header: Hide the big search bar to save space */
   .search-icon-inside,
-  .search-input,.search-btn-inside{
-    display: none; 
+  .search-input,
+  .search-btn-inside {
+    display: none;
     /* In a real app, you would show a small 'Search Icon' button instead */
   }
 
@@ -403,13 +438,15 @@ html {
 
   /* 3. Hero Banner: Stack Vertically */
   .hero-banner {
-    flex-direction: column-reverse; /* Text on top, or Image on top? Let's try Image top */
+    flex-direction: column-reverse;
+    /* Text on top, or Image on top? Let's try Image top */
     text-align: center;
     padding: 20px;
   }
 
   .hero-image img {
-    height: 150px; /* Smaller image */
+    height: 150px;
+    /* Smaller image */
     margin-right: 0;
     margin-bottom: 15px;
   }
@@ -418,18 +455,16 @@ html {
   /* Your current 'repeat(auto-fill, minmax(200px, 1fr))' handles this automatically, 
      but sometimes mobile needs specifically smaller cards. */
   .product-grid {
-    width: 100%; /* Full width on mobile */
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); /* Force 2 columns */
+    width: 100%;
+    /* Full width on mobile */
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    /* Force 2 columns */
     gap: 10px;
     padding: 10px 15px;
   }
-  
-  /* 5. Hide Sidebar (If you have one visible by default) */
-  /* Usually sidebar becomes a drawer on mobile. 
-     Assuming your sidebar has a class .category-sidebar: */
-  .category-sidebar {
-      display: none; /* Only show when hamburger menu is clicked */
-  }
+
+
+  /* 5. Sidebar is now toggleable via hamburger menu */
 
   .mobile-search-btn {
     display: block;
@@ -439,7 +474,7 @@ html {
     color: #444;
     cursor: pointer;
   }
-  
+
   /* Adjust header spacing for mobile */
   .header-actions {
     gap: 10px;
@@ -452,7 +487,7 @@ html {
 
   .product-grid {
     /* Optional: On very tiny phones, maybe stick to 2 columns or go to 1 */
-    grid-template-columns: repeat(2, 1fr); 
+    grid-template-columns: repeat(2, 1fr);
     gap: 8px;
   }
 
@@ -471,22 +506,22 @@ html {
   }
 
   .image-container img {
-    height: 120px; /* Smaller product images */
+    height: 120px;
+    /* Smaller product images */
   }
 
   .product-info h3 {
-    font-size: 14px; /* Smaller titles */
-    height: 40px; /* Fixed height for 2 lines of text */
+    font-size: 14px;
+    /* Smaller titles */
+    height: 40px;
+    /* Fixed height for 2 lines of text */
     overflow: hidden;
   }
 
-  .category-sidebar {
-      display: none; /* Only show when hamburger menu is clicked */
-  }
-  
   /* 4. Hero Text */
   .hero-text h2 {
     font-size: 22px;
   }
 }
+
 /* gello 
