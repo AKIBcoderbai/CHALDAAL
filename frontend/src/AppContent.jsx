@@ -9,6 +9,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import SellerLogin from "./pages/SellerLogin"; // <--- Updated Import
 import SellerDashboard from "./pages/SellerDashboard"; // <--- Updated Import
+import ThemeToggle from "./components/ThemeToggle";
 import {
   FaBars,
   FaSearch,
@@ -179,6 +180,7 @@ export default function AppContent() {
           </div>
 
           <div className="header-actions">
+            <ThemeToggle />
             <div
               className="location-selector"
               onClick={() => setIsMapOpen(true)}
