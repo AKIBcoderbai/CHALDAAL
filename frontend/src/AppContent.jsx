@@ -139,24 +139,47 @@ export default function AppContent() {
         .filter((item) => item.qty > 0),
     );
   };
-  const handlePlaceOrder = async(customerData) => {
-    alert("Order Placed Successfully!");
-    setCart([]);
-    navigate("/");
-    // Validate user is logged in (Optional but recommended)
-        if (!user) {
-            alert("Please log in to place an order.");
-            navigate("/login");
-            return;
-        }
+const handlePlaceOrder = async (customerData) => {
+  // 1. Validate user is logged in
+  if (!user) {
+    alert("Please log in to place an order.");
+    navigate("/login");
+    return;
+  }
 
-      const orderPayload = {
-        customer: customerData,
-        items: cart,
-        total: totalAmount,
-        userId: user ? user.id : null // <--- Ensure this is sent!
-    };
+  // 2. Calculate the total locally (including delivery fee if applicable)
+  const subtotal = cart.reduce((acc, item) => acc + item.price * item.qty, 0);
+  const totalWithDelivery = subtotal + 60; // Matching the 60 taka fee in Checkout.jsx
+
+  // 3. Construct the payload
+  const orderPayload = {
+    customer: customerData,
+    items: cart,
+    total: totalWithDelivery,
+    userId: user.id // From your login state
   };
+
+  try {
+    // 4. Send the request to the backend
+    const response = await fetch("http://localhost:3000/api/orders", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(orderPayload),
+    });
+
+    if (response.ok) {
+      alert("Order Placed Successfully!");
+      setCart([]); // Only clear cart on success
+      navigate("/");
+    } else {
+      const errorData = await response.json();
+      alert("Failed to place order: " + (errorData.error || "Server Error"));
+    }
+  } catch (error) {
+    console.error("Order Error:", error);
+    alert("Connection to server failed.");
+  }
+};
 
   return (
     <div className="app-container">
