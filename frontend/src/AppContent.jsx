@@ -139,10 +139,23 @@ export default function AppContent() {
         .filter((item) => item.qty > 0),
     );
   };
-  const handlePlaceOrder = (customerData) => {
+  const handlePlaceOrder = async(customerData) => {
     alert("Order Placed Successfully!");
     setCart([]);
     navigate("/");
+    // Validate user is logged in (Optional but recommended)
+        if (!user) {
+            alert("Please log in to place an order.");
+            navigate("/login");
+            return;
+        }
+
+      const orderPayload = {
+        customer: customerData,
+        items: cart,
+        total: totalAmount,
+        userId: user ? user.id : null // <--- Ensure this is sent!
+    };
   };
 
   return (

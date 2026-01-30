@@ -43,45 +43,56 @@ app.get('/api/products', async (req, res) => {
     }
 });
 // 3. PLACE ORDER (The Complex Part)
+// 3. PLACE ORDER (Fixed: Includes user_id)
 app.post('/api/orders', async (req, res) => {
     const client = await pool.connect();
     
     try {
-        const { customer, items, total } = req.body;
+        // 1. Destructure userId from the incoming request
+        const { customer, items, total, userId } = req.body;
 
         // Start Transaction
         await client.query('BEGIN');
 
-        // A. Insert into ORDERS table
+        // A. Insert into ORDERS table (Now includes user_id)
         const orderQuery = `
-            INSERT INTO orders (customer_name, phone_number, address, total_amount, payment_method)
-            VALUES ($1, $2, $3, $4, $5)
+            INSERT INTO orders (customer_name, phone_number, address, total_amount, payment_method, user_id)
+            VALUES ($1, $2, $3, $4, $5, $6)
             RETURNING order_id
         `;
-        const orderValues = [customer.name, customer.phone, customer.address, total, customer.paymentMethod];
+        
+        // 2. Add userId to the values array
+        // Note: If userId is undefined (guest checkout), this might fail if the DB column is NOT NULL.
+        // Ensure your Frontend always sends a userId if the user is logged in.
+        const orderValues = [
+            customer.name, 
+            customer.phone, 
+            customer.address, 
+            total, 
+            customer.paymentMethod, 
+            userId 
+        ];
+         console.log("📝 Executing Order Query:", orderValues);
         const orderResult = await client.query(orderQuery, orderValues);
         const newOrderId = orderResult.rows[0].order_id;
 
-        // B. Insert into ORDER_ITEMS table (Loop through cart)
+        // B. Insert into ORDER_ITEMS table
         for (const item of items) {
             const itemQuery = `
                 INSERT INTO order_items (order_id, product_id, quantity, price_at_purchase)
                 VALUES ($1, $2, $3, $4)
             `;
             await client.query(itemQuery, [newOrderId, item.id, item.qty, item.price]);
-
-            // Optional: Decrease Stock
-            // await client.query('UPDATE products SET stock_quantity = stock_quantity - $1 WHERE product_id = $2', [item.qty, item.id]);
         }
 
-        // Commit Transaction (Save everything)
+        // Commit Transaction
         await client.query('COMMIT');
 
         res.status(201).json({ message: 'Order Placed Successfully', orderId: newOrderId });
 
     } catch (err) {
         await client.query('ROLLBACK'); // If error, undo everything
-        console.error(err);
+        console.error("ORDER ERROR:", err.message);
         res.status(500).send('Server Error');
     } finally {
         client.release();
@@ -240,7 +251,7 @@ app.get('/api/seller/stats/:seller_id', async (req, res) => {
     }
 });
 
-// ... (Keep the rest of the file same)
+// ... (Keep the rest of the file same)3
 // Start Server
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
