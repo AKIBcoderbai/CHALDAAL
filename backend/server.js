@@ -49,6 +49,7 @@ app.get('/api/products', async (req, res) => {
     }
 });
 
+
 // --- USER AUTHENTICATION ROUTES ---
 
 // 4. USER SIGNUP

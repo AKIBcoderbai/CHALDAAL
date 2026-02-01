@@ -104,7 +104,7 @@ export default function AppContent() {
     if (searchTerm.length > 0) {
       return p.name.toLowerCase().includes(searchTerm.toLowerCase());
     }
-    return p.category === 'Main Catalog';
+    return p.category === selectedCategory;
   });
 
   const handleInputChange = (e) => setInputValue(e.target.value);
