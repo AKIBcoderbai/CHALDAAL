@@ -7,8 +7,8 @@ import CategorySidebar from "./components/CategorySidebar";
 import Checkout from "./pages/Checkout";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
-import SellerLogin from "./pages/SellerLogin"; // <--- Updated Import
-import SellerDashboard from "./pages/SellerDashboard"; // <--- Updated Import
+import SellerLogin from "./pages/SellerLogin"; 
+import SellerDashboard from "./pages/SellerDashboard"; 
 import ThemeToggle from "./components/ThemeToggle";
 import {
   FaBars,
@@ -149,7 +149,7 @@ const handlePlaceOrder = async (customerData) => {
 
   // 2. Calculate the total locally (including delivery fee if applicable)
   const subtotal = cart.reduce((acc, item) => acc + item.price * item.qty, 0);
-  const totalWithDelivery = subtotal + 60; // Matching the 60 taka fee in Checkout.jsx
+  const totalWithDelivery = subtotal + 60; 
 
   // 3. Construct the payload
   const orderPayload = {
@@ -169,7 +169,7 @@ const handlePlaceOrder = async (customerData) => {
 
     if (response.ok) {
       alert("Order Placed Successfully!");
-      setCart([]); // Only clear cart on success
+      setCart([]); 
       navigate("/");
     } else {
       const errorData = await response.json();
