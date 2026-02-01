@@ -49,68 +49,6 @@ app.get('/api/products', async (req, res) => {
     }
 });
 
-// 3. PLACE ORDER
-app.post('/api/orders', async (req, res) => {
-    const client = await pool.connect();
-    
-    try {
-        const { customer, items, total, userId } = req.body;
-        
-        await client.query('BEGIN');
-
-        // Insert into Orders
-        const orderQuery = `
-            INSERT INTO orders (user_id, status)
-            VALUES ($1, 'pending')
-            RETURNING order_id
-        `;
-        const orderResult = await client.query(orderQuery, [userId]);
-        const newOrderId = orderResult.rows[0].order_id;
-
-        // Insert into Order Details
-        for (const item of items) {
-            const itemQuery = `
-                INSERT INTO order_details (order_id, product_id, quantity, price)
-                VALUES ($1, $2, $3, $4)
-            `;
-            await client.query(itemQuery, [newOrderId, item.id, item.qty, item.price]);
-        }
-
-        // Insert into Payment
-        const paymentQuery = `
-            INSERT INTO payment (order_id, method, status)
-            VALUES ($1, $2, 'Unpaid')
-        `;
-        await client.query(paymentQuery, [newOrderId, customer.paymentMethod]);
-
-        // Handle Delivery & Address
-        const addressQuery = `
-            INSERT INTO address (street, area_id, city, label)
-            VALUES ($1, 1, 'Dhaka', 'Home')
-            RETURNING address_id
-        `;
-        const addressResult = await client.query(addressQuery, [customer.address]);
-        const newAddressId = addressResult.rows[0].address_id;
-
-        const deliveryQuery = `
-            INSERT INTO delivery (order_id, status, rider_id, time_slot_id, address_id)
-            VALUES ($1, 'Scheduled', 1, 1, $2)
-        `;
-        await client.query(deliveryQuery, [newOrderId, newAddressId]);
-
-        await client.query('COMMIT');
-
-        res.status(201).json({ message: 'Order Placed Successfully', orderId: newOrderId });
-
-    } catch (err) {
-        await client.query('ROLLBACK'); 
-        console.error("ORDER ERROR:", err.message);
-        res.status(500).send('Server Error: ' + err.message);
-    } finally {
-        client.release();
-    }
-});
-
 // --- USER AUTHENTICATION ROUTES ---
 
 // 4. USER SIGNUP
