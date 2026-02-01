@@ -83,11 +83,11 @@ export default function AppContent() {
           id: item.product_id,
           name: item.name,
           price: item.price,
-          originalPrice: item.original_price,
-          image: item.image_url,
-          category: item.category_name,
+          originalPrice: item.price,
+          image: item.image,
+          category: item.category,
           unit: item.unit,
-          stock: item.stock_quantity,
+          stock: item.stock,
         }));
 
         setProducts(mappedData);
@@ -104,7 +104,7 @@ export default function AppContent() {
     if (searchTerm.length > 0) {
       return p.name.toLowerCase().includes(searchTerm.toLowerCase());
     }
-    return p.category === selectedCategory;
+    return p.category === 'Main Catalog';
   });
 
   const handleInputChange = (e) => setInputValue(e.target.value);

@@ -22,7 +22,7 @@ const Login = ({ onLogin }) => {
       const data = await response.json();
 
       if (response.ok) {
-        // Update the global App state with real user info
+        // Backend now returns standardized user object
         onLogin({ 
             name: data.user.name, 
             email: data.user.email, 

@@ -31,8 +31,12 @@ const Signup = ({ onLogin }) => {
 
       if (response.ok) {
         alert("Account Created Successfully!");
-        // Optional: Auto-login after signup
-        onLogin({ name: data.user.full_name, email: data.user.email, id: data.user.user_id });
+        // Update: Access properties directly from the normalized response
+        onLogin({ 
+            name: data.user.name, 
+            email: data.user.email, 
+            id: data.user.id // This is actually person_id from backend
+        });
         navigate('/');
       } else {
         setError(data.error || "Signup Failed");
