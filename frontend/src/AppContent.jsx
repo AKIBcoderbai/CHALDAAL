@@ -91,7 +91,7 @@ export default function AppContent() {
         }));
 
         setProducts(mappedData);
-      } catch (error) {
+      } catch (error) {``
         console.error("Error connecting to backend:", error);
       } finally {
         setIsLoading(false);
