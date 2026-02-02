@@ -132,6 +132,64 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
+// 6. PLACE ORDER (Transactional)
+app.post('/api/orders', async (req, res) => {
+    const client = await pool.connect(); // Get a dedicated client for transaction
+    
+    try {
+        const { customer, items, total, userId } = req.body;
+        
+        // Start the Transaction
+        await client.query('BEGIN');
+
+        // Step 1: Create the Order Record
+        // We set status to 'Pending' so Admin can review it later
+        const orderResult = await client.query(
+            `INSERT INTO orders (user_id, status, order_time) 
+             VALUES ($1, 'pending', NOW()) 
+             RETURNING order_id`,
+            [userId]
+        );
+        
+        const orderId = orderResult.rows[0].order_id;
+
+        // Step 2: Insert Order Items
+        // We loop through the cart items and insert them one by one
+        for (const item of items) {
+            await client.query(
+                `INSERT INTO order_items (order_id, product_id, quantity, unit_price) 
+                 VALUES ($1, $2, $3, $4)`,
+                [orderId, item.id, item.qty, item.price]
+            );
+        }
+
+        // Step 3: Insert Payment Record
+        // Linking payment to the specific Order ID
+        await client.query(
+            `INSERT INTO payment (order_id, amount, method, status, payment_time) 
+             VALUES ($1, $2, $3, 'pending', NOW())`,
+            [orderId, total, customer.paymentMethod]
+        );
+
+        // Commit the Transaction (Save changes permanently)
+        await client.query('COMMIT');
+
+        res.status(201).json({ 
+            message: "Order placed successfully!", 
+            orderId: orderId 
+        });
+
+    } catch (err) {
+        // If ANY step fails, undo everything
+        await client.query('ROLLBACK');
+        console.error("ORDER TRANSACTION FAILED:", err.message);
+        res.status(500).json({ error: "Transaction Failed: " + err.message });
+    } finally {
+        // Release the client back to the pool
+        client.release();
+    }
+});
+
 // Start Server
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);

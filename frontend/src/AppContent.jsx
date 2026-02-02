@@ -80,7 +80,7 @@ export default function AppContent() {
         const data = await response.json();
 
         const mappedData = data.map((item) => ({
-          id: item.product_id,
+          id: item.id || item.product_id,
           name: item.name,
           price: item.price,
           originalPrice: item.price,
@@ -89,7 +89,7 @@ export default function AppContent() {
           unit: item.unit,
           stock: item.stock,
         }));
-
+        
         setProducts(mappedData);
       } catch (error) {``
         console.error("Error connecting to backend:", error);
@@ -119,6 +119,7 @@ export default function AppContent() {
   };
   const handleAddToCart = (product) => {
     const exists = cart.find((item) => item.id === product.id);
+    //console.log(item.id)
     if (exists) {
       setCart(
         cart.map((item) =>

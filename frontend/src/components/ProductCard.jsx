@@ -39,13 +39,16 @@ const ProductCard = ({ product, cart, onAddToCart, onUpdateQty }) => {
           {quantity === 0 ? (
             <button 
               className="add-btn"
-              onClick={() => onAddToCart(product)}
+              onClick={() => {onAddToCart(product);
+                 console.log(product.id);}
+              }
             >
               Add to Bag
             </button>
           ) : (
             <div className="qty-counter">
-              <button onClick={() => onUpdateQty(product.id, -1)}>−</button>
+              <button onClick={() =>{ onUpdateQty(product.id, -1)
+              }}>−</button>
               <span>{quantity}</span>
               <button onClick={() => onUpdateQty(product.id, 1)}>+</button>
             </div>
