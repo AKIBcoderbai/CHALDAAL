@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './Auth.css'; // Using for form styles
-import { FaBox, FaChartLine, FaDollarSign, FaStar, FaPlus, FaSignOutAlt } from 'react-icons/fa';
+import './Auth.css'; 
+import { FaBox, FaChartLine, FaDollarSign, FaStar, FaSignOutAlt } from 'react-icons/fa';
 
 const SellerDashboard = ({ user, onLogout }) => {
     const navigate = useNavigate();
-    const [activeTab, setActiveTab] = useState('overview'); // overview, add-product, my-products
+    const [activeTab, setActiveTab] = useState('overview'); 
     const [products, setProducts] = useState([]);
+    const [categories, setCategories] = useState([]); // <-- NEW STATE
     const [stats, setStats] = useState({ total_products: 0, total_sales: 0, total_profit: 0, rating: 0 });
     
-    // Add Product Form State
     const [formData, setFormData] = useState({
         name: '', price: '', original_price: '', stock_quantity: 10,
-        unit: '1 pcs', category_id: '1', image_url: ''
+        unit: '1 pcs', category_id: '', image_url: '' // category_id starts empty
     });
 
     useEffect(() => {
@@ -21,25 +21,27 @@ const SellerDashboard = ({ user, onLogout }) => {
             return;
         }
         fetchData();
+        fetchCategories(); // <-- CALL NEW FUNCTION
     }, [user, navigate]);
 
-    const fetchData = async () => {
+    // <-- NEW FUNCTION TO FETCH ACTUAL DB CATEGORIES
+    const fetchCategories = async () => {
         try {
-            // Fetch Products
-            const prodRes = await fetch(`http://localhost:3000/api/seller/products/${user.user_id}`);
-            const prodData = await prodRes.json();
-            setProducts(prodData);
-
-            // Fetch Stats
-            const statsRes = await fetch(`http://localhost:3000/api/seller/stats/${user.user_id}`);
-            const statsData = await statsRes.json();
-            setStats(statsData);
-        } catch (error) {
-            console.error("Error loading dashboard:", error);
+            const res = await fetch('http://localhost:3000/api/categories');
+            if (res.ok) {
+                const data = await res.json();
+                setCategories(data);
+                // Set default form selection to the first available category
+                if (data.length > 0) {
+                    setFormData(prev => ({ ...prev, category_id: data[0].category_id }));
+                }
+            }
+        } catch (err) {
+            console.error("Failed to load categories");
         }
     };
 
-    const handleAddProduct = async (e) => {
+const handleAddProduct = async (e) => {
         e.preventDefault();
         try {
             const response = await fetch('http://localhost:3000/api/products', {
@@ -50,12 +52,16 @@ const SellerDashboard = ({ user, onLogout }) => {
 
             if (response.ok) {
                 alert("Product Added Successfully!");
-                setFormData({ ...formData, name: '', price: '', image_url: '' }); // Reset partial form
-                fetchData(); // Refresh data
-                setActiveTab('my-products'); // Switch view
+                setFormData({ ...formData, name: '', price: '', image_url: '' }); 
+                fetchData(); 
+                setActiveTab('my-products'); 
+            } else {
+                // <-- NEW LOGIC: Catch and display the database rejection
+                const errData = await response.json();
+                alert(`Failed to add product: ${errData.error || errData.message || 'Unknown server error'}`);
             }
         } catch (error) {
-            alert("Failed to add product");
+            alert("Network error: Failed to reach server");
         }
     };
 
@@ -115,7 +121,7 @@ const SellerDashboard = ({ user, onLogout }) => {
                 <div style={styles.navItem(activeTab === 'add-product')} onClick={() => setActiveTab('add-product')}>+ Add New Product</div>
             </div>
 
-            {/* Content Area */}
+        {/* Content Area */}
             <div style={{background: 'white', padding: '25px', borderRadius: '10px', boxShadow: '0 2px 15px rgba(0,0,0,0.05)'}}>
                 
                 {/* 1. OVERVIEW TAB */}
@@ -127,26 +133,55 @@ const SellerDashboard = ({ user, onLogout }) => {
                     </div>
                 )}
 
-                {/* 2. ADD PRODUCT TAB */}
+                {/* 2. ADD PRODUCT TAB (Fully Updated) */}
                 {activeTab === 'add-product' && (
                     <div style={{maxWidth: '600px'}}>
                         <h3>Add New Product</h3>
                         <form onSubmit={handleAddProduct} className="auth-form">
-                            <div className="form-group"><label>Name</label><input name="name" onChange={handleChange} required /></div>
-                            <div className="form-group"><label>Price</label><input type="number" name="price" onChange={handleChange} required /></div>
-                            <div className="form-group"><label>Stock</label><input type="number" name="stock_quantity" onChange={handleChange} required /></div>
-                            <div className="form-group"><label>Category</label>
-                                <select name="category_id" onChange={handleChange} className="auth-input">
-                                    <option value="1">Grocery</option><option value="2">Beverage</option><option value="3">Pharmacy</option><option value="4">Cooking</option><option value="5">Food</option>
+                            <div className="form-group"><label>Name</label><input name="name" value={formData.name} onChange={handleChange} required /></div>
+                            <div className="form-group"><label>Price</label><input type="number" name="price" value={formData.price} onChange={handleChange} required /></div>
+                            <div className="form-group"><label>Stock</label><input type="number" name="stock_quantity" value={formData.stock_quantity} onChange={handleChange} required /></div>
+                            
+                            <div className="form-group">
+                                <label>Category</label>
+                                <select 
+                                    name="category_id" 
+                                    value={formData.category_id} 
+                                    onChange={handleChange} 
+                                    style={{padding: '10px', width: '100%', borderRadius: '5px', border: '1px solid #ccc'}}
+                                >
+                                    {categories.map(cat => (
+                                        <option key={cat.category_id} value={cat.category_id}>
+                                            {cat.name}
+                                        </option>
+                                    ))}
                                 </select>
                             </div>
-                            <div className="form-group"><label>Image URL</label><input name="image_url" onChange={handleChange} required /></div>
-                            <button type="submit" className="login-submit-btn" style={{background: '#2d3436'}}>Publish Product</button>
+
+                            <div className="form-group"><label>Image URL</label><input name="image_url" value={formData.image_url} onChange={handleChange} required /></div>
+                            
+                            <button 
+                                type="submit" 
+                                style={{
+                                    background: '#ff9f43', 
+                                    color: 'white', 
+                                    padding: '12px 20px', 
+                                    border: 'none', 
+                                    borderRadius: '5px', 
+                                    cursor: 'pointer', 
+                                    fontWeight: 'bold', 
+                                    width: '100%', 
+                                    fontSize: '16px',
+                                    marginTop: '15px'
+                                }}
+                            >
+                                Publish Product
+                            </button>
                         </form>
                     </div>
                 )}
 
-                {/* 3. MY PRODUCTS TAB */}
+                {/* 3. MY PRODUCTS TAB (Restored) */}
                 {activeTab === 'my-products' && (
                     <div>
                         <h3>My Inventory</h3>
@@ -174,8 +209,12 @@ const SellerDashboard = ({ user, onLogout }) => {
                         </table>
                     </div>
                 )}
+
             </div>
-        </div>
+
+
+            </div>
+        
     );
 };
 
