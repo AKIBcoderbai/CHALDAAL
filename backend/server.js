@@ -52,35 +52,49 @@ app.get('/api/products', async (req, res) => {
 
 // --- USER AUTHENTICATION ROUTES ---
 
-// 4. USER SIGNUP
+// 4. POLYMORPHIC SIGNUP
 app.post('/api/signup', async (req, res) => {
     const client = await pool.connect();
     try {
-        const { fullName, email, password, phone } = req.body;
+        // Default to 'user' if role isn't explicitly provided
+        const { fullName, email, password, phone, role = 'user' } = req.body;
         
+        // Validate the role against the DB constraint
+        const validRoles = ['user', 'admin', 'seller', 'rider'];
+        if (!validRoles.includes(role)) {
+            return res.status(400).json({ error: "Invalid role specified." });
+        }
+
         await client.query('BEGIN');
 
-        // Insert into Person
+        // Step 1: Insert into Supertype (Person)
         const personResult = await client.query(
-            `INSERT INTO person (name, email, phone, role, password) VALUES ($1, $2, $3, 'user', $4) RETURNING person_id, name, email, role`,
-            [fullName, email, phone, password]
+            `INSERT INTO person (name, email, phone, role, password) VALUES ($1, $2, $3, $4, $5) RETURNING person_id, name, email, role`,
+            [fullName, email, phone, role, password]
         );
         
         const newPerson = personResult.rows[0];
+        const pId = newPerson.person_id;
 
-        // Insert into Users
-        await client.query(
-            `INSERT INTO "users" (user_id) VALUES ($1)`,
-            [newPerson.person_id]
-        );
+        // Step 2: Insert into Subtype based on role
+        if (role === 'user') {
+            await client.query(`INSERT INTO "users" (user_id) VALUES ($1)`, [pId]);
+        } else if (role === 'seller') {
+            // company_name can be updated later in the dashboard
+            await client.query(`INSERT INTO seller (seller_id) VALUES ($1)`, [pId]);
+        } else if (role === 'admin') {
+            await client.query(`INSERT INTO admin (admin_id) VALUES ($1)`, [pId]);
+        } else if (role === 'rider') {
+            await client.query(`INSERT INTO rider (rider_id) VALUES ($1)`, [pId]);
+        }
 
         await client.query('COMMIT');
         
         res.status(201).json({ 
-            message: "User registered!", 
+            message: `${role} registered successfully!`, 
             user: {
-                id: newPerson.person_id,
-                name: newPerson.name,
+                user_id: pId,
+                full_name: newPerson.name,
                 email: newPerson.email,
                 role: newPerson.role
             }
@@ -98,7 +112,7 @@ app.post('/api/signup', async (req, res) => {
     }
 });
 
-// 5. USER LOGIN
+// 5. LOGIN
 app.post('/api/login', async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -116,11 +130,12 @@ app.post('/api/login', async (req, res) => {
             return res.status(401).json({ error: "Invalid Password" });
         }
 
+        // Keys mapping strictly to what the frontend expects
         res.json({ 
             message: "Login successful", 
             user: { 
-                id: user.person_id, 
-                name: user.name, 
+                user_id: user.person_id, 
+                full_name: user.name, 
                 email: user.email, 
                 role: user.role 
             } 
@@ -132,18 +147,17 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
+
 // 6. PLACE ORDER (Transactional)
 app.post('/api/orders', async (req, res) => {
-    const client = await pool.connect(); // Get a dedicated client for transaction
+    const client = await pool.connect(); 
     
     try {
         const { customer, items, total, userId } = req.body;
         
-        // Start the Transaction
         await client.query('BEGIN');
 
         // Step 1: Create the Order Record
-        // We set status to 'Pending' so Admin can review it later
         const orderResult = await client.query(
             `INSERT INTO orders (user_id, status, order_time) 
              VALUES ($1, 'pending', NOW()) 
@@ -153,8 +167,7 @@ app.post('/api/orders', async (req, res) => {
         
         const orderId = orderResult.rows[0].order_id;
 
-        // Step 2: Insert Order Items
-        // We loop through the cart items and insert them one by one
+        // Step 2: Insert Order Details (Updated table and column names)
         for (const item of items) {
             await client.query(
                 `INSERT INTO order_details (order_id, product_id, quantity, price) 
@@ -164,14 +177,12 @@ app.post('/api/orders', async (req, res) => {
         }
 
         // Step 3: Insert Payment Record
-        // Linking payment to the specific Order ID
         await client.query(
             `INSERT INTO payment (order_id, amount, method, status, payment_time) 
              VALUES ($1, $2, $3, 'pending', NOW())`,
             [orderId, total, customer.paymentMethod]
         );
 
-        // Commit the Transaction (Save changes permanently)
         await client.query('COMMIT');
 
         res.status(201).json({ 
@@ -180,13 +191,91 @@ app.post('/api/orders', async (req, res) => {
         });
 
     } catch (err) {
-        // If ANY step fails, undo everything
         await client.query('ROLLBACK');
         console.error("ORDER TRANSACTION FAILED:", err.message);
         res.status(500).json({ error: "Transaction Failed: " + err.message });
     } finally {
-        // Release the client back to the pool
         client.release();
+    }
+});
+
+// --- SELLER DASHBOARD ROUTES ---
+
+// 7. GET SELLER PRODUCTS
+app.get('/api/seller/products/:seller_id', async (req, res) => {
+    try {
+        const { seller_id } = req.params;
+        const query = `
+            SELECT product_id, name, unit_price as price, stock as stock_quantity, image_url 
+            FROM products 
+            WHERE seller_id = $1 
+            ORDER BY product_id DESC
+        `;
+        const result = await pool.query(query, [seller_id]);
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).send('Server Error');
+    }
+});
+
+// 8. ADD NEW PRODUCT (From Seller Dashboard)
+app.post('/api/products', async (req, res) => {
+    try {
+        const { name, unit, price, stock_quantity, image_url, category_id, seller_id } = req.body;
+        
+        const query = `
+            INSERT INTO products (name, unit, unit_price, stock, image_url, category_id, seller_id) 
+            VALUES ($1, $2, $3, $4, $5, $6, $7) 
+            RETURNING product_id
+        `;
+        
+        // Default unit to '1 pcs' if frontend doesn't supply it
+        const result = await pool.query(query, [
+            name, 
+            unit || '1 pcs', 
+            price, 
+            stock_quantity, 
+            image_url, 
+            category_id, 
+            seller_id
+        ]);
+
+        res.status(201).json({ message: "Product added", productId: result.rows[0].product_id });
+    } catch (err) {
+        console.error("ADD PRODUCT ERROR:", err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+// 9. GET SELLER STATS
+app.get('/api/seller/stats/:seller_id', async (req, res) => {
+    try {
+        const { seller_id } = req.params;
+        
+        // Count total active products for this seller
+        const prodQuery = `SELECT COUNT(*) FROM products WHERE seller_id = $1`;
+        const prodResult = await pool.query(prodQuery, [seller_id]);
+        
+        // For a complete implementation, you'd join order_details to calculate total_sales and profit
+        // This provides base values until order_details is fully populated
+        res.json({
+            total_products: parseInt(prodResult.rows[0].count),
+            total_sales: 0, 
+            total_profit: 0, 
+            rating: 5.0 
+        });
+    } catch (err) {
+        res.status(500).send('Server Error');
+    }
+});
+
+// 10. GET ALL CATEGORIES (Add this near your other routes)
+app.get('/api/categories', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT category_id, name FROM category ORDER BY category_id ASC');
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
     }
 });
 

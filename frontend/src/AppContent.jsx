@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import "./App.css";
 import ProductCard from "./components/ProductCard";
 import CartSidebar from "./components/CartSidebar";
@@ -23,6 +23,7 @@ import LocationPicker from "./components/LocationPicker";
 
 export default function AppContent() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [cart, setCart] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("Grocery");
@@ -185,7 +186,8 @@ const handlePlaceOrder = async (customerData) => {
   return (
     <div className="app-container">
       {/* HEADER: Only show if NOT in Seller Dashboard */}
-      {(!user || user.role !== "seller") && (
+     {/* HEADER: Hide on specific routes instead of user role */}
+      {location.pathname !== "/seller-dashboard" && location.pathname !== "/seller-login" && (
         <header className="header">
           <div className="logo-section" style={{ cursor: "pointer" }}>
             <FaBars
@@ -228,7 +230,7 @@ const handlePlaceOrder = async (customerData) => {
               <div className="custom-tooltip">{userAddress}</div>
             </div>
 
-            {user ? (
+           {user && user.role !== 'seller' ? (
               <div
                 className="user-profile"
                 onClick={handleLogout}
