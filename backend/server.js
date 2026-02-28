@@ -39,6 +39,7 @@ app.get('/api/products', async (req, res) => {
                 c.name as category
             FROM products p 
             JOIN category c ON p.category_id = c.category_id 
+            WHERE p.is_active=true
             ORDER BY p.product_id ASC
         `;
         const result = await pool.query(query);
@@ -272,10 +273,15 @@ app.post('/api/orders', async (req, res) => {
             );
 
             // Now, link the brand new address using that label
+            let insertingDefault=false;
+            if(addressLabel=='Home')
+            {
+                insertingDefault=true;
+            }
             await client.query(
                 `INSERT INTO person_address (person_id, address_id, label, is_default) 
-                 VALUES ($1, $2, $3, FALSE) ON CONFLICT DO NOTHING`,
-                [userId, finalAddressId, addressLabel]
+                 VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING`,
+                [userId, finalAddressId, addressLabel,insertingDefault]
             );
         }
 
@@ -327,7 +333,13 @@ app.get('/api/seller/products/:seller_id', async (req, res) => {
     try {
         const { seller_id } = req.params;
         const query = `
-            SELECT product_id, name, unit_price as price, stock as stock_quantity, image_url 
+            SELECT 
+                product_id, 
+                name, 
+                unit_price as price, 
+                stock as stock_quantity, 
+                image_url,
+                is_active    /* NEW: Send status to frontend */
             FROM products 
             WHERE seller_id = $1 
             ORDER BY product_id DESC
@@ -403,4 +415,25 @@ app.get('/api/categories', async (req, res) => {
 // Start Server
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
+});
+
+
+// 11. SOFT DELETE / DEACTIVATE PRODUCT
+app.delete('/api/products/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        // Soft delete by setting is_active to false instead of actually deleting the row
+        const query = 'UPDATE products SET is_active = FALSE WHERE product_id = $1 RETURNING *';
+        const result = await pool.query(query, [id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: "Product not found" });
+        }
+
+        res.json({ message: "Product deactivated successfully" });
+    } catch (err) {
+        console.error("DELETE PRODUCT ERROR:", err.message);
+        res.status(500).send('Server Error');
+    }
 });

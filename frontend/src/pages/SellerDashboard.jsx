@@ -84,6 +84,37 @@ const handleAddProduct = async (e) => {
         }
     };
 
+    // Add this near your other functions in SellerDashboard.jsx
+  const handleDeleteProduct = async (productId) => {
+      // Prevent accidental clicks
+      const confirmDeactivate = window.confirm("Are you sure you want to deactivate this product? It will be hidden from the storefront.");
+      if (!confirmDeactivate) return;
+
+      try {
+          const response = await fetch(`http://localhost:3000/api/products/${productId}`, {
+              method: 'DELETE',
+          });
+
+          if (response.ok) {
+              alert("Product deactivated successfully!");
+              
+              // Update the local state to instantly reflect the change
+              // Assuming your state variable holding the seller's products is called 'products'
+              setProducts(prevProducts => 
+                  prevProducts.map(p => 
+                      p.product_id === productId ? { ...p, is_active: false } : p
+                  )
+              );
+          } else {
+              const data = await response.json();
+              alert(data.error || "Failed to deactivate product.");
+          }
+      } catch (error) {
+          console.error("Delete Error:", error);
+          alert("Server connection failed.");
+      }
+  };
+
     const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
     // --- STYLES FOR DASHBOARD (Inline for simplicity) ---
@@ -221,7 +252,21 @@ const handleAddProduct = async (e) => {
                                         <td style={styles.td}>{p.name}</td>
                                         <td style={styles.td}>৳ {p.price}</td>
                                         <td style={styles.td}>{p.stock_quantity}</td>
-                                        <td style={styles.td}><button style={{color: 'red', border:'none', background:'none', cursor:'pointer'}}>Delete</button></td>
+                                        <td style={styles.td}>
+                                            {/* Conditionally render the button based on status */}
+                                            {p.is_active ? (
+                                                <button 
+                                                    onClick={() => handleDeleteProduct(p.product_id)}
+                                                    style={{color: 'white', backgroundColor: '#e74c3c', border:'none', padding: '6px 10px', borderRadius: '4px', cursor:'pointer', fontWeight: 'bold'}}
+                                                >
+                                                    Deactivate
+                                                </button>
+                                            ) : (
+                                                <span style={{ color: '#e74c3c', backgroundColor: '#fadbd8', padding: '6px 10px', borderRadius: '4px', fontWeight: 'bold', fontSize: '12px' }}>
+                                                    Inactive
+                                                </span>
+                                            )}
+                                        </td>
                                     </tr>
                                 ))}
                             </tbody>

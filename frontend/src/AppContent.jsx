@@ -155,9 +155,12 @@ const handlePlaceOrder = async (customerData) => {
     const subtotal = cart.reduce((acc, item) => acc + item.price * item.qty, 0);
     const totalWithDelivery = subtotal + 60; 
 
-    // SMART DETECTION: If they changed the text, we nullify the ID to force a new creation
-    const isEditedAddress = customerData.address !== userAddress;
-    const finalAddressId = isEditedAddress ? null : (user.address_id || null);
+  
+    const originalDbAddress = user.address || "";
+    const isNewAddress = (customerData.address !== originalDbAddress) || (customerData.label !== 'Home');
+    
+    // If it's a new address or a new label, send null so the backend creates it!
+    const finalAddressId = isNewAddress ? null : (user.address_id || null);
 
     const orderPayload = {
       customer: customerData,
@@ -166,7 +169,7 @@ const handlePlaceOrder = async (customerData) => {
       userId: user.id, 
       address_id: finalAddressId 
     };
-    
+
     try {
       const response = await fetch("http://localhost:3000/api/orders", {
         method: "POST",
