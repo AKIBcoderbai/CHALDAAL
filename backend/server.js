@@ -210,33 +210,72 @@ app.post('/api/orders', async (req, res) => {
         
         let finalAddressId = address_id;
 
-        // FIX: If the user didn't have an address_id, create a new one from the checkout text!
+        // If no ID was sent (because it's a new user or they edited the text in checkout)
         if (!finalAddressId) {
-            // 1. Find an existing area, or create a default 'Dhaka' area
-            let defaultAreaId = 1;
-            const areaCheck = await client.query(`SELECT area_id FROM area LIMIT 1`);
+            const addressText = customer.address || 'Address not provided';
+            const addressLabel = customer.label || 'Home'; // Fallback to Home
+            
+            // 1. Smart keyword search for area/division
+            const lowerAddress = addressText.toLowerCase();
+            const divisions = ['dhaka', 'chattogram', 'sylhet', 'khulna', 'rajshahi', 'barishal', 'rangpur', 'mymensingh'];
+            
+            let detectedArea = 'Dhaka'; // Default fallback
+            let i = 0;
+            let foundMatch = false;
+
+            for (let div of divisions) {
+                if (lowerAddress.includes(div)) {
+                    // Capitalize first letter beautifully
+                    detectedArea = div.charAt(0).toUpperCase() + div.slice(1);
+                    foundMatch = true;
+                    break;
+                }
+                i++;
+            }
+
+            // FIX: Prevent 'undefined' if no division was found in the text
+            if (!foundMatch) {
+                i = 0; // Default back to Dhaka's index
+            }
+
+            // 2. Check if this area exists in the database, if not create it
+            let finalAreaId;
+            let money = (i === 0) ? 60 : i * 60; // Ensure Dhaka (0) still costs 60, others scale up
+            let found_div = divisions[i];
+            let city = found_div;
+
+            // ILIKE makes the search case-insensitive
+            const areaCheck = await client.query(`SELECT area_id FROM area WHERE name ILIKE $1 LIMIT 1`, [detectedArea]);
             
             if (areaCheck.rows.length === 0) {
                 const newArea = await client.query(
-                    `INSERT INTO area (name, delivery_fee) VALUES ('Dhaka', 60) RETURNING area_id`
+                    `INSERT INTO area (name, delivery_fee) VALUES ($1,$2) RETURNING area_id`,
+                    [detectedArea, money]
                 );
-                defaultAreaId = newArea.rows[0].area_id;
+                finalAreaId = newArea.rows[0].area_id;
             } else {
-                defaultAreaId = areaCheck.rows[0].area_id;
+                finalAreaId = areaCheck.rows[0].area_id;
             }
 
-            // 2. Insert the new address using the valid area_id
+            // 3. Insert the new address using the detected area_id (FIXED SQL Syntax)
             const newAddressResult = await client.query(
-                `INSERT INTO address (street, area_id) VALUES ($1, $2) RETURNING address_id`,
-                [customer.address || 'Address not provided', defaultAreaId]
+                `INSERT INTO address (street, area_id, city, division) VALUES ($1, $2, $3, $4) RETURNING address_id`,
+                [addressText, finalAreaId, city, found_div]
             );
             finalAddressId = newAddressResult.rows[0].address_id;
             
-            // 3. Optionally save it as their default so they have it next time
+            // 4. Manage the Labels
+            // FIX: First, remove any existing address linkage that uses this exact label for this user
+            await client.query(
+                `DELETE FROM person_address WHERE person_id = $1 AND label = $2`,
+                [userId, addressLabel]
+            );
+
+            // Now, link the brand new address using that label
             await client.query(
                 `INSERT INTO person_address (person_id, address_id, label, is_default) 
-                 VALUES ($1, $2, 'Home', TRUE) ON CONFLICT DO NOTHING`,
-                [userId, finalAddressId]
+                 VALUES ($1, $2, $3, FALSE) ON CONFLICT DO NOTHING`,
+                [userId, finalAddressId, addressLabel]
             );
         }
 
@@ -281,7 +320,6 @@ app.post('/api/orders', async (req, res) => {
         client.release();
     }
 });
-
 // --- SELLER DASHBOARD ROUTES ---
 
 // 7. GET SELLER PRODUCTS

@@ -155,15 +155,18 @@ const handlePlaceOrder = async (customerData) => {
     const subtotal = cart.reduce((acc, item) => acc + item.price * item.qty, 0);
     const totalWithDelivery = subtotal + 60; 
 
-    // FIXED: Now we send address_id from user state, and the typed address from checkout
+    // SMART DETECTION: If they changed the text, we nullify the ID to force a new creation
+    const isEditedAddress = customerData.address !== userAddress;
+    const finalAddressId = isEditedAddress ? null : (user.address_id || null);
+
     const orderPayload = {
       customer: customerData,
       items: cart,
       total: totalWithDelivery,
       userId: user.id, 
-      address_id: user.address_id || null // Pass the ID if they have one
+      address_id: finalAddressId 
     };
-
+    
     try {
       const response = await fetch("http://localhost:3000/api/orders", {
         method: "POST",

@@ -7,6 +7,7 @@ const Checkout = ({ cart, placeOrder, shippingAddress }) => {
     name: '',
     phone: '',
     address: shippingAddress || '', // 2. Set default value from prop
+    label:'Home',
     paymentMethod: 'cod' 
   });
 
@@ -63,7 +64,19 @@ const Checkout = ({ cart, placeOrder, shippingAddress }) => {
                 * Pre-filled from your selected delivery location
             </small>
           </div>
+            
+          {/* NEW: Address Label Dropdown */}
+          <div className="form-group">
+            <label>Save Address As</label>
+            <select name="label" value={formData.label} onChange={handleChange} style={{padding: '10px', width: '100%', borderRadius: '5px', border: '1px solid #ddd'}}>
+                <option value="Home">Home</option>
+                <option value="Office">Office</option>
+                <option value="Friend">Friend's House</option>
+                <option value="Other">Other</option>
+            </select>
+          </div>
 
+          
           <h3>💳 Payment Method</h3>
            {/* ... (Payment options remain same) ... */}
            <div className="payment-options">
