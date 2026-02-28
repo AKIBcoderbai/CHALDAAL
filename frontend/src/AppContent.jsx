@@ -64,6 +64,10 @@ export default function AppContent() {
   const handleLogin = (userData) => {
     setUser(userData);
     localStorage.setItem("chaldal_user", JSON.stringify(userData));
+    // NEW: Update the address in the header/checkout immediately on login
+    if (userData.address) {
+      setUserAddress(userData.address);
+    }
   };
 
   const handleLogout = () => {
@@ -142,46 +146,44 @@ export default function AppContent() {
     );
   };
 const handlePlaceOrder = async (customerData) => {
-  // 1. Validate user is logged in
-  if (!user) {
-    alert("Please log in to place an order.");
-    navigate("/login");
-    return;
-  }
-
-  // 2. Calculate the total locally (including delivery fee if applicable)
-  const subtotal = cart.reduce((acc, item) => acc + item.price * item.qty, 0);
-  const totalWithDelivery = subtotal + 60; 
-
-  // 3. Construct the payload
-  const orderPayload = {
-    customer: customerData,
-    items: cart,
-    total: totalWithDelivery,
-    userId: user.id // From your login state
-  };
-
-  try {
-    // 4. Send the request to the backend
-    const response = await fetch("http://localhost:3000/api/orders", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(orderPayload),
-    });
-
-    if (response.ok) {
-      alert("Order Placed Successfully!");
-      setCart([]); 
-      navigate("/");
-    } else {
-      const errorData = await response.json();
-      alert("Failed to place order: " + (errorData.error || "Server Error"));
+    if (!user) {
+      alert("Please log in to place an order.");
+      navigate("/login");
+      return;
     }
-  } catch (error) {
-    console.error("Order Error:", error);
-    alert("Connection to server failed.");
-  }
-};
+
+    const subtotal = cart.reduce((acc, item) => acc + item.price * item.qty, 0);
+    const totalWithDelivery = subtotal + 60; 
+
+    // FIXED: Now we send address_id from user state, and the typed address from checkout
+    const orderPayload = {
+      customer: customerData,
+      items: cart,
+      total: totalWithDelivery,
+      userId: user.id, 
+      address_id: user.address_id || null // Pass the ID if they have one
+    };
+
+    try {
+      const response = await fetch("http://localhost:3000/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(orderPayload),
+      });
+
+      if (response.ok) {
+        alert("Order Placed Successfully!");
+        setCart([]); 
+        navigate("/");
+      } else {
+        const errorData = await response.json();
+        alert("Failed to place order: " + (errorData.error || "Server Error"));
+      }
+    } catch (error) {
+      console.error("Order Error:", error);
+      alert("Connection to server failed.");
+    }
+  };
 
   return (
     <div className="app-container">
@@ -264,9 +266,9 @@ const handlePlaceOrder = async (customerData) => {
       />
 
       <Routes>
-        {/* CUSTOMER ROUTES */}
+        
         <Route path="/login" element={<Login onLogin={handleLogin} />} />
-        <Route path="/signup" element={<Signup onLogin={handleLogin} />} />
+        <Route path="/signup" element={<Signup onLogin={handleLogin} defaultAddress={userAddress} />} />
 
         {/* HOME ROUTE */}
         <Route

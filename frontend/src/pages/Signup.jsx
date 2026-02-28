@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import './Auth.css';
 
-const Signup = ({ onLogin }) => {
+const Signup = ({ onLogin, defaultAddress }) => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     fullName: '',
@@ -21,21 +21,29 @@ const Signup = ({ onLogin }) => {
     setError('');
 
     try {
+      // 2. Merge the address from AppContent into the data sent to the server
+      const payload = { 
+        ...formData, 
+        address: defaultAddress !== "Locating..." ? defaultAddress : "Dhaka" // Fallback just in case
+      };
+
       const response = await fetch("http://localhost:3000/api/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(payload)
       });
 
       const data = await response.json();
 
       if (response.ok) {
         alert("Account Created Successfully!");
-        // Update: Access properties directly from the normalized response
+        // 3. Make sure to capture the returned address data
         onLogin({ 
-            name: data.user.name, 
+            name: data.user.full_name, 
             email: data.user.email, 
-            id: data.user.id // This is actually person_id from backend
+            id: data.user.user_id,
+            address: data.user.address,       
+            address_id: data.user.address_id
         });
         navigate('/');
       } else {

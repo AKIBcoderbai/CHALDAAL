@@ -31,10 +31,6 @@ const SellerLogin = ({ onLogin }) => {
             const data = await response.json();
 
             if (response.ok) {
-                // --- FIX STARTS HERE ---
-                
-                // The backend returns { user: { role: 'seller', ... } }
-                // So we must check data.user.role, NOT data.role
                 const userRole = data.user ? data.user.role : data.role;
 
                 if (userRole !== 'seller') {
@@ -42,11 +38,14 @@ const SellerLogin = ({ onLogin }) => {
                     return;
                 }
                 
-                // Pass the correct user object
-                onLogin(data.user); 
+                onLogin({
+                    name: data.user.full_name,
+                    email: data.user.email,
+                    id: data.user.user_id, // Map user_id to id
+                    role: data.user.role
+                }); 
                 navigate('/seller-dashboard');
                 
-                // --- FIX ENDS HERE ---
             } else {
                 alert(data.error || "Authentication failed");
             }

@@ -56,10 +56,9 @@ app.get('/api/products', async (req, res) => {
 app.post('/api/signup', async (req, res) => {
     const client = await pool.connect();
     try {
-        // Default to 'user' if role isn't explicitly provided
-        const { fullName, email, password, phone, role = 'user' } = req.body;
+        // NEW: Extract 'address' from req.body
+        const { fullName, email, password, phone, role = 'user', address } = req.body;
         
-        // Validate the role against the DB constraint
         const validRoles = ['user', 'admin', 'seller', 'rider'];
         if (!validRoles.includes(role)) {
             return res.status(400).json({ error: "Invalid role specified." });
@@ -80,7 +79,6 @@ app.post('/api/signup', async (req, res) => {
         if (role === 'user') {
             await client.query(`INSERT INTO "users" (user_id) VALUES ($1)`, [pId]);
         } else if (role === 'seller') {
-            // company_name can be updated later in the dashboard
             await client.query(`INSERT INTO seller (seller_id) VALUES ($1)`, [pId]);
         } else if (role === 'admin') {
             await client.query(`INSERT INTO admin (admin_id) VALUES ($1)`, [pId]);
@@ -88,15 +86,49 @@ app.post('/api/signup', async (req, res) => {
             await client.query(`INSERT INTO rider (rider_id) VALUES ($1)`, [pId]);
         }
 
+        // NEW Step 3: Insert the default address if provided
+        let addressId = null;
+        if (address) {
+            // 1. Find an existing area, or create a default 'Dhaka' area if none exist
+            let defaultAreaId = 1;
+            const areaCheck = await client.query(`SELECT area_id FROM area LIMIT 1`);
+            
+            if (areaCheck.rows.length === 0) {
+                // Create a dummy area with a default delivery fee of 60
+                const newArea = await client.query(
+                    `INSERT INTO area (name, delivery_fee) VALUES ('Dhaka', 60) RETURNING area_id`
+                );
+                defaultAreaId = newArea.rows[0].area_id;
+            } else {
+                defaultAreaId = areaCheck.rows[0].area_id;
+            }
+
+            // 2. Insert the address using the valid area_id
+            const addressResult = await client.query(
+                `INSERT INTO address (street, area_id) VALUES ($1, $2) RETURNING address_id`,
+                [address, defaultAreaId]
+            );
+            addressId = addressResult.rows[0].address_id;
+
+            // 3. Link it to the user as their default address
+            await client.query(
+                `INSERT INTO person_address (person_id, address_id, label, is_default) VALUES ($1, $2, 'Home', TRUE)`,
+                [pId, addressId]
+            );
+        }
+
         await client.query('COMMIT');
         
+        // Return the full user object including their new address info
         res.status(201).json({ 
             message: `${role} registered successfully!`, 
             user: {
                 user_id: pId,
                 full_name: newPerson.name,
                 email: newPerson.email,
-                role: newPerson.role
+                role: newPerson.role,
+                address: address || null,
+                address_id: addressId
             }
         });
 
@@ -117,7 +149,19 @@ app.post('/api/login', async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        const query = 'SELECT * FROM person WHERE email = $1';
+        // JOIN with person_address and address to get the default address
+        const query = `
+            SELECT 
+                p.*, 
+                a.address_id, 
+                a.street, 
+                a.city, 
+                a.area_id
+            FROM person p
+            LEFT JOIN person_address pa ON p.person_id = pa.person_id AND pa.is_default = TRUE
+            LEFT JOIN address a ON pa.address_id = a.address_id
+            WHERE p.email = $1
+        `;
         const result = await pool.query(query, [email]);
 
         if (result.rows.length === 0) {
@@ -130,6 +174,12 @@ app.post('/api/login', async (req, res) => {
             return res.status(401).json({ error: "Invalid Password" });
         }
 
+        // Format the address into a single readable string for the frontend textarea
+        let formattedAddress = '';
+        if (user.street) {
+            formattedAddress = `${user.street}${user.city ? ', ' + user.city : ''}`;
+        }
+
         // Keys mapping strictly to what the frontend expects
         res.json({ 
             message: "Login successful", 
@@ -137,7 +187,9 @@ app.post('/api/login', async (req, res) => {
                 user_id: user.person_id, 
                 full_name: user.name, 
                 email: user.email, 
-                role: user.role 
+                role: user.role,
+                address_id: user.address_id || null,     // Pass the ID for the order table
+                address: formattedAddress || null        // Pass the string for the Checkout UI
             } 
         });
 
@@ -147,27 +199,58 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-
 // 6. PLACE ORDER (Transactional)
 app.post('/api/orders', async (req, res) => {
     const client = await pool.connect(); 
     
     try {
-        const { customer, items, total, userId } = req.body;
+        const { customer, items, total, userId, address_id } = req.body;
         
         await client.query('BEGIN');
+        
+        let finalAddressId = address_id;
+
+        // FIX: If the user didn't have an address_id, create a new one from the checkout text!
+        if (!finalAddressId) {
+            // 1. Find an existing area, or create a default 'Dhaka' area
+            let defaultAreaId = 1;
+            const areaCheck = await client.query(`SELECT area_id FROM area LIMIT 1`);
+            
+            if (areaCheck.rows.length === 0) {
+                const newArea = await client.query(
+                    `INSERT INTO area (name, delivery_fee) VALUES ('Dhaka', 60) RETURNING area_id`
+                );
+                defaultAreaId = newArea.rows[0].area_id;
+            } else {
+                defaultAreaId = areaCheck.rows[0].area_id;
+            }
+
+            // 2. Insert the new address using the valid area_id
+            const newAddressResult = await client.query(
+                `INSERT INTO address (street, area_id) VALUES ($1, $2) RETURNING address_id`,
+                [customer.address || 'Address not provided', defaultAreaId]
+            );
+            finalAddressId = newAddressResult.rows[0].address_id;
+            
+            // 3. Optionally save it as their default so they have it next time
+            await client.query(
+                `INSERT INTO person_address (person_id, address_id, label, is_default) 
+                 VALUES ($1, $2, 'Home', TRUE) ON CONFLICT DO NOTHING`,
+                [userId, finalAddressId]
+            );
+        }
 
         // Step 1: Create the Order Record
         const orderResult = await client.query(
-            `INSERT INTO orders (user_id, status, order_time) 
-             VALUES ($1, 'pending', NOW()) 
+            `INSERT INTO orders (user_id, address_id, status, order_time) 
+             VALUES ($1, $2, 'pending', NOW()) 
              RETURNING order_id`,
-            [userId]
+            [userId, finalAddressId]
         );
         
         const orderId = orderResult.rows[0].order_id;
 
-        // Step 2: Insert Order Details (Updated table and column names)
+        // Step 2: Insert Order Details
         for (const item of items) {
             await client.query(
                 `INSERT INTO order_details (order_id, product_id, quantity, price) 

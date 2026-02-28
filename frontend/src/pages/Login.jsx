@@ -22,11 +22,12 @@ const Login = ({ onLogin }) => {
       const data = await response.json();
 
       if (response.ok) {
-        // Backend now returns standardized user object
         onLogin({ 
-            name: data.user.name, 
+            name: data.user.full_name, 
             email: data.user.email, 
-            id: data.user.id 
+            id: data.user.user_id,
+            address: data.user.address || '',
+            address_id: data.user.address_id || null
         });
         navigate('/');
       } else {
