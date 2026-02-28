@@ -230,7 +230,7 @@ const handlePlaceOrder = async (customerData) => {
               <div className="custom-tooltip">{userAddress}</div>
             </div>
 
-            {user ? (
+           {user && user.role !== 'seller' ? (
               <div
                 className="user-profile"
                 onClick={handleLogout}

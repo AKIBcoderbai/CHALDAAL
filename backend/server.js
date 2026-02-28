@@ -272,12 +272,10 @@ app.get('/api/seller/stats/:seller_id', async (req, res) => {
 // 10. GET ALL CATEGORIES (Add this near your other routes)
 app.get('/api/categories', async (req, res) => {
     try {
-        const query = 'SELECT category_id, name FROM category ORDER BY category_id ASC';
-        const result = await pool.query(query);
+        const result = await pool.query('SELECT category_id, name FROM category ORDER BY category_id ASC');
         res.json(result.rows);
     } catch (err) {
-        console.error("CATEGORY FETCH ERROR:", err.message);
-        res.status(500).json({ error: 'Server Error' });
+        res.status(500).json({ error: err.message });
     }
 });
 

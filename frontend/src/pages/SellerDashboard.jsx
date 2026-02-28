@@ -40,6 +40,25 @@ const SellerDashboard = ({ user, onLogout }) => {
             console.error("Failed to load categories");
         }
     };
+    const fetchData = async () => {
+        try {
+            // Fetch Products
+            const prodRes = await fetch(`http://localhost:3000/api/seller/products/${user.user_id}`);
+            if (prodRes.ok) {
+                const prodData = await prodRes.json();
+                setProducts(prodData);
+            }
+
+            // Fetch Stats
+            const statsRes = await fetch(`http://localhost:3000/api/seller/stats/${user.user_id}`);
+            if (statsRes.ok) {
+                const statsData = await statsRes.json();
+                setStats(statsData);
+            }
+        } catch (error) {
+            console.error("Error loading dashboard:", error);
+        }
+    };
 
 const handleAddProduct = async (e) => {
         e.preventDefault();
