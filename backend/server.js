@@ -157,7 +157,7 @@ app.post('/api/orders', async (req, res) => {
         // We loop through the cart items and insert them one by one
         for (const item of items) {
             await client.query(
-                `INSERT INTO order_items (order_id, product_id, quantity, unit_price) 
+                `INSERT INTO order_details (order_id, product_id, quantity, price) 
                  VALUES ($1, $2, $3, $4)`,
                 [orderId, item.id, item.qty, item.price]
             );
