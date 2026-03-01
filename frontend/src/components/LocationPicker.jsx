@@ -2,9 +2,8 @@ import React, { useState, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import './LocationPicker.css'; // <--- We will create this file next
+import './LocationPicker.css'; 
 
-// Fix for default marker icon missing in Leaflet
 import icon from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 
@@ -49,16 +48,16 @@ function DraggableMarker({ position, setPosition }) {
 }
 
 const LocationPicker = ({ isOpen, onClose, onSelectLocation }) => {
-    // Default to Dhaka coordinates
+   
     const [position, setPosition] = useState({ lat: 23.8103, lng: 90.4125 });
 
     if (!isOpen) return null;
 
     return (
-        // The Overlay: Covers the whole screen with a semi-transparent dark layer
+  
         <div className="location-modal-overlay">
             
-            {/* The Modal: The actual white box containing the map */}
+            {/*The actual white box containing the map */}
             <div className="location-modal">
                 <div className="modal-header">
                     <h3>Select Delivery Location</h3>
@@ -69,7 +68,7 @@ const LocationPicker = ({ isOpen, onClose, onSelectLocation }) => {
                     <MapContainer 
                         center={[23.8103, 90.4125]} 
                         zoom={13} 
-                        style={{ height: '100%', width: '100%' }} // Use 100% to fill the container
+                        style={{ height: '100%', width: '100%' }} 
                     >
                         <TileLayer
                             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'

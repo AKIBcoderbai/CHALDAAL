@@ -4,7 +4,7 @@ export const products = [
     name: "Miniket Rice Premium",
     category: "Grocery",
     price: 65,
-    originalPrice: 70, // <--- New field for discount calculation
+    originalPrice: 70, 
     unit: "kg",
     image: "https://chaldn.com/_mpimage/chinigura-rice-premium-1-kg?src=https%3A%2F%2Feggyolk.chaldal.com%2Fapi%2FPicture%2FRaw%3FpictureId%3D48071&q=best&v=1&m=400&webp=1",
     stock: 50

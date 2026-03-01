@@ -57,7 +57,7 @@ app.get('/api/products', async (req, res) => {
 app.post('/api/signup', async (req, res) => {
     const client = await pool.connect();
     try {
-        // NEW: Extract 'address' from req.body
+      
         const { fullName, email, password, phone, role = 'user', address } = req.body;
         
         const validRoles = ['user', 'admin', 'seller', 'rider'];
@@ -67,7 +67,7 @@ app.post('/api/signup', async (req, res) => {
 
         await client.query('BEGIN');
 
-        // Step 1: Insert into Supertype (Person)
+        // Insert into Supertype (Person)
         const personResult = await client.query(
             `INSERT INTO person (name, email, phone, role, password) VALUES ($1, $2, $3, $4, $5) RETURNING person_id, name, email, role`,
             [fullName, email, phone, role, password]
@@ -76,7 +76,7 @@ app.post('/api/signup', async (req, res) => {
         const newPerson = personResult.rows[0];
         const pId = newPerson.person_id;
 
-        // Step 2: Insert into Subtype based on role
+        //insert into Subtype based on role
         if (role === 'user') {
             await client.query(`INSERT INTO "users" (user_id) VALUES ($1)`, [pId]);
         } else if (role === 'seller') {
@@ -87,7 +87,7 @@ app.post('/api/signup', async (req, res) => {
             await client.query(`INSERT INTO rider (rider_id) VALUES ($1)`, [pId]);
         }
 
-        // NEW Step 3: Insert the default address if provided
+        // Insert the default address if provided
         let addressId = null;
         if (address) {
             // 1. Find an existing area, or create a default 'Dhaka' area if none exist
@@ -95,7 +95,7 @@ app.post('/api/signup', async (req, res) => {
             const areaCheck = await client.query(`SELECT area_id FROM area LIMIT 1`);
             
             if (areaCheck.rows.length === 0) {
-                // Create a dummy area with a default delivery fee of 60
+              
                 const newArea = await client.query(
                     `INSERT INTO area (name, delivery_fee) VALUES ('Dhaka', 60) RETURNING area_id`
                 );
@@ -120,7 +120,6 @@ app.post('/api/signup', async (req, res) => {
 
         await client.query('COMMIT');
         
-        // Return the full user object including their new address info
         res.status(201).json({ 
             message: `${role} registered successfully!`, 
             user: {
@@ -150,7 +149,7 @@ app.post('/api/login', async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        // JOIN with person_address and address to get the default address
+
         const query = `
             SELECT 
                 p.*, 
@@ -175,13 +174,13 @@ app.post('/api/login', async (req, res) => {
             return res.status(401).json({ error: "Invalid Password" });
         }
 
-        // Format the address into a single readable string for the frontend textarea
+
         let formattedAddress = '';
         if (user.street) {
             formattedAddress = `${user.street}${user.city ? ', ' + user.city : ''}`;
         }
 
-        // Keys mapping strictly to what the frontend expects
+
         res.json({ 
             message: "Login successful", 
             user: { 
@@ -189,8 +188,8 @@ app.post('/api/login', async (req, res) => {
                 full_name: user.name, 
                 email: user.email, 
                 role: user.role,
-                address_id: user.address_id || null,     // Pass the ID for the order table
-                address: formattedAddress || null        // Pass the string for the Checkout UI
+                address_id: user.address_id || null,     
+                address: formattedAddress || null        
             } 
         });
 
@@ -211,12 +210,12 @@ app.post('/api/orders', async (req, res) => {
         
         let finalAddressId = address_id;
 
-        // If no ID was sent (because it's a new user or they edited the text in checkout)
+      
         if (!finalAddressId) {
             const addressText = customer.address || 'Address not provided';
-            const addressLabel = customer.label || 'Home'; // Fallback to Home
+            const addressLabel = customer.label || 'Home'; 
             
-            // 1. Smart keyword search for area/division
+
             const lowerAddress = addressText.toLowerCase();
             const divisions = ['dhaka', 'chattogram', 'sylhet', 'khulna', 'rajshahi', 'barishal', 'rangpur', 'mymensingh'];
             
@@ -226,7 +225,6 @@ app.post('/api/orders', async (req, res) => {
 
             for (let div of divisions) {
                 if (lowerAddress.includes(div)) {
-                    // Capitalize first letter beautifully
                     detectedArea = div.charAt(0).toUpperCase() + div.slice(1);
                     foundMatch = true;
                     break;
@@ -234,9 +232,9 @@ app.post('/api/orders', async (req, res) => {
                 i++;
             }
 
-            // FIX: Prevent 'undefined' if no division was found in the text
+
             if (!foundMatch) {
-                i = 0; // Default back to Dhaka's index
+                i = 0;
             }
 
             // 2. Check if this area exists in the database, if not create it
@@ -266,13 +264,11 @@ app.post('/api/orders', async (req, res) => {
             finalAddressId = newAddressResult.rows[0].address_id;
             
             // 4. Manage the Labels
-            // FIX: First, remove any existing address linkage that uses this exact label for this user
             await client.query(
                 `DELETE FROM person_address WHERE person_id = $1 AND label = $2`,
                 [userId, addressLabel]
             );
 
-            // Now, link the brand new address using that label
             let insertingDefault=false;
             if(addressLabel=='Home')
             {
@@ -362,7 +358,6 @@ app.post('/api/products', async (req, res) => {
             RETURNING product_id
         `;
         
-        // Default unit to '1 pcs' if frontend doesn't supply it
         const result = await pool.query(query, [
             name, 
             unit || '1 pcs', 
@@ -385,12 +380,9 @@ app.get('/api/seller/stats/:seller_id', async (req, res) => {
     try {
         const { seller_id } = req.params;
         
-        // Count total active products for this seller
         const prodQuery = `SELECT COUNT(*) FROM products WHERE seller_id = $1`;
         const prodResult = await pool.query(prodQuery, [seller_id]);
         
-        // For a complete implementation, you'd join order_details to calculate total_sales and profit
-        // This provides base values until order_details is fully populated
         res.json({
             total_products: parseInt(prodResult.rows[0].count),
             total_sales: 0, 
@@ -422,8 +414,6 @@ app.listen(PORT, () => {
 app.delete('/api/products/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        
-        // Soft delete by setting is_active to false instead of actually deleting the row
         const query = 'UPDATE products SET is_active = FALSE WHERE product_id = $1 RETURNING *';
         const result = await pool.query(query, [id]);
 

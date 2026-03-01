@@ -5,10 +5,10 @@ const categories = [
   { id: 1, name: 'Grocery', icon: '🍎' },
   { id: 2, name: 'Beverage', icon: '🥤' },
   { id: 3, name: 'Pharmacy', icon: '💊' },
-  { id: 7, name: 'Clothing', icon: '👕' },     // FIXED: Changed "Clothes" to "Clothing" to match the database
-  { id: 8, name: 'Electronics', icon: '💻' }   // FIXED: Updated ID to 8
+  { id: 7, name: 'Clothing', icon: '👕' },     
+  { id: 8, name: 'Electronics', icon: '💻' } 
 ];
-// Note: We removed the extra search props. We only need 'onSelectCategory'
+
 const CategorySidebar = ({ activeCategory, onSelectCategory, isOpen, onClose }) => {
 
  
@@ -27,7 +27,7 @@ const CategorySidebar = ({ activeCategory, onSelectCategory, isOpen, onClose }) 
               className={`menu-item ${activeCategory === cat.name ? 'active' : ''}`}
               onClick={() => {
                 onSelectCategory(cat.name);
-                onClose(); // Close sidebar when an item is clicked (UX best practice)
+                onClose(); // Close sidebar when an item is clicked 
               }}
             >
               <span className="icon">{cat.icon}</span>

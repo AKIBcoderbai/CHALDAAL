@@ -18,7 +18,7 @@ const SellerLogin = ({ onLogin }) => {
         e.preventDefault();
         const endpoint = isSignup ? '/api/signup' : '/api/login';
         
-        // Force role to 'seller' during registration
+       
         const payload = isSignup ? { ...formData, fullName: formData.full_name, role: 'seller' } : formData;
 
         try {

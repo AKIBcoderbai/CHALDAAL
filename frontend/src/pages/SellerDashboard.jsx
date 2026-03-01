@@ -7,7 +7,7 @@ const SellerDashboard = ({ user, onLogout }) => {
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('overview'); 
     const [products, setProducts] = useState([]);
-    const [categories, setCategories] = useState([]); // <-- NEW STATE
+    const [categories, setCategories] = useState([]); 
     const [stats, setStats] = useState({ total_products: 0, total_sales: 0, total_profit: 0, rating: 0 });
     
     const [formData, setFormData] = useState({
@@ -21,17 +21,16 @@ const SellerDashboard = ({ user, onLogout }) => {
             return;
         }
         fetchData();
-        fetchCategories(); // <-- CALL NEW FUNCTION
+        fetchCategories();
     }, [user, navigate]);
 
-    // <-- NEW FUNCTION TO FETCH ACTUAL DB CATEGORIES
+    //  FETCH ACTUAL DB CATEGORIES
     const fetchCategories = async () => {
         try {
             const res = await fetch('http://localhost:3000/api/categories');
             if (res.ok) {
                 const data = await res.json();
                 setCategories(data);
-                // Set default form selection to the first available category
                 if (data.length > 0) {
                     setFormData(prev => ({ ...prev, category_id: data[0].category_id }));
                 }
@@ -75,7 +74,7 @@ const handleAddProduct = async (e) => {
                 fetchData(); 
                 setActiveTab('my-products'); 
             } else {
-                // <-- NEW LOGIC: Catch and display the database rejection
+                //Catch and display the database rejection
                 const errData = await response.json();
                 alert(`Failed to add product: ${errData.error || errData.message || 'Unknown server error'}`);
             }
@@ -84,9 +83,7 @@ const handleAddProduct = async (e) => {
         }
     };
 
-    // Add this near your other functions in SellerDashboard.jsx
   const handleDeleteProduct = async (productId) => {
-      // Prevent accidental clicks
       const confirmDeactivate = window.confirm("Are you sure you want to deactivate this product? It will be hidden from the storefront.");
       if (!confirmDeactivate) return;
 
@@ -97,9 +94,6 @@ const handleAddProduct = async (e) => {
 
           if (response.ok) {
               alert("Product deactivated successfully!");
-              
-              // Update the local state to instantly reflect the change
-              // Assuming your state variable holding the seller's products is called 'products'
               setProducts(prevProducts => 
                   prevProducts.map(p => 
                       p.product_id === productId ? { ...p, is_active: false } : p
@@ -117,7 +111,6 @@ const handleAddProduct = async (e) => {
 
     const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
-    // --- STYLES FOR DASHBOARD (Inline for simplicity) ---
     const styles = {
         container: { padding: '20px', background: '#f4f6f8', minHeight: '100vh' },
         header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' },
@@ -183,7 +176,7 @@ const handleAddProduct = async (e) => {
                     </div>
                 )}
 
-                {/* 2. ADD PRODUCT TAB (Fully Updated) */}
+                {/* 2. ADD PRODUCT TAB  */}
                 {activeTab === 'add-product' && (
                     <div style={{maxWidth: '600px'}}>
                         <h3>Add New Product</h3>
@@ -231,7 +224,7 @@ const handleAddProduct = async (e) => {
                     </div>
                 )}
 
-                {/* 3. MY PRODUCTS TAB (Restored) */}
+                {/* 3. MY PRODUCTS TAB  */}
                 {activeTab === 'my-products' && (
                     <div>
                         <h3>My Inventory</h3>

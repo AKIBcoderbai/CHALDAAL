@@ -21,10 +21,10 @@ const Signup = ({ onLogin, defaultAddress }) => {
     setError('');
 
     try {
-      // 2. Merge the address from AppContent into the data sent to the server
+      
       const payload = { 
         ...formData, 
-        address: defaultAddress !== "Locating..." ? defaultAddress : "Dhaka" // Fallback just in case
+        address: defaultAddress !== "Locating..." ? defaultAddress : "Dhaka" 
       };
 
       const response = await fetch("http://localhost:3000/api/signup", {
@@ -37,7 +37,7 @@ const Signup = ({ onLogin, defaultAddress }) => {
 
       if (response.ok) {
         alert("Account Created Successfully!");
-        // 3. Make sure to capture the returned address data
+       
         onLogin({ 
             name: data.user.full_name, 
             email: data.user.email, 
