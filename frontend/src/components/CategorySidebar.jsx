@@ -2,15 +2,12 @@ import React from 'react';
 import './CategorySidebar.css';
 
 const categories = [
-  { id: 1, name: 'Grocery', icon: '🥚' },
+  { id: 1, name: 'Grocery', icon: '🍎' },
   { id: 2, name: 'Beverage', icon: '🥤' },
   { id: 3, name: 'Pharmacy', icon: '💊' },
-  {
-    id: 4, name: 'Clothes', icon: '👕'
-  },
-  { id: 5, name: 'Electronics', icon: '📱' }
+  { id: 7, name: 'Clothing', icon: '👕' },     // FIXED: Changed "Clothes" to "Clothing" to match the database
+  { id: 8, name: 'Electronics', icon: '💻' }   // FIXED: Updated ID to 8
 ];
-
 // Note: We removed the extra search props. We only need 'onSelectCategory'
 const CategorySidebar = ({ activeCategory, onSelectCategory, isOpen, onClose }) => {
 
