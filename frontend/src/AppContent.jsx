@@ -96,7 +96,7 @@ export default function AppContent() {
         }));
         
         setProducts(mappedData);
-      } catch (error) {``
+      } catch (error) {
         console.error("Error connecting to backend:", error);
       } finally {
         setIsLoading(false);
@@ -287,15 +287,7 @@ const handlePlaceOrder = async (customerData) => {
                 isOpen={isMenuOpen}
                 onClose={() => setIsMenuOpen(false)}
               />
-              <main
-                style={{
-                  flex: 1,
-                  background: "#f6f6f6",
-                  display: "flex",
-                  flexDirection: "column",
-                  overflowX: "hidden",
-                }}
-              >
+              <main className="main-content">
                 <BannerCarousel />
 
                 <div className="product-grid">

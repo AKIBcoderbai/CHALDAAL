@@ -1,6 +1,6 @@
 .category-sidebar {
   width: 240px;
-  background: white;
+  background: var(--surface-color);
   height: calc(100vh - 65px);
   /* Full height minus header */
   position: fixed;
@@ -9,7 +9,7 @@
   left: -250px;
   /* Hidden by default */
   overflow-y: auto;
-  border-right: 1px solid #f0f0f0;
+  border-right: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.02);
@@ -31,7 +31,7 @@
 }
 
 .category-sidebar::-webkit-scrollbar-thumb {
-  background-color: #ddd;
+  background-color: var(--border-color);
   border-radius: 4px;
 }
 
@@ -46,7 +46,7 @@
   padding: 12px 20px;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
-  color: #555;
+  color: var(--text-secondary);
   font-size: 14px;
   border-left: 4px solid transparent;
   /* Hidden border for hover effect */
@@ -54,21 +54,21 @@
 
 /* Hover Effect: Background + Slide text slightly */
 .menu-item:hover {
-  background-color: #fff9e6;
+  background-color: var(--surface-muted);
   /* Light yellow tint */
   padding-left: 25px;
   /* Subtle slide animation */
-  color: #333;
+  color: var(--text-color);
 }
 
 /* Active State (Selected Category) */
 .menu-item.active {
-  background-color: #fff4ce;
+  background-color: var(--surface-muted);
   /* Chaldal yellow highlight */
   border-left-color: #ffd645;
   /* Yellow Bar */
   font-weight: 600;
-  color: #000;
+  color: var(--text-color);
 }
 
 .icon {
@@ -81,7 +81,7 @@
 }
 
 .arrow {
-  color: #ccc;
+  color: var(--text-secondary);
   font-size: 18px;
   opacity: 0;
   transform: translateX(-5px);
@@ -96,11 +96,11 @@
 
 .sidebar-footer {
   padding: 20px;
-  border-top: 1px solid #eee;
+  border-top: 1px solid var(--border-color);
   font-size: 13px;
-  color: #888;
+  color: var(--text-secondary);
   text-align: center;
-  background: #fdfdfd;
+  background: var(--surface-muted);
 }
 
 /* Sidebar overlay */
