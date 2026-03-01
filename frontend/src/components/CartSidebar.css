@@ -74,6 +74,66 @@
   border-top: 1px solid var(--border-color);
 }
 
+.coupon-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.coupon-row input {
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+  border-radius: 8px;
+  padding: 9px 10px;
+}
+
+.coupon-row button {
+  border: none;
+  border-radius: 8px;
+  background: #ffd645;
+  color: #1f2937;
+  font-weight: 700;
+  padding: 0 12px;
+  cursor: pointer;
+}
+
+.coupon-error {
+  color: #cc3b3b;
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+
+.coupon-applied {
+  color: #2f855a;
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.coupon-applied button {
+  border: none;
+  background: transparent;
+  color: #d63031;
+  text-decoration: underline;
+  margin-left: 8px;
+  cursor: pointer;
+}
+
+.bill-row {
+  display: flex;
+  justify-content: space-between;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.bill-row.discount {
+  color: #2f855a;
+  font-weight: 700;
+}
+
 .total-row {
   display: flex;
   justify-content: space-between;
@@ -97,6 +157,11 @@
 
 .checkout-btn:hover {
   background-color: #d81b5c;
+}
+
+.checkout-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 @media (max-width: 768px) {

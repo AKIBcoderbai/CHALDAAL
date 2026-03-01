@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { BrowserRouter, Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import "./App.css";
 import ProductCard from "./components/ProductCard";
@@ -31,6 +31,10 @@ export default function AppContent() {
   const [searchTerm, setSearchTerm] = useState("");
   const [inputValue, setInputValue] = useState("");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [sortBy, setSortBy] = useState("featured");
+  const [inStockOnly, setInStockOnly] = useState(false);
+  const [priceCap, setPriceCap] = useState(0);
 
   // --- Location State ---
   const [isMapOpen, setIsMapOpen] = useState(false);
@@ -39,6 +43,18 @@ export default function AppContent() {
   // --- Real Data State ---
   const [products, setProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [wishlistIds, setWishlistIds] = useState(() => {
+    const raw = localStorage.getItem("chaldal_wishlist_ids");
+    return raw ? JSON.parse(raw) : [];
+  });
+  const [checkoutMeta, setCheckoutMeta] = useState({
+    couponCode: "",
+    discount: 0,
+    deliveryCharge: 60,
+    tax: 0,
+    subtotal: 0,
+    total: 0,
+  });
 
   // --- Helper to get Real Address Name ---
   const fetchAddressName = async (lat, lng) => {
@@ -105,22 +121,70 @@ export default function AppContent() {
     fetchProducts();
   }, []);
 
-  const displayedProducts = products.filter((p) => {
-    if (searchTerm.length > 0) {
-      return p.name.toLowerCase().includes(searchTerm.toLowerCase());
+  const maxProductPrice = useMemo(
+    () => Math.max(...products.map((p) => Number(p.price) || 0), 0),
+    [products],
+  );
+
+  useEffect(() => {
+    if (maxProductPrice > 0 && priceCap === 0) {
+      setPriceCap(maxProductPrice);
     }
-    return p.category === selectedCategory;
-  });
+  }, [maxProductPrice, priceCap]);
+
+  const suggestions = useMemo(() => {
+    const keyword = inputValue.trim().toLowerCase();
+    if (!keyword) return [];
+    return products
+      .filter((p) => p.name?.toLowerCase().includes(keyword))
+      .slice(0, 6);
+  }, [inputValue, products]);
+
+  const quickCategories = useMemo(() => {
+    const set = new Set(products.map((p) => p.category).filter(Boolean));
+    return ["All", ...Array.from(set).slice(0, 7)];
+  }, [products]);
+
+  const displayedProducts = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+
+    let list = products.filter((p) => {
+      const byQuery = query.length > 0
+        ? p.name?.toLowerCase().includes(query)
+        : selectedCategory === "All" || p.category === selectedCategory;
+
+      const byStock = inStockOnly ? Number(p.stock) > 0 : true;
+      const byPrice = priceCap > 0 ? Number(p.price) <= priceCap : true;
+      return byQuery && byStock && byPrice;
+    });
+
+    if (sortBy === "price-asc") {
+      list = [...list].sort((a, b) => Number(a.price) - Number(b.price));
+    } else if (sortBy === "price-desc") {
+      list = [...list].sort((a, b) => Number(b.price) - Number(a.price));
+    } else if (sortBy === "name-asc") {
+      list = [...list].sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    return list;
+  }, [products, searchTerm, selectedCategory, inStockOnly, priceCap, sortBy]);
 
   const handleInputChange = (e) => setInputValue(e.target.value);
-  const handleSearchKeyBtn = () => setSearchTerm(inputValue);
+  const handleSearchKeyBtn = () => {
+    setSearchTerm(inputValue);
+    setShowSuggestions(false);
+  };
   const handleSearchKey = (e) => {
-    if (e.key === "Enter") setSearchTerm(inputValue);
+    if (e.key === "Enter") {
+      setSearchTerm(inputValue);
+      setShowSuggestions(false);
+    }
   };
   const handleSelectCategory = (categoryName) => {
     setSelectedCategory(categoryName);
     setSearchTerm("");
     setInputValue("");
+    setShowSuggestions(false);
   };
   const handleAddToCart = (product) => {
     const exists = cart.find((item) => item.id === product.id);
@@ -135,6 +199,16 @@ export default function AppContent() {
       setCart([...cart, { ...product, qty: 1 }]);
     }
     setIsCartOpen(true);
+  };
+
+  const toggleWishlist = (productId) => {
+    setWishlistIds((prev) => {
+      const next = prev.includes(productId)
+        ? prev.filter((id) => id !== productId)
+        : [...prev, productId];
+      localStorage.setItem("chaldal_wishlist_ids", JSON.stringify(next));
+      return next;
+    });
   };
   const handleUpdateQty = (id, amount) => {
     setCart((prevCart) =>
@@ -220,10 +294,33 @@ const handlePlaceOrder = async (customerData) => {
               placeholder="Search for products (e.g. eggs, milk)"
               onChange={handleInputChange}
               onKeyDown={handleSearchKey}
+              onFocus={() => setShowSuggestions(true)}
+              onBlur={() => setTimeout(() => setShowSuggestions(false), 120)}
             />
             <button onClick={handleSearchKeyBtn} className="search-btn-inside">
               <FaSearch />
             </button>
+            {showSuggestions && suggestions.length > 0 && (
+              <div className="search-suggestions">
+                {suggestions.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    className="suggestion-item"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => {
+                      setInputValue(item.name);
+                      setSearchTerm(item.name);
+                      setShowSuggestions(false);
+                    }}
+                  >
+                    <img src={item.image} alt={item.name} />
+                    <span>{item.name}</span>
+                    <span className="suggestion-price">৳ {item.price}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="header-actions">
@@ -289,9 +386,60 @@ const handlePlaceOrder = async (customerData) => {
               />
               <main className="main-content">
                 <BannerCarousel />
+                <section className="discovery-toolbar">
+                  <div className="discover-left">
+                    <span className="discover-label">Quick Filters</span>
+                    {quickCategories.map((category) => (
+                      <button
+                        key={category}
+                        className={`discover-chip ${selectedCategory === category ? "active" : ""}`}
+                        onClick={() => handleSelectCategory(category)}
+                      >
+                        {category}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="discover-right">
+                    <label className="stock-toggle">
+                      <input
+                        type="checkbox"
+                        checked={inStockOnly}
+                        onChange={(e) => setInStockOnly(e.target.checked)}
+                      />
+                      In stock only
+                    </label>
+                    <label className="price-cap">
+                      Max ৳ {Math.round(priceCap || maxProductPrice || 0)}
+                      <input
+                        type="range"
+                        min="0"
+                        max={maxProductPrice || 1}
+                        value={priceCap || maxProductPrice || 0}
+                        onChange={(e) => setPriceCap(Number(e.target.value))}
+                      />
+                    </label>
+                    <select
+                      className="sort-select"
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value)}
+                    >
+                      <option value="featured">Sort: Featured</option>
+                      <option value="price-asc">Price: Low to High</option>
+                      <option value="price-desc">Price: High to Low</option>
+                      <option value="name-asc">Name: A to Z</option>
+                    </select>
+                  </div>
+                </section>
+                <div className="results-summary">
+                  Showing <strong>{displayedProducts.length}</strong> products
+                </div>
 
                 <div className="product-grid">
-                  {displayedProducts.length > 0 ? (
+                  {isLoading ? (
+                    Array.from({ length: 10 }).map((_, idx) => (
+                      <div key={`skeleton-${idx}`} className="product-skeleton-card" />
+                    ))
+                  ) : displayedProducts.length > 0 ? (
                     displayedProducts.map((product) => (
                       <ProductCard
                         key={product.id}
@@ -299,6 +447,8 @@ const handlePlaceOrder = async (customerData) => {
                         cart={cart}
                         onAddToCart={handleAddToCart}
                         onUpdateQty={handleUpdateQty}
+                        wishlisted={wishlistIds.includes(product.id)}
+                        onToggleWishlist={toggleWishlist}
                       />
                     ))
                   ) : (
@@ -361,6 +511,7 @@ const handlePlaceOrder = async (customerData) => {
               cart={cart}
               placeOrder={handlePlaceOrder}
               shippingAddress={userAddress}
+              checkoutMeta={checkoutMeta}
             />
           }
         />
@@ -381,7 +532,8 @@ const handlePlaceOrder = async (customerData) => {
         onClose={() => setIsCartOpen(false)}
         cartItems={cart}
         onUpdateQty={handleUpdateQty}
-        onCheckout={() => {
+        onCheckout={(summary) => {
+          setCheckoutMeta(summary);
           setIsCartOpen(false);
           navigate("/checkout");
         }}

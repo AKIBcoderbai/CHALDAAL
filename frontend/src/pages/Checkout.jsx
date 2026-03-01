@@ -1,58 +1,143 @@
-import React, { useState, useEffect } from 'react'; // Import useEffect
+import React, { useMemo, useState, useEffect } from 'react';
 import './Checkout.css';
 
-// 1. Receive 'shippingAddress' prop
-const Checkout = ({ cart, placeOrder, shippingAddress }) => {
+const Checkout = ({ cart, placeOrder, shippingAddress, checkoutMeta }) => {
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
-    address: shippingAddress || '', // 2. Set default value from prop
+    address: shippingAddress || '',
     label:'Home',
-    paymentMethod: 'cod' 
+    paymentMethod: localStorage.getItem("chaldal_payment_method") || 'cod'
+  });
+  const [errors, setErrors] = useState({});
+  const [savedAddresses, setSavedAddresses] = useState(() => {
+    const raw = localStorage.getItem("chaldal_saved_addresses");
+    return raw ? JSON.parse(raw) : [];
   });
 
-  // 3. Optional: specific effect to update address if the user changes it in the header while on this page
   useEffect(() => {
     if(shippingAddress) {
         setFormData(prev => ({ ...prev, address: shippingAddress }));
     }
   }, [shippingAddress]);
 
-  const total = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
-  const deliveryCharge = 60;
+  const subtotal = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
+  const discount = checkoutMeta?.discount || 0;
+  const deliveryCharge = checkoutMeta?.deliveryCharge ?? (subtotal > 0 ? 60 : 0);
+  const tax = checkoutMeta?.tax ?? Math.round(Math.max(subtotal - discount, 0) * 0.03);
+  const total = Math.max(subtotal - discount, 0) + deliveryCharge + tax;
+
+  const validateField = (name, value) => {
+    if (name === "name" && value.trim().length < 2) {
+      return "Name should be at least 2 characters.";
+    }
+    if (name === "phone" && !/^01\d{9}$/.test(value.trim())) {
+      return "Enter a valid 11-digit Bangladeshi number (01XXXXXXXXX).";
+    }
+    if (name === "address" && value.trim().length < 8) {
+      return "Address looks too short.";
+    }
+    return "";
+  };
+
+  const completion = useMemo(() => {
+    const infoDone =
+      !validateField("name", formData.name) &&
+      !validateField("phone", formData.phone) &&
+      !validateField("address", formData.address);
+    const paymentDone = !!formData.paymentMethod;
+    const reviewDone = cart.length > 0;
+    const value = [infoDone, paymentDone, reviewDone].filter(Boolean).length;
+    return Math.round((value / 3) * 100);
+  }, [formData, cart.length]);
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+    setErrors((prev) => ({ ...prev, [name]: validateField(name, value) }));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    placeOrder(formData); 
+    const nextErrors = {
+      name: validateField("name", formData.name),
+      phone: validateField("phone", formData.phone),
+      address: validateField("address", formData.address),
+    };
+    setErrors(nextErrors);
+    if (Object.values(nextErrors).some(Boolean)) return;
+    if (cart.length === 0) return;
+
+    const saveAddress = {
+      name: formData.name,
+      phone: formData.phone,
+      address: formData.address,
+      label: formData.label,
+    };
+    const merged = [
+      saveAddress,
+      ...savedAddresses.filter((a) => a.address !== saveAddress.address),
+    ].slice(0, 5);
+    localStorage.setItem("chaldal_saved_addresses", JSON.stringify(merged));
+    localStorage.setItem("chaldal_payment_method", formData.paymentMethod);
+    setSavedAddresses(merged);
+
+    placeOrder({
+      ...formData,
+      billing: {
+        subtotal,
+        discount,
+        deliveryCharge,
+        tax,
+        total,
+        couponCode: checkoutMeta?.couponCode || "",
+      },
+    }); 
   };
 
   return (
     <div className="checkout-container">
-      <h2>Checkout</h2>
+      <div className="checkout-topbar">
+        <h2>Checkout</h2>
+        <div className="progress-block">
+          <div className="progress-line">
+            <div className="progress-fill" style={{ width: `${completion}%` }} />
+          </div>
+          <p>{completion}% completed</p>
+        </div>
+      </div>
       
       <div className="checkout-layout">
         <form className="checkout-form" onSubmit={handleSubmit}>
-          <h3>📍 Delivery Address</h3>
+          <h3>Delivery Details</h3>
+          {savedAddresses.length > 0 && (
+            <div className="saved-addresses">
+              {savedAddresses.map((saved, idx) => (
+                <button
+                  type="button"
+                  key={`${saved.address}-${idx}`}
+                  onClick={() => setFormData((prev) => ({ ...prev, ...saved }))}
+                >
+                  <strong>{saved.label}</strong> - {saved.address}
+                </button>
+              ))}
+            </div>
+          )}
           
           <div className="form-group">
             <label>Full Name</label>
-            <input type="text" name="name" required placeholder="Ex: Sami" onChange={handleChange} />
+            <input type="text" name="name" required placeholder="Ex: Sami" value={formData.name} onChange={handleChange} />
+            {errors.name && <small className="field-error">{errors.name}</small>}
           </div>
 
           <div className="form-group">
             <label>Phone Number</label>
-            <input type="text" name="phone" required placeholder="017..." onChange={handleChange} />
+            <input type="text" name="phone" required placeholder="017..." value={formData.phone} onChange={handleChange} />
+            {errors.phone && <small className="field-error">{errors.phone}</small>}
           </div>
 
           <div className="form-group">
             <label>Full Address</label>
-            {/* The textarea now uses 'value={formData.address}' 
-               so it displays the auto-filled location but remains editable.
-            */}
             <textarea 
                 name="address" 
                 required 
@@ -60,15 +145,13 @@ const Checkout = ({ cart, placeOrder, shippingAddress }) => {
                 value={formData.address}
                 onChange={handleChange}
             ></textarea>
-            <small style={{color: '#666', marginTop: '5px', display: 'block'}}>
-                * Pre-filled from your selected delivery location
-            </small>
+            {errors.address && <small className="field-error">{errors.address}</small>}
+            <small className="field-note">Pre-filled from your selected delivery location.</small>
           </div>
             
-          {/* NEW: Address Label Dropdown */}
           <div className="form-group">
             <label>Save Address As</label>
-            <select name="label" value={formData.label} onChange={handleChange} style={{padding: '10px', width: '100%', borderRadius: '5px', border: '1px solid #ddd'}}>
+            <select name="label" value={formData.label} onChange={handleChange}>
                 <option value="Home">Home</option>
                 <option value="Office">Office</option>
                 <option value="Friend">Friend's House</option>
@@ -77,23 +160,25 @@ const Checkout = ({ cart, placeOrder, shippingAddress }) => {
           </div>
 
           
-          <h3>💳 Payment Method</h3>
-           {/* ... (Payment options remain same) ... */}
+          <h3>Payment Method</h3>
            <div className="payment-options">
             <label className={`payment-card ${formData.paymentMethod === 'cod' ? 'selected' : ''}`}>
-              <input type="radio" name="paymentMethod" value="cod" checked onChange={handleChange} />
-              <span>💵 Cash on Delivery</span>
+              <input type="radio" name="paymentMethod" value="cod" checked={formData.paymentMethod === 'cod'} onChange={handleChange} />
+              <span>Cash on Delivery</span>
             </label>
             <label className={`payment-card ${formData.paymentMethod === 'bkash' ? 'selected' : ''}`}>
-              <input type="radio" name="paymentMethod" value="bkash" onChange={handleChange} />
-              <span>🚀 bKash (Not available)</span>
+              <input type="radio" name="paymentMethod" value="bkash" checked={formData.paymentMethod === 'bkash'} onChange={handleChange} />
+              <span>bKash</span>
+            </label>
+            <label className={`payment-card ${formData.paymentMethod === 'card' ? 'selected' : ''}`}>
+              <input type="radio" name="paymentMethod" value="card" checked={formData.paymentMethod === 'card'} onChange={handleChange} />
+              <span>Card</span>
             </label>
           </div>
 
-          <button type="submit" className="confirm-btn">Confirm Order</button>
+          <button type="submit" className="confirm-btn" disabled={cart.length === 0}>Confirm Order</button>
         </form>
 
-        {/* ... (Order Summary remains same) ... */}
         <div className="order-summary">
           <h3>Order Summary</h3>
           <div className="summary-items">
@@ -105,10 +190,15 @@ const Checkout = ({ cart, placeOrder, shippingAddress }) => {
             ))}
           </div>
           <hr />
-          <div className="summary-row"><span>Subtotal:</span> <span>৳ {total}</span></div>
+          <div className="summary-row"><span>Subtotal:</span> <span>৳ {subtotal}</span></div>
+          {discount > 0 && <div className="summary-row discount"><span>Discount:</span> <span>- ৳ {discount}</span></div>}
           <div className="summary-row"><span>Delivery Fee:</span> <span>৳ {deliveryCharge}</span></div>
+          <div className="summary-row"><span>VAT (3%):</span> <span>৳ {tax}</span></div>
+          {checkoutMeta?.couponCode && (
+            <div className="summary-row"><span>Coupon:</span> <span>{checkoutMeta.couponCode}</span></div>
+          )}
           <div className="summary-total">
-            <span>Total:</span> <span>৳ {total + deliveryCharge}</span>
+            <span>Total:</span> <span>৳ {total}</span>
           </div>
         </div>
 
