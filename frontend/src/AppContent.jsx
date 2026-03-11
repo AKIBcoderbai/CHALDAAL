@@ -1,29 +1,19 @@
 import { useEffect, useMemo, useState } from "react";
-import { BrowserRouter, Routes, Route, useNavigate, useLocation } from "react-router-dom";
+import { Routes, Route, useNavigate } from "react-router-dom";
 import "./App.css";
-import ProductCard from "./components/ProductCard";
+
 import CartSidebar from "./components/CartSidebar";
-import CategorySidebar from "./components/CategorySidebar";
 import Checkout from "./pages/Checkout";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
-import SellerLogin from "./pages/SellerLogin"; 
-import SellerDashboard from "./pages/SellerDashboard"; 
-import ThemeToggle from "./components/ThemeToggle";
-import {
-  FaBars,
-  FaSearch,
-  FaMapMarkerAlt,
-  FaUser,
-  FaShoppingBag,
-} from "react-icons/fa";
-import { MdKeyboardArrowDown } from "react-icons/md";
-import BannerCarousel from "./components/BannerCarousel";
+import SellerLogin from "./pages/SellerLogin";
+import SellerDashboard from "./pages/SellerDashboard";
 import LocationPicker from "./components/LocationPicker";
+import Header from "./pages/Header";
+import Home from "./pages/Home";
 
 export default function AppContent() {
   const navigate = useNavigate();
-  const location = useLocation();
   const [cart, setCart] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("Grocery");
@@ -47,6 +37,7 @@ export default function AppContent() {
     const raw = localStorage.getItem("chaldal_wishlist_ids");
     return raw ? JSON.parse(raw) : [];
   });
+  
   const [checkoutMeta, setCheckoutMeta] = useState({
     couponCode: "",
     discount: 0,
@@ -110,7 +101,7 @@ export default function AppContent() {
           unit: item.unit,
           stock: item.stock,
         }));
-        
+
         setProducts(mappedData);
       } catch (error) {
         console.error("Error connecting to backend:", error);
@@ -219,7 +210,7 @@ export default function AppContent() {
         .filter((item) => item.qty > 0),
     );
   };
-const handlePlaceOrder = async (customerData) => {
+  const handlePlaceOrder = async (customerData) => {
     if (!user) {
       alert("Please log in to place an order.");
       navigate("/login");
@@ -227,12 +218,12 @@ const handlePlaceOrder = async (customerData) => {
     }
 
     const subtotal = cart.reduce((acc, item) => acc + item.price * item.qty, 0);
-    const totalWithDelivery = subtotal + 60; 
+    const totalWithDelivery = subtotal + 60;
 
-  
+
     const originalDbAddress = user.address || "";
     const isNewAddress = (customerData.address !== originalDbAddress) || (customerData.label !== 'Home');
-    
+
     // If it's a new address or a new label, send null so the backend creates it!
     const finalAddressId = isNewAddress ? null : (user.address_id || null);
 
@@ -240,8 +231,8 @@ const handlePlaceOrder = async (customerData) => {
       customer: customerData,
       items: cart,
       total: totalWithDelivery,
-      userId: user.id, 
-      address_id: finalAddressId 
+      userId: user.id,
+      address_id: finalAddressId
     };
 
     try {
@@ -253,7 +244,7 @@ const handlePlaceOrder = async (customerData) => {
 
       if (response.ok) {
         alert("Order Placed Successfully!");
-        setCart([]); 
+        setCart([]);
         navigate("/");
       } else {
         const errorData = await response.json();
@@ -267,95 +258,28 @@ const handlePlaceOrder = async (customerData) => {
 
   return (
     <div className="app-container">
-      {/* HEADER: Only show if NOT in Seller Dashboard */}
-     {/* HEADER: Hide on specific routes instead of user role */}
-      {location.pathname !== "/seller-dashboard" && location.pathname !== "/seller-login" && (
-        <header className="header">
-          <div className="logo-section" style={{ cursor: "pointer" }}>
-            <FaBars
-              className="menu-icon"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-            />
-            <span
-              className="brand-logo"
-              onClick={() => navigate("/")}
-              style={{ marginLeft: "10px" }}
-            >
-              Chaldal
-            </span>
-          </div>
+      {/* --- HEADER --- */}
 
-          <div className="search-container">
-            <FaSearch className="search-icon-inside" />
-            <input
-              type="text"
-              className="search-input"
-              value={inputValue}
-              placeholder="Search for products (e.g. eggs, milk)"
-              onChange={handleInputChange}
-              onKeyDown={handleSearchKey}
-              onFocus={() => setShowSuggestions(true)}
-              onBlur={() => setTimeout(() => setShowSuggestions(false), 120)}
-            />
-            <button onClick={handleSearchKeyBtn} className="search-btn-inside">
-              <FaSearch />
-            </button>
-            {showSuggestions && suggestions.length > 0 && (
-              <div className="search-suggestions">
-                {suggestions.map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    className="suggestion-item"
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => {
-                      setInputValue(item.name);
-                      setSearchTerm(item.name);
-                      setShowSuggestions(false);
-                    }}
-                  >
-                    <img src={item.image} alt={item.name} />
-                    <span>{item.name}</span>
-                    <span className="suggestion-price">৳ {item.price}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+      <Header
+        isMenuOpen={isMenuOpen}
+        setIsMenuOpen={setIsMenuOpen}
+        inputValue={inputValue}
+        setInputValue={setInputValue}
+        handleInputChange={handleInputChange}
+        handleSearchKey={handleSearchKey}
+        handleSearchKeyBtn={handleSearchKeyBtn}
+        showSuggestions={showSuggestions}
+        setShowSuggestions={setShowSuggestions}
+        suggestions={suggestions}
+        setSearchTerm={setSearchTerm}
+        setIsMapOpen={setIsMapOpen}
+        userAddress={userAddress}
+        user={user}
+        handleLogout={handleLogout}
+        cart={cart}
+        setIsCartOpen={setIsCartOpen}
+      />
 
-          <div className="header-actions">
-            <ThemeToggle />
-            <div
-              className="location-selector"
-              onClick={() => setIsMapOpen(true)}
-            >
-              <FaMapMarkerAlt style={{ color: "#ff6b6b", flexShrink: 0 }} />
-              <span className="address-text">{userAddress}</span>
-              <MdKeyboardArrowDown style={{ flexShrink: 0 }} />
-              <div className="custom-tooltip">{userAddress}</div>
-            </div>
-
-           {user && user.role !== 'seller' ? (
-              <div
-                className="user-profile"
-                onClick={handleLogout}
-                style={{ cursor: "pointer" }}
-              >
-                <FaUser /> <span>{user.full_name || user.name}</span>
-              </div>
-            ) : (
-              <button className="login-btn" onClick={() => navigate("/login")}>
-                Login
-              </button>
-            )}
-
-            <div className="cart-badge-btn" onClick={() => setIsCartOpen(true)}>
-              <FaShoppingBag style={{ color: "#d63031" }} />
-              <span>{cart.reduce((acc, item) => acc + item.qty, 0)} Items</span>
-            </div>
-          </div>
-        </header>
-      )}
 
       {/* --- LOCATION PICKER MODAL --- */}
       <LocationPicker
@@ -369,140 +293,42 @@ const handlePlaceOrder = async (customerData) => {
       />
 
       <Routes>
-        
+
         <Route path="/login" element={<Login onLogin={handleLogin} />} />
+
+
         <Route path="/signup" element={<Signup onLogin={handleLogin} defaultAddress={userAddress} />} />
 
         {/* HOME ROUTE */}
         <Route
           path="/"
           element={
-            <div className="main-layout" style={{ display: "flex" }}>
-              <CategorySidebar
-                activeCategory={selectedCategory}
-                onSelectCategory={handleSelectCategory}
-                isOpen={isMenuOpen}
-                onClose={() => setIsMenuOpen(false)}
-              />
-              <main className="main-content">
-                <BannerCarousel />
-                <section className="discovery-toolbar">
-                  <div className="discover-left">
-                    <span className="discover-label">Quick Filters</span>
-                    {quickCategories.map((category) => (
-                      <button
-                        key={category}
-                        className={`discover-chip ${selectedCategory === category ? "active" : ""}`}
-                        onClick={() => handleSelectCategory(category)}
-                      >
-                        {category}
-                      </button>
-                    ))}
-                  </div>
-                  <div className="discover-right">
-                    <label className="stock-toggle">
-                      <input
-                        type="checkbox"
-                        checked={inStockOnly}
-                        onChange={(e) => setInStockOnly(e.target.checked)}
-                      />
-                      In stock only
-                    </label>
-                    <label className="price-cap">
-                      Max ৳ {Math.round(priceCap || maxProductPrice || 0)}
-                      <input
-                        type="range"
-                        min="0"
-                        max={maxProductPrice || 1}
-                        value={priceCap || maxProductPrice || 0}
-                        onChange={(e) => setPriceCap(Number(e.target.value))}
-                      />
-                    </label>
-                    <select
-                      className="sort-select"
-                      value={sortBy}
-                      onChange={(e) => setSortBy(e.target.value)}
-                    >
-                      <option value="featured">Sort: Featured</option>
-                      <option value="price-asc">Price: Low to High</option>
-                      <option value="price-desc">Price: High to Low</option>
-                      <option value="name-asc">Name: A to Z</option>
-                    </select>
-                  </div>
-                </section>
-                <div className="results-summary">
-                  Showing <strong>{displayedProducts.length}</strong> products
-                </div>
-
-                <div className="product-grid">
-                  {isLoading ? (
-                    Array.from({ length: 10 }).map((_, idx) => (
-                      <div key={`skeleton-${idx}`} className="product-skeleton-card" />
-                    ))
-                  ) : displayedProducts.length > 0 ? (
-                    displayedProducts.map((product) => (
-                      <ProductCard
-                        key={product.id}
-                        product={product}
-                        cart={cart}
-                        onAddToCart={handleAddToCart}
-                        onUpdateQty={handleUpdateQty}
-                        wishlisted={wishlistIds.includes(product.id)}
-                        onToggleWishlist={toggleWishlist}
-                      />
-                    ))
-                  ) : (
-                    <div
-                      style={{
-                        padding: "20px",
-                        color: "#666",
-                        gridColumn: "1 / -1",
-                      }}
-                    >
-                      <h3>No products found in {selectedCategory}</h3>
-                      <p>
-                        Check the database if you added products for this
-                        category!
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                {/* FOOTER: Only for Customers (Links to Seller Login) */}
-                <footer
-                  style={{
-                    marginTop: "50px",
-                    padding: "40px",
-                    backgroundColor: "#2d3436",
-                    color: "white",
-                    textAlign: "center",
-                  }}
-                >
-                  <h3>Partner with Chaldal</h3>
-                  <p>Sell your products to millions of customers.</p>
-                  <button
-                    onClick={() => {
-                      if (user) handleLogout(); // Force logout if a customer wants to log in as seller
-                      navigate("/seller-login");
-                    }}
-                    style={{
-                      marginTop: "10px",
-                      padding: "10px 20px",
-                      background: "#ff9f43",
-                      border: "none",
-                      borderRadius: "5px",
-                      color: "white",
-                      fontWeight: "bold",
-                      cursor: "pointer",
-                    }}
-                  >
-                    Seller Login
-                  </button>
-                </footer>
-              </main>
-            </div>
+            <Home
+              selectedCategory={selectedCategory}
+              handleSelectCategory={handleSelectCategory}
+              isMenuOpen={isMenuOpen}
+              setIsMenuOpen={setIsMenuOpen}
+              quickCategories={quickCategories}
+              inStockOnly={inStockOnly}
+              setInStockOnly={setInStockOnly}
+              priceCap={priceCap}
+              setPriceCap={setPriceCap}
+              maxProductPrice={maxProductPrice}
+              sortBy={sortBy}
+              setSortBy={setSortBy}
+              displayedProducts={displayedProducts}
+              isLoading={isLoading}
+              cart={cart}
+              handleAddToCart={handleAddToCart}
+              handleUpdateQty={handleUpdateQty}
+              wishlistIds={wishlistIds}
+              toggleWishlist={toggleWishlist}
+              user={user}
+              handleLogout={handleLogout}
+            />
           }
         />
+
 
         <Route
           path="/checkout"
@@ -521,6 +347,8 @@ const handlePlaceOrder = async (customerData) => {
           path="/seller-login"
           element={<SellerLogin onLogin={handleLogin} />}
         />
+
+
         <Route
           path="/seller-dashboard"
           element={<SellerDashboard user={user} onLogout={handleLogout} />}
