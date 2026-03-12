@@ -4,6 +4,7 @@ const helmet = require('helmet');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const pool = require('./database/db'); 
+const bcrypt=require('bcrypt');
 
 dotenv.config();
 
@@ -65,12 +66,14 @@ app.post('/api/signup', async (req, res) => {
             return res.status(400).json({ error: "Invalid role specified." });
         }
 
+        const hashedPassword = await bcrypt.hash(password, 10);
+
         await client.query('BEGIN');
 
         // Insert into Supertype (Person)
         const personResult = await client.query(
             `INSERT INTO person (name, email, phone, role, password) VALUES ($1, $2, $3, $4, $5) RETURNING person_id, name, email, role`,
-            [fullName, email, phone, role, password]
+            [fullName, email, phone, role, hashedPassword]
         );
         
         const newPerson = personResult.rows[0];
@@ -169,10 +172,11 @@ app.post('/api/login', async (req, res) => {
         }
 
         const user = result.rows[0];
-
-        if (password !== user.password) {
+        const match = await bcrypt.compare(password, user.password);
+        if (!match) {
             return res.status(401).json({ error: "Invalid Password" });
         }
+       
 
 
         let formattedAddress = '';

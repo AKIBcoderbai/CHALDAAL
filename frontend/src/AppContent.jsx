@@ -9,43 +9,29 @@ import Signup from "./pages/Signup";
 import SellerLogin from "./pages/SellerLogin";
 import SellerDashboard from "./pages/SellerDashboard";
 import LocationPicker from "./components/LocationPicker";
-import Header from "./pages/Header";
+import Header from "./components/Header";
 import Home from "./pages/Home";
+import useProducts from "./hooks/useProducts";
+import useCart from "./hooks/useCart";
 
 export default function AppContent() {
   const navigate = useNavigate();
-  const [cart, setCart] = useState([]);
-  const [isCartOpen, setIsCartOpen] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState("Grocery");
   const [user, setUser] = useState(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [inputValue, setInputValue] = useState("");
+
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [sortBy, setSortBy] = useState("featured");
-  const [inStockOnly, setInStockOnly] = useState(false);
-  const [priceCap, setPriceCap] = useState(0);
+  
 
   // --- Location State ---
   const [isMapOpen, setIsMapOpen] = useState(false);
   const [userAddress, setUserAddress] = useState("Dhaka");
 
   // --- Real Data State ---
-  const [products, setProducts] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
+  
   const [wishlistIds, setWishlistIds] = useState(() => {
     const raw = localStorage.getItem("chaldal_wishlist_ids");
     return raw ? JSON.parse(raw) : [];
   });
-  
-  const [checkoutMeta, setCheckoutMeta] = useState({
-    couponCode: "",
-    discount: 0,
-    deliveryCharge: 60,
-    tax: 0,
-    subtotal: 0,
-    total: 0,
-  });
+
 
   // --- Helper to get Real Address Name ---
   const fetchAddressName = async (lat, lng) => {
@@ -83,114 +69,20 @@ export default function AppContent() {
     navigate("/");
   };
 
-  // --- Fetch Products logic ---
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        setIsLoading(true);
-        const response = await fetch("http://localhost:3000/api/products");
-        const data = await response.json();
+  // fetch products logic all now in a hook created by me called useProducts.js
+  const {
+    isLoading, selectedCategory, inputValue, setInputValue,
+    showSuggestions, setShowSuggestions, suggestions, setSearchTerm,
+    quickCategories, inStockOnly, setInStockOnly, priceCap, setPriceCap,
+    maxProductPrice, sortBy, setSortBy, displayedProducts,
+    handleInputChange, handleSearchKey, handleSearchKeyBtn, handleSelectCategory
+  } = useProducts();
 
-        const mappedData = data.map((item) => ({
-          id: item.id || item.product_id,
-          name: item.name,
-          price: item.price,
-          originalPrice: item.price,
-          image: item.image,
-          category: item.category,
-          unit: item.unit,
-          stock: item.stock,
-        }));
-
-        setProducts(mappedData);
-      } catch (error) {
-        console.error("Error connecting to backend:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchProducts();
-  }, []);
-
-  const maxProductPrice = useMemo(
-    () => Math.max(...products.map((p) => Number(p.price) || 0), 0),
-    [products],
-  );
-
-  useEffect(() => {
-    if (maxProductPrice > 0 && priceCap === 0) {
-      setPriceCap(maxProductPrice);
-    }
-  }, [maxProductPrice, priceCap]);
-
-  const suggestions = useMemo(() => {
-    const keyword = inputValue.trim().toLowerCase();
-    if (!keyword) return [];
-    return products
-      .filter((p) => p.name?.toLowerCase().includes(keyword))
-      .slice(0, 6);
-  }, [inputValue, products]);
-
-  const quickCategories = useMemo(() => {
-    const set = new Set(products.map((p) => p.category).filter(Boolean));
-    return ["All", ...Array.from(set).slice(0, 7)];
-  }, [products]);
-
-  const displayedProducts = useMemo(() => {
-    const query = searchTerm.trim().toLowerCase();
-
-    let list = products.filter((p) => {
-      const byQuery = query.length > 0
-        ? p.name?.toLowerCase().includes(query)
-        : selectedCategory === "All" || p.category === selectedCategory;
-
-      const byStock = inStockOnly ? Number(p.stock) > 0 : true;
-      const byPrice = priceCap > 0 ? Number(p.price) <= priceCap : true;
-      return byQuery && byStock && byPrice;
-    });
-
-    if (sortBy === "price-asc") {
-      list = [...list].sort((a, b) => Number(a.price) - Number(b.price));
-    } else if (sortBy === "price-desc") {
-      list = [...list].sort((a, b) => Number(b.price) - Number(a.price));
-    } else if (sortBy === "name-asc") {
-      list = [...list].sort((a, b) => a.name.localeCompare(b.name));
-    }
-
-    return list;
-  }, [products, searchTerm, selectedCategory, inStockOnly, priceCap, sortBy]);
-
-  const handleInputChange = (e) => setInputValue(e.target.value);
-  const handleSearchKeyBtn = () => {
-    setSearchTerm(inputValue);
-    setShowSuggestions(false);
-  };
-  const handleSearchKey = (e) => {
-    if (e.key === "Enter") {
-      setSearchTerm(inputValue);
-      setShowSuggestions(false);
-    }
-  };
-  const handleSelectCategory = (categoryName) => {
-    setSelectedCategory(categoryName);
-    setSearchTerm("");
-    setInputValue("");
-    setShowSuggestions(false);
-  };
-  const handleAddToCart = (product) => {
-    const exists = cart.find((item) => item.id === product.id);
-    //console.log(item.id)
-    if (exists) {
-      setCart(
-        cart.map((item) =>
-          item.id === product.id ? { ...exists, qty: exists.qty + 1 } : item,
-        ),
-      );
-    } else {
-      setCart([...cart, { ...product, qty: 1 }]);
-    }
-    setIsCartOpen(true);
-  };
+  /// --- CART LOGIC ---
+  const {
+    cart, isCartOpen, setIsCartOpen, checkoutMeta, setCheckoutMeta,
+    handleAddToCart, handleUpdateQty, clearCart
+  } = useCart();
 
   const toggleWishlist = (productId) => {
     setWishlistIds((prev) => {
@@ -201,15 +93,7 @@ export default function AppContent() {
       return next;
     });
   };
-  const handleUpdateQty = (id, amount) => {
-    setCart((prevCart) =>
-      prevCart
-        .map((item) =>
-          item.id === id ? { ...item, qty: item.qty + amount } : item,
-        )
-        .filter((item) => item.qty > 0),
-    );
-  };
+ 
   const handlePlaceOrder = async (customerData) => {
     if (!user) {
       alert("Please log in to place an order.");
@@ -244,7 +128,7 @@ export default function AppContent() {
 
       if (response.ok) {
         alert("Order Placed Successfully!");
-        setCart([]);
+        clearCart();
         navigate("/");
       } else {
         const errorData = await response.json();

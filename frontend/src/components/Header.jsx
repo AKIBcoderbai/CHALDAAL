@@ -1,7 +1,7 @@
  import { useLocation, useNavigate } from "react-router-dom";
 import { FaBars, FaSearch, FaMapMarkerAlt, FaUser, FaShoppingBag } from "react-icons/fa";
 import { MdKeyboardArrowDown } from "react-icons/md";
-import ThemeToggle from "../components/ThemeToggle"; // Make sure path is correct
+import ThemeToggle from "./ThemeToggle"; // Make sure path is correct
 
 function Header({ 
     isMenuOpen, setIsMenuOpen, inputValue, setInputValue, 

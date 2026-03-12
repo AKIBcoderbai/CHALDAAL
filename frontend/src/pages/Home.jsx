@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import CategorySidebar from "../components/CategorySidebar";
 import BannerCarousel from "../components/BannerCarousel";
 import ProductCard from "../components/ProductCard";
+import Footer from "../components/Footer";
 
 function Home({
   selectedCategory, handleSelectCategory,
@@ -104,19 +105,7 @@ function Home({
         </div>
 
         {/* FOOTER */}
-        <footer style={{ marginTop: "50px", padding: "40px", backgroundColor: "#2d3436", color: "white", textAlign: "center" }}>
-          <h3>Partner with Chaldal</h3>
-          <p>Sell your products to millions of customers.</p>
-          <button
-            onClick={() => {
-              if (user) handleLogout();
-              navigate("/seller-login");
-            }}
-            style={{ marginTop: "10px", padding: "10px 20px", background: "#ff9f43", border: "none", borderRadius: "5px", color: "white", fontWeight: "bold", cursor: "pointer" }}
-          >
-            Seller Login
-          </button>
-        </footer>
+       <Footer user={user} handleLogout={handleLogout} />
       </main>
     </div>
   );
