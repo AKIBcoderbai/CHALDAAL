@@ -22,6 +22,8 @@ const Login = ({ onLogin }) => {
       const data = await response.json();
 
       if (response.ok) {
+
+        localStorage.setItem("token", data.token);
         onLogin({ 
             name: data.user.full_name, 
             email: data.user.email, 

@@ -66,6 +66,7 @@ export default function AppContent() {
   const handleLogout = () => {
     setUser(null);
     localStorage.removeItem("chaldal_user");
+    localStorage.removeItem("token");
     navigate("/");
   };
 
@@ -120,9 +121,21 @@ export default function AppContent() {
     };
 
     try {
+
+      const token = localStorage.getItem("token");
+      if(!token) {
+        alert("Authentication token missing. Please log in again.");
+        navigate("/login");
+        return;
+      }
+
+
       const response = await fetch("http://localhost:3000/api/orders", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json" ,
+          "Authorization": `Bearer ${token}`
+          },
         body: JSON.stringify(orderPayload),
       });
 
@@ -131,6 +144,14 @@ export default function AppContent() {
         clearCart();
         navigate("/");
       } else {
+
+        if(response.status === 401 || response.status === 403) {
+          alert("Authentication failed. Please log in again.");
+          localStorage.removeItem("token");
+          navigate("/login");
+          return;
+        }
+
         const errorData = await response.json();
         alert("Failed to place order: " + (errorData.error || "Server Error"));
       }

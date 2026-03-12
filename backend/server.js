@@ -5,6 +5,7 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const pool = require('./database/db'); 
 const bcrypt=require('bcrypt');
+const jwt=require('jsonwebtoken');
 
 dotenv.config();
 
@@ -51,6 +52,23 @@ app.get('/api/products', async (req, res) => {
     }
 });
 
+const authenticateToken = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) {
+        return res.status(401).json({ error: "Access token is required" });
+    }
+
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
+        if (err) {
+            return res.status(403).json({ error: "Invalid or expired token" });
+        }
+        req.user = user;
+        console.log("Authenticated User:", user);
+        next();
+    });
+};
 
 // --- USER AUTHENTICATION ROUTES ---
 
@@ -184,9 +202,15 @@ app.post('/api/login', async (req, res) => {
             formattedAddress = `${user.street}${user.city ? ', ' + user.city : ''}`;
         }
 
+        const payload = {
+            user_id: user.person_id,
+            role: user.role
+        };
 
+        const accessToken = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
         res.json({ 
             message: "Login successful", 
+            token: accessToken,
             user: { 
                 user_id: user.person_id, 
                 full_name: user.name, 
@@ -204,11 +228,13 @@ app.post('/api/login', async (req, res) => {
 });
 
 // 6. PLACE ORDER (Transactional)
-app.post('/api/orders', async (req, res) => {
+app.post('/api/orders', authenticateToken, async (req, res) => {
     const client = await pool.connect(); 
     
     try {
-        const { customer, items, total, userId, address_id } = req.body;
+        const { customer, items, total, address_id } = req.body;
+
+        const userId=req.user.user_id;
         
         await client.query('BEGIN');
         
@@ -431,3 +457,5 @@ app.delete('/api/products/:id', async (req, res) => {
         res.status(500).send('Server Error');
     }
 });
+
+

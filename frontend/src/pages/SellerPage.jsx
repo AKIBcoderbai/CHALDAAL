@@ -36,7 +36,9 @@ const SellerPage = ({ user }) => {
         try {
             const response = await fetch('http://localhost:3000/api/products', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${localStorage.getItem("token")}`
+                 },
                 body: JSON.stringify({
                     ...formData,
                     seller_id: user.user_id // Determine who is selling

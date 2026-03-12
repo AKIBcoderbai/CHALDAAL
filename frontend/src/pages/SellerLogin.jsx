@@ -37,11 +37,11 @@ const SellerLogin = ({ onLogin }) => {
                     alert("This account is not a Seller account. Please login as a Customer.");
                     return;
                 }
-                
+                localStorage.setItem("token", data.token);
                 onLogin({
                     name: data.user.full_name,
                     email: data.user.email,
-                    id: data.user.user_id, // Map user_id to id
+                    id: data.user.user_id, 
                     role: data.user.role
                 }); 
                 navigate('/seller-dashboard');
