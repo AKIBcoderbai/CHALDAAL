@@ -97,6 +97,8 @@ app.post('/api/signup', async (req, res) => {
         const newPerson = personResult.rows[0];
         const pId = newPerson.person_id;
 
+
+
         //insert into Subtype based on role
         if (role === 'user') {
             await client.query(`INSERT INTO "users" (user_id) VALUES ($1)`, [pId]);
@@ -107,7 +109,11 @@ app.post('/api/signup', async (req, res) => {
         } else if (role === 'rider') {
             await client.query(`INSERT INTO rider (rider_id) VALUES ($1)`, [pId]);
         }
-
+        const payload = {
+            user_id: newPerson.person_id,
+            role: newPerson.role
+        };
+        const token = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
         // Insert the default address if provided
         let addressId = null;
         if (address) {
@@ -143,6 +149,7 @@ app.post('/api/signup', async (req, res) => {
         
         res.status(201).json({ 
             message: `${role} registered successfully!`, 
+            token: token,
             user: {
                 user_id: pId,
                 full_name: newPerson.name,
@@ -166,7 +173,7 @@ app.post('/api/signup', async (req, res) => {
 });
 
 // 5. LOGIN
-app.post('/api/login', async (req, res) => {
+app.post('/api/login',async (req, res) => {
     try {
         const { email, password } = req.body;
 
@@ -355,9 +362,13 @@ app.post('/api/orders', authenticateToken, async (req, res) => {
 // --- SELLER DASHBOARD ROUTES ---
 
 // 7. GET SELLER PRODUCTS
-app.get('/api/seller/products/:seller_id', async (req, res) => {
+app.get('/api/seller/products/:seller_id',authenticateToken, async (req, res) => {
     try {
-        const { seller_id } = req.params;
+        const seller_id=req.user.user_id;
+
+        if(req.user.role!=='seller') {
+            return res.status(403).json({ error: "Access denied. Not a seller account." });
+        }
         const query = `
             SELECT 
                 product_id, 
@@ -377,11 +388,16 @@ app.get('/api/seller/products/:seller_id', async (req, res) => {
     }
 });
 
-// 8. ADD NEW PRODUCT (From Seller Dashboard)
-app.post('/api/products', async (req, res) => {
+
+app.post('/api/products', authenticateToken, async (req, res) => {
     try {
-        const { name, unit, price, stock_quantity, image_url, category_id, seller_id } = req.body;
-        
+        const { name, unit, price, stock_quantity, image_url, category_id } = req.body;
+        const seller_id = req.user.user_id;
+
+        if (req.user.role !== 'seller') {
+            return res.status(403).json({ error: "Access denied. Not a seller account." });
+        }
+
         const query = `
             INSERT INTO products (name, unit, unit_price, stock, image_url, category_id, seller_id) 
             VALUES ($1, $2, $3, $4, $5, $6, $7) 
@@ -406,9 +422,13 @@ app.post('/api/products', async (req, res) => {
 });
 
 // 9. GET SELLER STATS
-app.get('/api/seller/stats/:seller_id', async (req, res) => {
+app.get('/api/seller/stats/:seller_id', authenticateToken, async (req, res) => {
     try {
-        const { seller_id } = req.params;
+        const seller_id = req.user.user_id;
+
+        if (req.user.role !== 'seller') {
+            return res.status(403).json({ error: "Access denied. Not a seller account." });
+        }
         
         const prodQuery = `SELECT COUNT(*) FROM products WHERE seller_id = $1`;
         const prodResult = await pool.query(prodQuery, [seller_id]);
@@ -439,16 +459,22 @@ app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
 
-
 // 11. SOFT DELETE / DEACTIVATE PRODUCT
-app.delete('/api/products/:id', async (req, res) => {
+app.delete('/api/products/:id', authenticateToken, async (req, res) => { // <-- Add Bouncer
     try {
+        if (req.user.role !== 'seller') {
+            return res.status(403).json({ error: "Access denied." });
+        }
+
         const { id } = req.params;
-        const query = 'UPDATE products SET is_active = FALSE WHERE product_id = $1 RETURNING *';
-        const result = await pool.query(query, [id]);
+        const seller_id = req.user.user_id;
+
+     
+        const query = 'UPDATE products SET is_active = FALSE WHERE product_id = $1 AND seller_id = $2 RETURNING *';
+        const result = await pool.query(query, [id, seller_id]);
 
         if (result.rows.length === 0) {
-            return res.status(404).json({ error: "Product not found" });
+            return res.status(404).json({ error: "Product not found or unauthorized" });
         }
 
         res.json({ message: "Product deactivated successfully" });

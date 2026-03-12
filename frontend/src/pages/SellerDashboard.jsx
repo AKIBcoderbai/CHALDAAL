@@ -42,14 +42,25 @@ const SellerDashboard = ({ user, onLogout }) => {
     const fetchData = async () => {
         try {
             // Fetch Products
-            const prodRes = await fetch(`http://localhost:3000/api/seller/products/${user.user_id}`);
+            const token = localStorage.getItem("token");
+            if (!token) {
+                alert("Authentication token missing. Please login again.");
+                navigate("/login");
+                return;
+            }
+            
+            const prodRes = await fetch(`http://localhost:3000/api/seller/products/${user.user_id}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
             if (prodRes.ok) {
                 const prodData = await prodRes.json();
                 setProducts(prodData);
             }
 
             // Fetch Stats
-            const statsRes = await fetch(`http://localhost:3000/api/seller/stats/${user.user_id}`);
+            const statsRes = await fetch(`http://localhost:3000/api/seller/stats/${user.user_id}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
             if (statsRes.ok) {
                 const statsData = await statsRes.json();
                 setStats(statsData);
@@ -62,9 +73,17 @@ const SellerDashboard = ({ user, onLogout }) => {
 const handleAddProduct = async (e) => {
         e.preventDefault();
         try {
+            const token = localStorage.getItem("token");
+            if (!token) {
+                alert("Authentication token missing. Please login again.");
+                navigate("/login");
+                return;
+            }
             const response = await fetch('http://localhost:3000/api/products', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                 },
                 body: JSON.stringify({ ...formData, seller_id: user.user_id })
             });
 
@@ -88,8 +107,16 @@ const handleAddProduct = async (e) => {
       if (!confirmDeactivate) return;
 
       try {
+          const token = localStorage.getItem("token");
+          if (!token) {
+              alert("Authentication token missing. Please login again.");
+              navigate("/login");
+              return;
+          }
+
           const response = await fetch(`http://localhost:3000/api/products/${productId}`, {
               method: 'DELETE',
+              headers: { 'Authorization': `Bearer ${token}` }
           });
 
           if (response.ok) {

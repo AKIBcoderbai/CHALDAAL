@@ -37,7 +37,7 @@ const Signup = ({ onLogin, defaultAddress }) => {
 
       if (response.ok) {
         alert("Account Created Successfully!");
-       
+        localStorage.setItem("token", data.token);
         onLogin({ 
             name: data.user.full_name, 
             email: data.user.email, 
