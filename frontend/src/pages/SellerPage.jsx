@@ -1,23 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './Auth.css'; // Re-using your existing nice form styles
+import './Auth.css'; 
 
 const SellerPage = ({ user }) => {
     const navigate = useNavigate();
     
-    // Form State
     const [formData, setFormData] = useState({
         name: '',
         price: '',
         original_price: '',
         stock_quantity: 10,
         unit: '1 pcs',
-        category_id: '1', // Default to Grocery
+        category_id: '1', 
         image_url: ''
     });
 
     useEffect(() => {
-        // If user is not logged in, send them to login
         if (!user) {
             alert("You must login to become a seller!");
             navigate('/login');
@@ -41,14 +39,14 @@ const SellerPage = ({ user }) => {
                  },
                 body: JSON.stringify({
                     ...formData,
-                    seller_id: user.user_id // Determine who is selling
+                    seller_id: user.user_id 
                 })
             });
 
             if (response.ok) {
                 alert("Product Listed Successfully! It is now live.");
-                navigate('/'); // Go back home to see it
-                window.location.reload(); // Reload to fetch new data
+                navigate('/'); 
+                window.location.reload(); 
             } else {
                 alert("Failed to list product.");
             }

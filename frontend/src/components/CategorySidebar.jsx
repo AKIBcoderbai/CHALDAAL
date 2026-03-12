@@ -27,7 +27,7 @@ const CategorySidebar = ({ activeCategory, onSelectCategory, isOpen, onClose }) 
               className={`menu-item ${activeCategory === cat.name ? 'active' : ''}`}
               onClick={() => {
                 onSelectCategory(cat.name);
-                onClose(); // Close sidebar when an item is clicked 
+                onClose(); 
               }}
             >
               <span className="icon">{cat.icon}</span>

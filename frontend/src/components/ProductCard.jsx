@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { FaClock, FaHeart, FaRegHeart, FaStar } from 'react-icons/fa';
 
-// Now receiving 'cart' prop to check quantities
+// reusable product card component for listing products in various places
 const ProductCard = ({ product, cart, onAddToCart, onUpdateQty, wishlisted, onToggleWishlist }) => {
   const hoverTimerRef = useRef(null);
   const touchTimerRef = useRef(null);
@@ -10,11 +10,10 @@ const ProductCard = ({ product, cart, onAddToCart, onUpdateQty, wishlisted, onTo
   const [previewSide, setPreviewSide] = useState("right");
   const [isTouched, setIsTouched] = useState(false);
 
-  // Check if item is already in cart
   const cartItem = cart.find(item => item.id === product.id);
   const quantity = cartItem ? cartItem.qty : 0;
 
-  // Calculate Discount %
+  // Calculate discount percentage if originalPrice is provided and greater than current price
   const discount = product.originalPrice > product.price 
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
     : 0;
@@ -73,7 +72,8 @@ const ProductCard = ({ product, cart, onAddToCart, onUpdateQty, wishlisted, onTo
         className={`product-card ${isTouched ? "soft-touch" : ""}`}
         onMouseDown={handleTouchFeedback}
       >
-        {/* Discount Badge */}
+
+
         {discount > 0 && (
           <div className="discount-badge">{discount}% OFF</div>
         )}
@@ -108,7 +108,7 @@ const ProductCard = ({ product, cart, onAddToCart, onUpdateQty, wishlisted, onTo
             )}
           </div>
 
-          {/* Smart Button Logic */}
+          
           <div className="action-area">
             {quantity === 0 ? (
               <button 

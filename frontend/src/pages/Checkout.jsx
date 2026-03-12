@@ -6,7 +6,7 @@ const Checkout = ({ cart, placeOrder, shippingAddress, checkoutMeta }) => {
     name: '',
     phone: '',
     address: shippingAddress || '',
-    label:'Home',
+    label: 'Home',
     paymentMethod: localStorage.getItem("chaldal_payment_method") || 'cod'
   });
   const [errors, setErrors] = useState({});
@@ -16,8 +16,8 @@ const Checkout = ({ cart, placeOrder, shippingAddress, checkoutMeta }) => {
   });
 
   useEffect(() => {
-    if(shippingAddress) {
-        setFormData(prev => ({ ...prev, address: shippingAddress }));
+    if (shippingAddress) {
+      setFormData(prev => ({ ...prev, address: shippingAddress }));
     }
   }, [shippingAddress]);
 
@@ -92,7 +92,7 @@ const Checkout = ({ cart, placeOrder, shippingAddress, checkoutMeta }) => {
         total,
         couponCode: checkoutMeta?.couponCode || "",
       },
-    }); 
+    });
   };
 
   return (
@@ -106,7 +106,7 @@ const Checkout = ({ cart, placeOrder, shippingAddress, checkoutMeta }) => {
           <p>{completion}% completed</p>
         </div>
       </div>
-      
+
       <div className="checkout-layout">
         <form className="checkout-form" onSubmit={handleSubmit}>
           <h3>Delivery Details</h3>
@@ -123,7 +123,7 @@ const Checkout = ({ cart, placeOrder, shippingAddress, checkoutMeta }) => {
               ))}
             </div>
           )}
-          
+
           <div className="form-group">
             <label>Full Name</label>
             <input type="text" name="name" required placeholder="Ex: Sami" value={formData.name} onChange={handleChange} />
@@ -137,31 +137,29 @@ const Checkout = ({ cart, placeOrder, shippingAddress, checkoutMeta }) => {
           </div>
 
           <div className="form-group">
-            <label>Full Address</label>
-            <textarea 
-                name="address" 
-                required 
-                placeholder="House, Road, Area..." 
-                value={formData.address}
-                onChange={handleChange}
-            ></textarea>
-            {errors.address && <small className="field-error">{errors.address}</small>}
-            <small className="field-note">Pre-filled from your selected delivery location.</small>
-          </div>
+            <h3>Delivery Address</h3>
             
+            <div style={{ padding: '15px', background: '#eee', borderRadius: '5px', marginBottom: '15px' }}>
+              <strong>{shippingAddress}</strong>
+            </div>
+            <p style={{ fontSize: '12px', color: '#666' }}>
+              * To change your delivery address, click the location pin in the top navigation bar.
+            </p>
+          </div>
+
           <div className="form-group">
             <label>Save Address As</label>
             <select name="label" value={formData.label} onChange={handleChange}>
-                <option value="Home">Home</option>
-                <option value="Office">Office</option>
-                <option value="Friend">Friend's House</option>
-                <option value="Other">Other</option>
+              <option value="Home">Home</option>
+              <option value="Office">Office</option>
+              <option value="Friend">Friend's House</option>
+              <option value="Other">Other</option>
             </select>
           </div>
 
-          
+
           <h3>Payment Method</h3>
-           <div className="payment-options">
+          <div className="payment-options">
             <label className={`payment-card ${formData.paymentMethod === 'cod' ? 'selected' : ''}`}>
               <input type="radio" name="paymentMethod" value="cod" checked={formData.paymentMethod === 'cod'} onChange={handleChange} />
               <span>Cash on Delivery</span>

@@ -57,7 +57,7 @@ export default function AppContent() {
   const handleLogin = (userData) => {
     setUser(userData);
     localStorage.setItem("chaldal_user", JSON.stringify(userData));
-    // NEW: Update the address in the header/checkout immediately on login
+
     if (userData.address) {
       setUserAddress(userData.address);
     }
@@ -70,7 +70,8 @@ export default function AppContent() {
     navigate("/");
   };
 
-  // fetch products logic all now in a hook created by me called useProducts.js
+  // fetching products and handle all product related logic in this custom hook
+
   const {
     isLoading, selectedCategory, inputValue, setInputValue,
     showSuggestions, setShowSuggestions, suggestions, setSearchTerm,
@@ -79,7 +80,10 @@ export default function AppContent() {
     handleInputChange, handleSearchKey, handleSearchKeyBtn, handleSelectCategory
   } = useProducts();
 
-  /// --- CART LOGIC ---
+  /// Cart logic in this custom hook to keep things organized and separate from product fetching logic
+  // this is how standard react developers would do it. Not gpt . It will stack everything in one file and make it a mess. Don't do that.
+  //  Always separate concerns and logic into custom hooks or components. It makes your code cleaner and more maintainable.
+
   const {
     cart, isCartOpen, setIsCartOpen, checkoutMeta, setCheckoutMeta,
     handleAddToCart, handleUpdateQty, clearCart
@@ -109,7 +113,7 @@ export default function AppContent() {
     const originalDbAddress = user.address || "";
     const isNewAddress = (customerData.address !== originalDbAddress) || (customerData.label !== 'Home');
 
-    // If it's a new address or a new label, send null so the backend creates it!
+   
     const finalAddressId = isNewAddress ? null : (user.address_id || null);
 
     const orderPayload = {

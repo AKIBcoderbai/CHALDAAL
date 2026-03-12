@@ -88,7 +88,7 @@ app.post('/api/signup', async (req, res) => {
 
         await client.query('BEGIN');
 
-        // Insert into Supertype (Person)
+      
         const personResult = await client.query(
             `INSERT INTO person (name, email, phone, role, password) VALUES ($1, $2, $3, $4, $5) RETURNING person_id, name, email, role`,
             [fullName, email, phone, role, hashedPassword]
@@ -99,7 +99,6 @@ app.post('/api/signup', async (req, res) => {
 
 
 
-        //insert into Subtype based on role
         if (role === 'user') {
             await client.query(`INSERT INTO "users" (user_id) VALUES ($1)`, [pId]);
         } else if (role === 'seller') {
@@ -114,10 +113,10 @@ app.post('/api/signup', async (req, res) => {
             role: newPerson.role
         };
         const token = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
-        // Insert the default address if provided
+
         let addressId = null;
         if (address) {
-            // 1. Find an existing area, or create a default 'Dhaka' area if none exist
+           
             let defaultAreaId = 1;
             const areaCheck = await client.query(`SELECT area_id FROM area LIMIT 1`);
             
@@ -131,14 +130,14 @@ app.post('/api/signup', async (req, res) => {
                 defaultAreaId = areaCheck.rows[0].area_id;
             }
 
-            // 2. Insert the address using the valid area_id
+            
             const addressResult = await client.query(
                 `INSERT INTO address (street, area_id) VALUES ($1, $2) RETURNING address_id`,
                 [address, defaultAreaId]
             );
             addressId = addressResult.rows[0].address_id;
 
-            // 3. Link it to the user as their default address
+           
             await client.query(
                 `INSERT INTO person_address (person_id, address_id, label, is_default) VALUES ($1, $2, 'Home', TRUE)`,
                 [pId, addressId]
@@ -256,7 +255,7 @@ app.post('/api/orders', authenticateToken, async (req, res) => {
             const lowerAddress = addressText.toLowerCase();
             const divisions = ['dhaka', 'chattogram', 'sylhet', 'khulna', 'rajshahi', 'barishal', 'rangpur', 'mymensingh'];
             
-            let detectedArea = 'Dhaka'; // Default fallback
+            let detectedArea = 'Dhaka'; 
             let i = 0;
             let foundMatch = false;
 
@@ -274,13 +273,11 @@ app.post('/api/orders', authenticateToken, async (req, res) => {
                 i = 0;
             }
 
-            // 2. Check if this area exists in the database, if not create it
             let finalAreaId;
-            let money = (i === 0) ? 60 : i * 60; // Ensure Dhaka (0) still costs 60, others scale up
+            let money = (i === 0) ? 60 : i * 60; 
             let found_div = divisions[i];
             let city = found_div;
 
-            // ILIKE makes the search case-insensitive
             const areaCheck = await client.query(`SELECT area_id FROM area WHERE name ILIKE $1 LIMIT 1`, [detectedArea]);
             
             if (areaCheck.rows.length === 0) {
@@ -293,14 +290,12 @@ app.post('/api/orders', authenticateToken, async (req, res) => {
                 finalAreaId = areaCheck.rows[0].area_id;
             }
 
-            // 3. Insert the new address using the detected area_id (FIXED SQL Syntax)
             const newAddressResult = await client.query(
                 `INSERT INTO address (street, area_id, city, division) VALUES ($1, $2, $3, $4) RETURNING address_id`,
                 [addressText, finalAreaId, city, found_div]
             );
             finalAddressId = newAddressResult.rows[0].address_id;
             
-            // 4. Manage the Labels
             await client.query(
                 `DELETE FROM person_address WHERE person_id = $1 AND label = $2`,
                 [userId, addressLabel]
@@ -318,31 +313,17 @@ app.post('/api/orders', authenticateToken, async (req, res) => {
             );
         }
 
-        // Step 1: Create the Order Record
-        const orderResult = await client.query(
-            `INSERT INTO orders (user_id, address_id, status, order_time) 
-             VALUES ($1, $2, 'pending', NOW()) 
-             RETURNING order_id`,
-            [userId, finalAddressId]
-        );
+        const query = `SELECT place_order($1, $2, $3, $4, $5::jsonb) AS new_order_id`;
         
-        const orderId = orderResult.rows[0].order_id;
-
-        // Step 2: Insert Order Details
-        for (const item of items) {
-            await client.query(
-                `INSERT INTO order_details (order_id, product_id, quantity, price) 
-                 VALUES ($1, $2, $3, $4)`,
-                [orderId, item.id, item.qty, item.price]
-            );
-        }
-
-        // Step 3: Insert Payment Record
-        await client.query(
-            `INSERT INTO payment (order_id, amount, method, status, payment_time) 
-             VALUES ($1, $2, $3, 'pending', NOW())`,
-            [orderId, total, customer.paymentMethod]
-        );
+        const result = await client.query(query, [
+            userId, 
+            finalAddressId, 
+            total, 
+            customer.paymentMethod, 
+            JSON.stringify(items) 
+        ]);
+        
+        const orderId = result.rows[0].new_order_id;
 
         await client.query('COMMIT');
 
@@ -359,6 +340,7 @@ app.post('/api/orders', authenticateToken, async (req, res) => {
         client.release();
     }
 });
+
 // --- SELLER DASHBOARD ROUTES ---
 
 // 7. GET SELLER PRODUCTS
@@ -388,6 +370,7 @@ app.get('/api/seller/products/:seller_id',authenticateToken, async (req, res) =>
     }
 });
 
+// 8. ADD NEW PRODUCT
 
 app.post('/api/products', authenticateToken, async (req, res) => {
     try {
@@ -444,7 +427,8 @@ app.get('/api/seller/stats/:seller_id', authenticateToken, async (req, res) => {
     }
 });
 
-// 10. GET ALL CATEGORIES (Add this near your other routes)
+// 10. GET ALL CATEGORIES
+
 app.get('/api/categories', async (req, res) => {
     try {
         const result = await pool.query('SELECT category_id, name FROM category ORDER BY category_id ASC');
@@ -459,8 +443,9 @@ app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
 
-// 11. SOFT DELETE / DEACTIVATE PRODUCT
-app.delete('/api/products/:id', authenticateToken, async (req, res) => { // <-- Add Bouncer
+// 11. DELETE (DEACTIVATE) PRODUCT
+
+app.delete('/api/products/:id', authenticateToken, async (req, res) => { 
     try {
         if (req.user.role !== 'seller') {
             return res.status(403).json({ error: "Access denied." });
