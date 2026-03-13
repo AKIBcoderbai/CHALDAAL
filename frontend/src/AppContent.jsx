@@ -17,6 +17,7 @@ import useCart from "./hooks/useCart";
 export default function AppContent() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   
@@ -100,10 +101,18 @@ export default function AppContent() {
   };
  
   const handlePlaceOrder = async (customerData) => {
+    if (isPlacingOrder) {
+      return false;
+    }
+
     if (!user) {
       alert("Please log in to place an order.");
       navigate("/login");
-      return;
+      return false;
+    }
+
+    if (cart.length === 0) {
+      return false;
     }
 
     const subtotal = cart.reduce((acc, item) => acc + item.price * item.qty, 0);
@@ -125,12 +134,13 @@ export default function AppContent() {
     };
 
     try {
+      setIsPlacingOrder(true);
 
       const token = localStorage.getItem("token");
       if(!token) {
         alert("Authentication token missing. Please log in again.");
         navigate("/login");
-        return;
+        return false;
       }
 
 
@@ -138,30 +148,42 @@ export default function AppContent() {
         method: "POST",
         headers: { 
           "Content-Type": "application/json" ,
-          "Authorization": `Bearer ${token}`
+          "Authorization": `Bearer ${token}`,
+          "X-Idempotency-Key": customerData.clientOrderId
           },
         body: JSON.stringify(orderPayload),
       });
+
+      const responseData = await response.json().catch(() => ({}));
 
       if (response.ok) {
         alert("Order Placed Successfully!");
         clearCart();
         navigate("/");
+        return true;
       } else {
 
         if(response.status === 401 || response.status === 403) {
           alert("Authentication failed. Please log in again.");
           localStorage.removeItem("token");
           navigate("/login");
-          return;
+          return false;
         }
 
-        const errorData = await response.json();
-        alert("Failed to place order: " + (errorData.error || "Server Error"));
+        if (response.status === 409) {
+          alert(responseData.error || "Your order is already being processed. Please wait.");
+          return false;
+        }
+
+        alert("Failed to place order: " + (responseData.error || "Server Error"));
+        return false;
       }
     } catch (error) {
       console.error("Order Error:", error);
       alert("Connection to server failed.");
+      return false;
+    } finally {
+      setIsPlacingOrder(false);
     }
   };
 
@@ -247,6 +269,7 @@ export default function AppContent() {
               placeOrder={handlePlaceOrder}
               shippingAddress={userAddress}
               checkoutMeta={checkoutMeta}
+              isPlacingOrder={isPlacingOrder}
             />
           }
         />

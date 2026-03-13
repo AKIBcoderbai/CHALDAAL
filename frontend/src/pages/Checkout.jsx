@@ -1,7 +1,7 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import './Checkout.css';
 
-const Checkout = ({ cart, placeOrder, shippingAddress, checkoutMeta }) => {
+const Checkout = ({ cart, placeOrder, shippingAddress, checkoutMeta, isPlacingOrder }) => {
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -10,10 +10,18 @@ const Checkout = ({ cart, placeOrder, shippingAddress, checkoutMeta }) => {
     paymentMethod: localStorage.getItem("chaldal_payment_method") || 'cod'
   });
   const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [savedAddresses, setSavedAddresses] = useState(() => {
     const raw = localStorage.getItem("chaldal_saved_addresses");
     return raw ? JSON.parse(raw) : [];
   });
+
+  //new try
+  const idempotencyKeyRef = useRef(
+    typeof crypto !== "undefined" && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2)}`
+  );
 
   useEffect(() => {
     if (shippingAddress) {
@@ -57,8 +65,10 @@ const Checkout = ({ cart, placeOrder, shippingAddress, checkoutMeta }) => {
     setErrors((prev) => ({ ...prev, [name]: validateField(name, value) }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting || isPlacingOrder) return;
+
     const nextErrors = {
       name: validateField("name", formData.name),
       phone: validateField("phone", formData.phone),
@@ -82,17 +92,29 @@ const Checkout = ({ cart, placeOrder, shippingAddress, checkoutMeta }) => {
     localStorage.setItem("chaldal_payment_method", formData.paymentMethod);
     setSavedAddresses(merged);
 
-    placeOrder({
-      ...formData,
-      billing: {
-        subtotal,
-        discount,
-        deliveryCharge,
-        tax,
-        total,
-        couponCode: checkoutMeta?.couponCode || "",
-      },
-    });
+    // const generatedOrderId = typeof crypto !== "undefined" && crypto.randomUUID
+    //   ? crypto.randomUUID()
+    //   : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    //try new thing
+    const generatedOrderId=idempotencyKeyRef.current;
+
+    setIsSubmitting(true);
+    try {
+      await placeOrder({
+        ...formData,
+        clientOrderId: generatedOrderId,
+        billing: {
+          subtotal,
+          discount,
+          deliveryCharge,
+          tax,
+          total,
+          couponCode: checkoutMeta?.couponCode || "",
+        },
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -138,7 +160,7 @@ const Checkout = ({ cart, placeOrder, shippingAddress, checkoutMeta }) => {
 
           <div className="form-group">
             <h3>Delivery Address</h3>
-            
+
             <div style={{ padding: '15px', background: '#eee', borderRadius: '5px', marginBottom: '15px' }}>
               <strong>{shippingAddress}</strong>
             </div>
@@ -174,7 +196,9 @@ const Checkout = ({ cart, placeOrder, shippingAddress, checkoutMeta }) => {
             </label>
           </div>
 
-          <button type="submit" className="confirm-btn" disabled={cart.length === 0}>Confirm Order</button>
+          <button type="submit" className="confirm-btn" disabled={cart.length === 0 || isSubmitting || isPlacingOrder}>
+            {isSubmitting || isPlacingOrder ? 'Placing Order...' : 'Confirm Order'}
+          </button>
         </form>
 
         <div className="order-summary">

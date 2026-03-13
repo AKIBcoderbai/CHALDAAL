@@ -11,6 +11,18 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const ORDER_IDEMPOTENCY_WINDOW_MS = 10 * 60 * 1000;
+const processedOrderRequests = new Map();
+const processingOrderRequests = new Set();
+
+const cleanupProcessedOrderRequests = () => {
+    const now = Date.now();
+    for (const [key, value] of processedOrderRequests.entries()) {
+        if (now - value.createdAt > ORDER_IDEMPOTENCY_WINDOW_MS) {
+            processedOrderRequests.delete(key);
+        }
+    }
+};
 
 // Middleware
 app.use(express.json());
@@ -236,6 +248,28 @@ app.post('/api/login',async (req, res) => {
 // 6. PLACE ORDER (Transactional)
 app.post('/api/orders', authenticateToken, async (req, res) => {
     const client = await pool.connect(); 
+    const idempotencyKey = req.headers['x-idempotency-key'];
+
+    if (idempotencyKey) {
+        cleanupProcessedOrderRequests();
+
+        const previousOrder = processedOrderRequests.get(idempotencyKey);
+        if (previousOrder) {
+            client.release();
+            return res.status(200).json({
+                message: "Order already placed successfully.",
+                orderId: previousOrder.orderId,
+                duplicate: true
+            });
+        }
+
+        if (processingOrderRequests.has(idempotencyKey)) {
+            client.release();
+            return res.status(409).json({ error: "Order request is already being processed." });
+        }
+
+        processingOrderRequests.add(idempotencyKey);
+    }
     
     try {
         const { customer, items, total, address_id } = req.body;
@@ -325,6 +359,13 @@ app.post('/api/orders', authenticateToken, async (req, res) => {
         
         const orderId = result.rows[0].new_order_id;
 
+        if (idempotencyKey) {
+            processedOrderRequests.set(idempotencyKey, {
+                orderId,
+                createdAt: Date.now()
+            });
+        }
+
         await client.query('COMMIT');
 
         res.status(201).json({ 
@@ -337,6 +378,9 @@ app.post('/api/orders', authenticateToken, async (req, res) => {
         console.error("ORDER TRANSACTION FAILED:", err.message);
         res.status(500).json({ error: "Transaction Failed: " + err.message });
     } finally {
+        if (idempotencyKey) {
+            processingOrderRequests.delete(idempotencyKey);
+        }
         client.release();
     }
 });
@@ -469,4 +513,103 @@ app.delete('/api/products/:id', authenticateToken, async (req, res) => {
     }
 });
 
+//cart logic database added
 
+app.get('/api/cart',authenticateToken, async (req, res) => {
+    try {
+        const user_id=req.user.user_id;
+        const query='SELECT * from cart_joiner($1)';
+        const result = await pool.query(query, [user_id]);
+        console.log("CART ITEMS:", result.rows);
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).send('Server Error');
+        console.log(err.message);
+    } finally {
+        //client.release();
+    }
+});
+
+
+app.post('/api/cart/add',authenticateToken, async (req, res) => {
+    try{
+        const user_id=req.user.user_id;
+        const {product_id,quantity,price}=req.body;
+        //either user has a cart or not 
+        //has cart 
+        const cartResult=await pool.query('SELECT cart_id from cart WHERE user_id=$1', [user_id]);
+        let cart_id;
+        if(cartResult.rows.length==0)
+        {
+            //no cart for this.
+            //need to create 
+            let newCart=await pool.query('INSERT INTO cart(user_id) values ($1) RETURNING cart_id',[user_id])
+            cart_id=newCart.rows[0].cart_id;
+        } 
+        else 
+        {
+            cart_id=cartResult.rows[0].cart_id;
+        }
+        //now we have cart_id
+        //check if product already in cart then just update qty
+        const cartItemResult=await pool.query('SELECT * from cart_items WHERE cart_id=$1 AND product_id=$2',[cart_id,product_id]);
+        if(cartItemResult.rows.length==0)
+        {
+            //not in cart, need to insert
+            await pool.query('INSERT INTO cart_items(cart_id,product_id,quantity,price) VALUES($1,$2,$3,$4)',[cart_id,product_id,quantity,price]);
+        }
+        else
+        {
+            //already in cart, just update qty
+            await pool.query('UPDATE cart_items SET quantity=quantity+$1 WHERE cart_id=$2 AND product_id=$3',[quantity,cart_id,product_id]);
+        }
+        res.json({message:"Product added to cart"});  
+    }
+    catch(err){
+        res.status(500).send('Server Error');
+    }
+    finally {
+        //client.release();
+    }
+});
+
+//this is needed when we already have product and press plus or minus button
+app.put('/api/cart/update', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.user_id;
+        const { product_id, amount } = req.body; 
+
+        const cartResult = await pool.query(`SELECT cart_id FROM cart WHERE user_id = $1 LIMIT 1`, [userId]);
+        if (cartResult.rows.length === 0) return res.status(404).json({ error: "Cart not found" });
+        const cartId = cartResult.rows[0].cart_id;
+
+        const updateResult = await pool.query(`
+            UPDATE cart_items 
+            SET quantity = quantity + $1 
+            WHERE cart_id = $2 AND product_id = $3 
+            RETURNING quantity
+        `, [amount, cartId, product_id]);
+
+        if (updateResult.rows.length > 0 && updateResult.rows[0].quantity <= 0) {
+            await pool.query(`DELETE FROM cart_items WHERE cart_id = $1 AND product_id = $2`, [cartId, product_id]);
+        }
+
+        res.json({ message: "Cart quantity updated" });
+    } catch (err) {
+        res.status(500).json({ error: "Failed to update cart" });
+    }
+});
+
+
+app.delete('/api/cart/clear', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.user_id;
+        await pool.query(`
+            DELETE FROM cart_items 
+            WHERE cart_id = (SELECT cart_id FROM cart WHERE user_id = $1 LIMIT 1)
+        `, [userId]);
+        res.json({ message: "Cart cleared" });
+    } catch (err) {
+        res.status(500).json({ error: "Failed to clear cart" });
+    }
+});

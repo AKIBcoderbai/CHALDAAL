@@ -24,6 +24,7 @@ const Login = ({ onLogin }) => {
       if (response.ok) {
 
         localStorage.setItem("token", data.token);
+        window.dispatchEvent(new Event('login_success'));
         onLogin({ 
             name: data.user.full_name, 
             email: data.user.email, 

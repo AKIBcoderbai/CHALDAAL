@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState,useEffect } from "react";
 
 export default function useCart() {
   const [cart, setCart] = useState([]);
@@ -13,6 +13,39 @@ export default function useCart() {
     total: 0,
   });
 
+  useEffect(() =>{
+    const fetchCart = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setCart([]);
+        return;
+      }
+      try{
+        const response = await fetch("http://localhost:3000/api/cart", {
+          headers: {
+            "Authorization": `Bearer ${token}`}
+          });
+        if (response.ok) {
+          const cartItems = await response.json();
+          console.log("Fetched cart items:", cartItems);
+          setCart(cartItems);
+        } else {
+          setCart([]);
+        }
+      }
+      catch(err){
+        console.error("Failed to fetch cart:", err);
+        setCart([]);
+      }
+    };
+    fetchCart();
+
+    window.addEventListener('login_success', fetchCart);
+    return () => {
+      window.removeEventListener('login_success', fetchCart);
+    };
+  }, []);
+
   const handleAddToCart = (product) => {
     const exists = cart.find((item) => item.id === product.id);
     if (exists) {
@@ -25,6 +58,23 @@ export default function useCart() {
       setCart([...cart, { ...product, qty: 1 }]);
     }
     setIsCartOpen(true);
+
+    //optimistically update server cart
+    //now handle the real database stuff
+      const token = localStorage.getItem("token");
+      if(token)
+      {
+        fetch("http://localhost:3000/api/cart/add", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify({ product_id: product.id, quantity: 1,price:product.price })
+        }).catch(err => {
+          console.error("Failed to update cart on server:", err);
+        });
+      }
   };
 
   const handleUpdateQty = (id, amount) => {
@@ -35,10 +85,28 @@ export default function useCart() {
         )
         .filter((item) => item.qty > 0),
     );
+
+    const token = localStorage.getItem("token");
+    if (token) {
+      fetch("http://localhost:3000/api/cart/update", {
+        method: "PUT",
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ product_id: id, amount: amount })
+      }).catch(err => console.error("database sync failed"));
+    }
+
   };
 
   const clearCart = () => {
     setCart([]);
+    //clear server cart
+    const token = localStorage.getItem("token");
+    if (token) {
+      fetch("http://localhost:3000/api/cart/clear", {
+        method: "DELETE",
+        headers: { 'Authorization': `Bearer ${token}` }
+      }).catch(err => console.error("Failed to clear cart on server:", err));
+    }
   };
 
   return {
