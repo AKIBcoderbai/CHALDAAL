@@ -613,3 +613,51 @@ app.delete('/api/cart/clear', authenticateToken, async (req, res) => {
         res.status(500).json({ error: "Failed to clear cart" });
     }
 });
+
+//user profile logic now
+
+app.get('/api/profile/me',authenticateToken, async (req, res) => {
+    try {
+        const userId=req.user.user_id;
+        const query='SELECT * from get_user_profile($1) AS profile';
+
+        const result = await pool.query(query, [userId]);
+        console.log("PROFILE DATA:", result.rows[0]);
+        res.json(result.rows[0].profile);
+    }     catch (err) {
+        console.error("PROFILE FETCH ERROR:", err.message);
+        res.status(500).json({ error: "Failed to fetch profile" });
+    }
+});
+
+
+app.post('/api/profile/reviews', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.user_id;
+        const { product_id, rating, comment } = req.body;
+        console.log("REVIEW DATA:", { userId, product_id, rating, comment });
+        const query='SELECT * from submit_review($1, $2, $3, $4)';
+
+        await pool.query(query, [userId, product_id, rating, comment]);
+        res.json({ message: "Review submitted successfully" });
+    } catch (err) {
+        console.error("REVIEW ERROR:", err.message);
+        res.status(500).json({ error: "Failed to submit review" });
+    }
+});
+
+
+app.put('/api/users/avatar', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.user_id;
+        const { image_url } = req.body;
+
+        await pool.query(`UPDATE person SET image_url = $1 WHERE person_id = $2`, [image_url, userId]);
+        res.json({ message: "Avatar updated!" });
+    } catch (err) {
+        res.status(500).json({ error: "Failed to update avatar" });
+    }
+});
+
+
+

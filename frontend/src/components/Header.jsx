@@ -1,4 +1,4 @@
- import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { FaBars, FaSearch, FaMapMarkerAlt, FaUser, FaShoppingBag } from "react-icons/fa";
 import { MdKeyboardArrowDown } from "react-icons/md";
 import ThemeToggle from "./ThemeToggle"; // Make sure path is correct
@@ -17,11 +17,18 @@ function Header({
             {location.pathname !== "/seller-dashboard" && location.pathname !== "/seller-login" && (
                 <header className="header">
                     <div className="logo-section" style={{ cursor: "pointer" }}>
+                        {location.pathname === "/"? 
+                        (
+                            <label htmlFor="brand">
                         <FaBars
                             className="menu-icon"
                             onClick={() => setIsMenuOpen(!isMenuOpen)}
                         />
+                        </label>
+                        )
+                        :<></>}
                         <span
+                            name="brand"
                             className="brand-logo"
                             onClick={() => navigate("/")}
                             style={{ marginLeft: "10px" }}
@@ -83,7 +90,7 @@ function Header({
                         {user && user.role !== 'seller' ? (
                             <div
                                 className="user-profile"
-                                onClick={handleLogout}
+                                onClick={() => navigate("/profile")}
                                 style={{ cursor: "pointer" }}
                             >
                                 <FaUser /> <span>{user.full_name || user.name}</span>

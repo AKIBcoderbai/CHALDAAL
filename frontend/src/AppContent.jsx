@@ -13,6 +13,7 @@ import Header from "./components/Header";
 import Home from "./pages/Home";
 import useProducts from "./hooks/useProducts";
 import useCart from "./hooks/useCart";
+import UserProfile from "./pages/UserProfile";
 
 export default function AppContent() {
   const navigate = useNavigate();
@@ -58,7 +59,6 @@ export default function AppContent() {
   const handleLogin = (userData) => {
     setUser(userData);
     localStorage.setItem("chaldal_user", JSON.stringify(userData));
-
     if (userData.address) {
       setUserAddress(userData.address);
     }
@@ -68,8 +68,22 @@ export default function AppContent() {
     setUser(null);
     localStorage.removeItem("chaldal_user");
     localStorage.removeItem("token");
+    window.dispatchEvent(new Event('logout_success'));
     navigate("/");
   };
+
+  useEffect(() => {
+    const handleSessionExpired = () => {
+      alert("Session expired. Please log in again.");
+      handleLogout();
+    }
+
+    window.addEventListener("session_expired", handleSessionExpired);
+    return () => {
+      window.removeEventListener("session_expired", handleSessionExpired);
+    };
+    handleSessionExpired();
+  }, [navigate]);
 
   // fetching products and handle all product related logic in this custom hook
 
@@ -274,6 +288,16 @@ export default function AppContent() {
           }
         />
 
+        <Route
+          path="/profile"
+          element={
+            <UserProfile
+              user={user}
+              onLogout={handleLogout}
+            />
+          }
+        />
+
         {/* SELLER ROUTES */}
         <Route
           path="/seller-login"
@@ -298,6 +322,8 @@ export default function AppContent() {
           navigate("/checkout");
         }}
       />
+
+      
     </div>
   );
 }

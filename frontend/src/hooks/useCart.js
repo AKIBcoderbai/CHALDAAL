@@ -25,6 +25,11 @@ export default function useCart() {
           headers: {
             "Authorization": `Bearer ${token}`}
           });
+
+        if(response.status==401 || response.status==403) { 
+          window.dispatchEvent(new Event('session_expired'));
+          return;
+        }
         if (response.ok) {
           const cartItems = await response.json();
           console.log("Fetched cart items:", cartItems);
@@ -41,8 +46,22 @@ export default function useCart() {
     fetchCart();
 
     window.addEventListener('login_success', fetchCart);
+    window.addEventListener('logout_success', () => setCart([]));
+    window.addEventListener('focus', fetchCart); // Refresh cart when user returns to the tab
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        fetchCart();
+      }
+    });
     return () => {
       window.removeEventListener('login_success', fetchCart);
+      window.removeEventListener('logout_success', () => setCart([]));
+      window.removeEventListener('focus', fetchCart);
+      document.removeEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          fetchCart();
+        }
+      });
     };
   }, []);
 
