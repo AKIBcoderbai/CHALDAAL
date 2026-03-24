@@ -8,7 +8,8 @@ const Signup = ({ onLogin, defaultAddress }) => {
     fullName: '',
     email: '',
     phone: '',
-    password: ''
+    password: '',
+    role:'user'
   });
   const [error, setError] = useState('');
 
@@ -42,10 +43,19 @@ const Signup = ({ onLogin, defaultAddress }) => {
             name: data.user.full_name, 
             email: data.user.email, 
             id: data.user.user_id,
+            role: data.user.role,
             address: data.user.address,       
             address_id: data.user.address_id
         });
-        navigate('/');
+        if (data.user.role === 'seller') {
+            navigate('/seller-dashboard');
+        } else if (data.user.role === 'rider') {
+            navigate('/rider-dashboard');
+        } else if (data.user.role === 'admin') {
+            navigate('/admin-dashboard'); 
+        } else {
+            navigate('/');
+        }
       } else {
         setError(data.error || "Signup Failed");
       }
@@ -78,6 +88,20 @@ const Signup = ({ onLogin, defaultAddress }) => {
             <label>Phone</label>
             <input type="text" name="phone" placeholder="017..." onChange={handleChange} />
           </div>
+
+          <div className="form-group">
+          <label>Account Type</label>
+          <select 
+            name="role" 
+            value={formData.role} 
+            onChange={handleChange}
+            style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #ccc', marginBottom: '15px' }}
+          >
+            <option value="user">Customer (Buy Groceries)</option>
+            <option value="seller">Seller (Manage a Store)</option>
+            <option value="rider">Rider (Deliver Orders)</option>
+          </select>
+        </div>
           
           <div className="form-group">
             <label>Password</label>

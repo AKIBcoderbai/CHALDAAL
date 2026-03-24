@@ -656,8 +656,118 @@ app.put('/api/users/avatar', authenticateToken, async (req, res) => {
         res.json({ message: "Avatar updated!" });
     } catch (err) {
         res.status(500).json({ error: "Failed to update avatar" });
+        console.error("UPDATE AVATAR ERROR:", err.message);
     }
 });
 
 
 
+app.get('/api/rider/orders/available', authenticateToken, async (req, res) => {
+    try {
+        if (req.user.role !== 'rider') return res.status(403).json({ error: "Access denied." });
+
+        const query = `
+          SELECT * from get_rider_jobs() as available_orders
+        `;
+        const result = await pool.query(query);
+        console.log("AVAILABLE ORDERS:", result.rows[0].available_orders);
+        res.json(result.rows[0].available_orders);
+    } catch (err) {
+        res.status(500).json({ error: "Failed to fetch available orders" });
+        console.error("FETCH RIDER ORDERS ERROR:", err.message);
+    }
+});
+
+app.put('/api/rider/orders/:order_id/accept', authenticateToken, async (req, res) => {
+    try {
+        const riderId = req.user.user_id;
+        const { order_id } = req.params;
+
+        const query = `
+            UPDATE orders 
+            SET rider_id = $1, status = 'ontheway' 
+            WHERE order_id = $2 AND rider_id IS NULL 
+            RETURNING order_id;
+        `;
+        const result = await pool.query(query, [riderId, order_id]);
+
+        if (result.rows.length === 0) {
+            return res.status(409).json({ error: "Order was already claimed by another rider!" });
+        }
+        res.json({ message: "Order claimed successfully!" });
+    } catch (err) {
+        res.status(500).json({ error: "Failed to claim order" });
+        console.error("ACCEPT ORDER ERROR:", err.message);
+    }
+});
+
+
+app.get('/api/rider/orders/my-deliveries', authenticateToken, async (req, res) => {
+    try {
+        const riderId = req.user.user_id;
+        const query = `
+            SELECT o.order_id, o.status, a.street, p.name as customer_name, p.phone
+            FROM orders o
+            JOIN address a ON o.address_id = a.address_id
+            JOIN person p ON o.user_id = p.person_id
+            WHERE o.rider_id = $1 AND o.status = 'ontheway';
+        `;
+        const result = await pool.query(query, [riderId]);
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).json({ error: "Failed to fetch active jobs" });
+    }
+});
+
+app.put('/api/rider/orders/:order_id/deliver', authenticateToken, async (req, res) => {
+    try {
+        const riderId = req.user.user_id;
+        const { order_id } = req.params;
+
+        const query = `
+            UPDATE orders 
+            SET status = 'delivered' 
+            WHERE order_id = $1 AND rider_id = $2 
+            RETURNING order_id;
+        `;
+        const orderId=await pool.query(query, [order_id, riderId]);
+        if (orderId.rows.length === 0) {
+            return res.status(404).json({ error: "Order not found or you are not assigned to this order." });
+        }
+        res.json({ message: "Delivery complete!" });
+    } catch (err) {
+        res.status(500).json({ error: "Failed to mark delivered" });
+        console.error("DELIVER ORDER ERROR:", err.message);
+    }
+});
+
+app.get('/api/rider/profile', authenticateToken, async (req, res) => {
+    try {
+        const riderId = req.user.user_id;
+        const query = `
+            SELECT name, email, phone, image_url 
+            FROM person
+            WHERE person_id = $1
+        `;
+        const result = await pool.query(query, [riderId]);
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: "Rider profile not found." });
+        }
+        res.json(result.rows[0]);
+    } catch (err) {
+        res.status(500).json({ error: "Failed to fetch rider profile" });
+        console.error("FETCH RIDER PROFILE ERROR:", err.message);
+    }
+});
+
+app.put('/api/rider/profileupdate', authenticateToken, async (req, res) => {
+    try {
+        const riderId = req.user.user_id;
+        const { image_url } = req.body;
+        await pool.query(`UPDATE person SET image_url = $1 WHERE person_id = $2`, [image_url, riderId]);
+        res.json({ message: "Profile updated successfully!" });
+    } catch (err) {
+        res.status(500).json({ error: "Failed to update profile" });
+        console.error("UPDATE RIDER PROFILE ERROR:", err.message);
+    }
+});

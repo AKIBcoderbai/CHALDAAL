@@ -29,10 +29,19 @@ const Login = ({ onLogin }) => {
             name: data.user.full_name, 
             email: data.user.email, 
             id: data.user.user_id,
+            role: data.user.role,
             address: data.user.address || '',
             address_id: data.user.address_id || null
         });
-        navigate('/');
+        if (data.user.role === 'seller') {
+            navigate('/seller-dashboard');
+        } else if (data.user.role === 'rider') {
+            navigate('/rider-dashboard');
+        } else if (data.user.role === 'admin') {
+            navigate('/admin-dashboard');
+        } else {
+            navigate('/');
+        }
       } else {
         setError(data.error || "Login Failed");
       }
