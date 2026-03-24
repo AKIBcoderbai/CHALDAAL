@@ -1,32 +1,32 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { FaBars, FaSearch, FaMapMarkerAlt, FaUser, FaShoppingBag } from "react-icons/fa";
 import { MdKeyboardArrowDown } from "react-icons/md";
-import ThemeToggle from "./ThemeToggle"; // Make sure path is correct
+import ThemeToggle from "./ThemeToggle";
 
-function Header({ 
-    isMenuOpen, setIsMenuOpen, inputValue, setInputValue, 
-    handleInputChange, handleSearchKey, handleSearchKeyBtn, 
-    showSuggestions, setShowSuggestions, suggestions, setSearchTerm, 
-    setIsMapOpen, userAddress, user, handleLogout, cart, setIsCartOpen 
-}){
+function Header({
+    isMenuOpen, setIsMenuOpen, inputValue, setInputValue,
+    handleInputChange, handleSearchKey, handleSearchKeyBtn,
+    showSuggestions, setShowSuggestions, suggestions, setSearchTerm,
+    setIsMapOpen, userAddress, user, handleLogout, cart, setIsCartOpen
+}) {
 
-    const location=useLocation();
-    const navigate=useNavigate();
+    const location = useLocation();
+    const navigate = useNavigate();
     return (
         <>
             {location.pathname !== "/seller-dashboard" && location.pathname !== "/seller-login" && (
                 <header className="header">
                     <div className="logo-section" style={{ cursor: "pointer" }}>
-                        {location.pathname === "/"? 
-                        (
-                            <label htmlFor="brand">
-                        <FaBars
-                            className="menu-icon"
-                            onClick={() => setIsMenuOpen(!isMenuOpen)}
-                        />
-                        </label>
-                        )
-                        :<></>}
+                        {location.pathname === "/" ?
+                            (
+                                <label htmlFor="brand">
+                                    <FaBars
+                                        className="menu-icon"
+                                        onClick={() => setIsMenuOpen(!isMenuOpen)}
+                                    />
+                                </label>
+                            )
+                            : <></>}
                         <span
                             name="brand"
                             className="brand-logo"
@@ -88,13 +88,31 @@ function Header({
                         </div>
 
                         {user && user.role !== 'seller' ? (
-                            <div
-                                className="user-profile"
-                                onClick={() => navigate("/profile")}
-                                style={{ cursor: "pointer" }}
-                            >
-                                <FaUser /> <span>{user.full_name || user.name}</span>
-                            </div>
+                            user.role === 'rider' ? (
+                                <div
+                                    className="user-profile"
+                                    onClick={() => navigate("/rider-dashboard")}
+                                    style={{ cursor: "pointer" }}
+                                >
+                                    <FaUser /> <span>{user.full_name || user.name}</span>
+                                </div>
+                            ) : user.role === 'admin' ? (
+                                < div
+                                    className="user-profile"
+                                    onClick={() => navigate("/admin-dashboard")}
+                                    style={{ cursor: "pointer" }}
+                                >
+                                    <FaUser /> <span>{user.full_name || user.name}</span>
+                                </div>
+                            ) : (
+                                <div
+                                    className="user-profile"
+                                    onClick={() => navigate("/profile")}
+                                    style={{ cursor: "pointer" }}
+                                >
+                                    <FaUser /> <span>{user.full_name || user.name}</span>
+                                </div>
+                            )
                         ) : (
                             <button className="login-btn" onClick={() => navigate("/login")}>
                                 Login
@@ -106,8 +124,9 @@ function Header({
                             <span>{cart.reduce((acc, item) => acc + item.qty, 0)} Items</span>
                         </div>
                     </div>
-                </header>
-            )}
+                </header >
+            )
+            }
 
         </>
     )

@@ -113,7 +113,7 @@ return (
           )}
           
           <div>
-            <h2 style={{ margin: 0, color: '#00cec9' }}>🛵 Rider Hub</h2>
+            <h2 style={{ margin: 0, color: '#00cec9' }}>My Profile</h2>
             <p style={{ margin: '5px 0 10px 0', fontSize: '18px' }}>{user?.name}</p>
             
             <div style={{ display: 'flex', gap: '10px' }}>
@@ -175,7 +175,6 @@ return (
                 <div key={order.order_id} style={{ padding: '20px', border: '1px solid #dfe6e9', borderRadius: '10px', background: '#f8f9fa' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
                     <strong style={{ fontSize: '18px' }}>Order #{order.order_id}</strong>
-                    <span style={{ color: '#d63031', fontWeight: 'bold' }}>৳ {order.total_amount}</span>
                   </div>
                   <p style={{ margin: '5px 0', color: '#636e72' }}>📍 {order.street}, {order.city}</p>
                   <p style={{ margin: '5px 0', color: '#636e72' }}>👤 {order.customer_name} ({order.customer_phone})</p>
