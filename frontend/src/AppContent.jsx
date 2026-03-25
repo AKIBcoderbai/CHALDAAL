@@ -280,6 +280,7 @@ export default function AppContent() {
           path="/checkout"
           element={
             <Checkout
+              user={user}
               cart={cart}
               placeOrder={handlePlaceOrder}
               shippingAddress={userAddress}

@@ -175,6 +175,7 @@ return (
                 <div key={order.order_id} style={{ padding: '20px', border: '1px solid #dfe6e9', borderRadius: '10px', background: '#f8f9fa' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
                     <strong style={{ fontSize: '18px' }}>Order #{order.order_id}</strong>
+                    <strong style={{ fontSize: '16px', color: '#0984e3' }}>${order.delivery_fee.toFixed(2)}</strong>
                   </div>
                   <p style={{ margin: '5px 0', color: '#636e72' }}>📍 {order.street}, {order.city}</p>
                   <p style={{ margin: '5px 0', color: '#636e72' }}>👤 {order.customer_name} ({order.customer_phone})</p>
@@ -198,7 +199,7 @@ return (
                 <div key={job.order_id} style={{ padding: '20px', border: '2px solid #00cec9', borderRadius: '10px', background: '#e0fbfb' }}>
                   <strong style={{ fontSize: '18px' }}>Order #{job.order_id}</strong>
                   <p style={{ margin: '10px 0 5px 0' }}>📍 {job.street}</p>
-                  <p style={{ margin: '5px 0 15px 0' }}>📞 {job.customer_name} - {job.phone}</p>
+                  <p style={{ margin: '5px 0 15px 0' }}>📞 {job.customer_name} - {job.customer_phone}</p>
                   <button 
                     onClick={() => handleDeliverOrder(job.order_id)}
                     style={{ width: '100%', padding: '10px', background: '#00b894', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}

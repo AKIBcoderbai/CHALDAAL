@@ -347,13 +347,15 @@ app.post('/api/orders', authenticateToken, async (req, res) => {
             );
         }
 
-        const query = `SELECT place_order($1, $2, $3, $4, $5::jsonb) AS new_order_id`;
+        const query = `SELECT place_order($1, $2, $3, $4, $5, $6, $7::jsonb) AS new_order_id`;
         
         const result = await client.query(query, [
             userId, 
             finalAddressId, 
             total, 
             customer.paymentMethod, 
+            customer.name,
+            customer.phone,
             JSON.stringify(items) 
         ]);
         
@@ -670,7 +672,6 @@ app.get('/api/rider/orders/available', authenticateToken, async (req, res) => {
           SELECT * from get_rider_jobs() as available_orders
         `;
         const result = await pool.query(query);
-        console.log("AVAILABLE ORDERS:", result.rows[0].available_orders);
         res.json(result.rows[0].available_orders);
     } catch (err) {
         res.status(500).json({ error: "Failed to fetch available orders" });
@@ -706,10 +707,10 @@ app.get('/api/rider/orders/my-deliveries', authenticateToken, async (req, res) =
     try {
         const riderId = req.user.user_id;
         const query = `
-            SELECT o.order_id, o.status, a.street, p.name as customer_name, p.phone
+            SELECT o.order_id, o.status, a.street, d.contact_name as customer_name, d.contact_phone as customer_phone
             FROM orders o
             JOIN address a ON o.address_id = a.address_id
-            JOIN person p ON o.user_id = p.person_id
+            JOIN delivery d ON o.order_id = d.order_id
             WHERE o.rider_id = $1 AND o.status = 'ontheway';
         `;
         const result = await pool.query(query, [riderId]);

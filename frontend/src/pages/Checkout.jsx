@@ -1,10 +1,10 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import './Checkout.css';
 
-const Checkout = ({ cart, placeOrder, shippingAddress, checkoutMeta, isPlacingOrder }) => {
+const Checkout = ({ user,cart, placeOrder, shippingAddress, checkoutMeta, isPlacingOrder }) => {
   const [formData, setFormData] = useState({
-    name: '',
-    phone: '',
+    name: user?.name || '',
+    phone: user?.phone || '',
     address: shippingAddress || '',
     label: 'Home',
     paymentMethod: localStorage.getItem("chaldal_payment_method") || 'cod'
@@ -39,7 +39,7 @@ const Checkout = ({ cart, placeOrder, shippingAddress, checkoutMeta, isPlacingOr
     if (name === "name" && value.trim().length < 2) {
       return "Name should be at least 2 characters.";
     }
-    if (name === "phone" && !/^01\d{9}$/.test(value.trim())) {
+    if (name === "phone" && !/^01[3-9]\d{8}$/.test(value.trim())) {
       return "Enter a valid 11-digit Bangladeshi number (01XXXXXXXXX).";
     }
     if (name === "address" && value.trim().length < 8) {

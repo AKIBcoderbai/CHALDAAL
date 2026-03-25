@@ -21,6 +21,12 @@ const Signup = ({ onLogin, defaultAddress }) => {
     e.preventDefault();
     setError('');
 
+    const phoneRegex = /^01[3-9]\d{8}$/;
+    if (formData.phone && !phoneRegex.test(formData.phone)) {
+      setError("Please enter a valid Bangladeshi phone number.");
+      return;
+    }
+
     try {
       
       const payload = { 
@@ -86,7 +92,7 @@ const Signup = ({ onLogin, defaultAddress }) => {
 
           <div className="form-group">
             <label>Phone</label>
-            <input type="text" name="phone" placeholder="017..." onChange={handleChange} />
+            <input type="text" name="phone" required maxLength="11" placeholder="017..." onChange={handleChange} />
           </div>
 
           <div className="form-group">
