@@ -18,13 +18,14 @@ export default function AdminDashboard({ user, onLogout }) {
   const [forbidden, setForbidden] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      navigate("/login", { state: { from: "/admin-dashboard" } });
-      return;
-    }
-    fetchAdminData();
-  }, [navigate]);
+  const token = localStorage.getItem("token");
+  // Check both token existence AND user role
+  if (!token || !user || user.role !== 'admin') {
+    navigate("/login", { state: { from: "/admin-dashboard" } });
+    return;
+  }
+  fetchAdminData();
+}, [navigate, user]);
 
   const uniqueSellers = useMemo(() => {
     const sellerMap = new Map();

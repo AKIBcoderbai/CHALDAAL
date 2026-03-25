@@ -22,21 +22,28 @@ const Login = ({ onLogin }) => {
       });
 
       const data = await response.json();
+if (response.ok) {
+  localStorage.setItem("token", data.token);
+  window.dispatchEvent(new Event('login_success'));
+  onLogin({ 
+      name: data.user.full_name, 
+      email: data.user.email, 
+      id: data.user.user_id,
+      role: data.user.role,
+      address: data.user.address || '',
+      address_id: data.user.address_id || null
+  });
 
-      if (response.ok) {
+  // Determine target route based on role
+  let targetRoute = from !== '/' ? from : '/';
+  if (targetRoute === '/') {
+      if (data.user.role === 'admin') targetRoute = '/admin-dashboard';
+      else if (data.user.role === 'rider') targetRoute = '/rider-dashboard';
+      else if (data.user.role === 'seller') targetRoute = '/seller-dashboard';
+  }
 
-        localStorage.setItem("token", data.token);
-        window.dispatchEvent(new Event('login_success'));
-        onLogin({ 
-            name: data.user.full_name, 
-            email: data.user.email, 
-            id: data.user.user_id,
-            role: data.user.role,
-            address: data.user.address || '',
-            address_id: data.user.address_id || null
-        });
-        navigate(from, { replace: true });
-      } else {
+  navigate(targetRoute, { replace: true });
+} else {
         setError(data.error || "Login Failed");
       }
     } catch (err) {

@@ -18,7 +18,7 @@ export default function RiderDashboard({ user, onLogout }) {
       return;
     }
     fetchDashboardData();
-  }, [user, navigate,avatarUrl]);
+  }, [user, navigate]);
 
   const fetchDashboardData = async () => {
     const token = localStorage.getItem("token");

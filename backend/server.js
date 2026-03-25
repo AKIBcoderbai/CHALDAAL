@@ -89,16 +89,16 @@ const authenticateToken = (req, res, next) => {
 //     next();
 // };
 
-//for now
+// Remove the existing 'for now' block and replace it with this:
 const requireRole = (allowedRoles) => (req, res, next) => {
-    // We still want req.user to exist (from authenticateToken) 
-    // so that routes can access req.user.user_id
     if (!req.user) {
         return res.status(401).json({ error: "Authentication required." });
     }
     
-    // Log for debugging: see who is accessing the admin route
-    console.log(`Bypassing role check for user: ${req.user.user_id}, Role: ${req.user.role}`);
+    // Check if the authenticated user's role is in the allowedRoles array
+    if (!allowedRoles.includes(req.user.role)) {
+        return res.status(403).json({ error: "Access denied. Insufficient permissions." });
+    }
     
     next(); 
 };
