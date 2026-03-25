@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Routes, Route, useNavigate } from "react-router-dom";
+import { Routes, Route, useNavigate, Navigate } from "react-router-dom";
 import "./App.css";
 
 import CartSidebar from "./components/CartSidebar";
@@ -14,7 +14,6 @@ import Home from "./pages/Home";
 import useProducts from "./hooks/useProducts";
 import useCart from "./hooks/useCart";
 import UserProfile from "./pages/UserProfile";
-import RiderDashboard from "./pages/RiderDashBoard";
 
 export default function AppContent() {
   const navigate = useNavigate();
@@ -311,12 +310,6 @@ export default function AppContent() {
           path="/seller-dashboard"
           element={<SellerDashboard user={user} onLogout={handleLogout} />}
         />
-
-        <Route
-          path="/rider-dashboard"
-          element={<RiderDashboard user={user} onLogout={handleLogout} />}
-        />
-
       </Routes>
 
       <CartSidebar

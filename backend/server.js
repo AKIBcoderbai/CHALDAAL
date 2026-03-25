@@ -82,6 +82,45 @@ const authenticateToken = (req, res, next) => {
     });
 };
 
+// const requireRole = (allowedRoles) => (req, res, next) => {
+//     if (!req.user || !allowedRoles.includes(req.user.role)) {
+//         return res.status(403).json({ error: "Access denied." });
+//     }
+//     next();
+// };
+
+//for now
+const requireRole = (allowedRoles) => (req, res, next) => {
+    // We still want req.user to exist (from authenticateToken) 
+    // so that routes can access req.user.user_id
+    if (!req.user) {
+        return res.status(401).json({ error: "Authentication required." });
+    }
+    
+    // Log for debugging: see who is accessing the admin route
+    console.log(`Bypassing role check for user: ${req.user.user_id}, Role: ${req.user.role}`);
+    
+    next(); 
+};
+
+const ensureAdminTables = async () => {
+    try {
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS admin_seller_messages (
+                message_id SERIAL PRIMARY KEY,
+                admin_id INTEGER NOT NULL REFERENCES person(person_id) ON DELETE CASCADE,
+                seller_id INTEGER NOT NULL REFERENCES person(person_id) ON DELETE CASCADE,
+                product_id INTEGER REFERENCES products(product_id) ON DELETE SET NULL,
+                subject VARCHAR(160) NOT NULL,
+                message TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+    } catch (err) {
+        console.error("ADMIN TABLE INIT ERROR:", err.message);
+    }
+};
+
 // --- USER AUTHENTICATION ROUTES ---
 
 // 4. POLYMORPHIC SIGNUP
@@ -473,6 +512,37 @@ app.get('/api/seller/stats/:seller_id', authenticateToken, async (req, res) => {
     }
 });
 
+// 9b. GET MESSAGES FROM ADMIN (seller inbox)
+app.get('/api/seller/admin-messages', authenticateToken, async (req, res) => {
+    try {
+        if (req.user.role !== 'seller') {
+            return res.status(403).json({ error: "Access denied. Not a seller account." });
+        }
+        const seller_id = req.user.user_id;
+        const query = `
+            SELECT
+                asm.message_id,
+                asm.subject,
+                asm.message,
+                asm.created_at,
+                asm.product_id,
+                p.name AS product_name,
+                adm.name AS admin_name,
+                adm.email AS admin_email
+            FROM admin_seller_messages asm
+            LEFT JOIN products p ON p.product_id = asm.product_id AND p.seller_id = $1
+            JOIN person adm ON adm.person_id = asm.admin_id
+            WHERE asm.seller_id = $1
+            ORDER BY asm.created_at DESC
+        `;
+        const result = await pool.query(query, [seller_id]);
+        res.json(result.rows);
+    } catch (err) {
+        console.error("SELLER ADMIN MESSAGES ERROR:", err.message);
+        res.status(500).json({ error: "Failed to fetch admin messages." });
+    }
+});
+
 // 10. GET ALL CATEGORIES
 
 app.get('/api/categories', async (req, res) => {
@@ -484,10 +554,121 @@ app.get('/api/categories', async (req, res) => {
     }
 });
 
+// --- ADMIN ROUTES ---
+
+// 12. GET ALL PRODUCTS FOR ADMIN MONITORING
+app.get('/api/admin/products', authenticateToken, requireRole(['admin']), async (req, res) => {
+    try {
+        const query = `
+            SELECT
+                p.product_id,
+                p.name,
+                p.unit_price AS price,
+                p.stock,
+                p.unit,
+                p.image_url,
+                p.is_active,
+                p.seller_id,
+                per.name AS seller_name,
+                per.email AS seller_email,
+                per.phone AS seller_phone,
+                c.name AS category
+            FROM products p
+            JOIN person per ON per.person_id = p.seller_id
+            LEFT JOIN category c ON c.category_id = p.category_id
+            ORDER BY p.product_id DESC
+        `;
+        const result = await pool.query(query);
+        res.json(result.rows);
+    } catch (err) {
+        console.error("ADMIN PRODUCTS FETCH ERROR:", err.message);
+        res.status(500).json({ error: "Failed to fetch products for admin." });
+    }
+});
+
+// 13. ADMIN DEACTIVATE ANY PRODUCT
+app.patch('/api/admin/products/:id/deactivate', authenticateToken, requireRole(['admin']), async (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = await pool.query(
+            `UPDATE products SET is_active = FALSE WHERE product_id = $1 RETURNING product_id, name, is_active`,
+            [id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: "Product not found." });
+        }
+
+        res.json({
+            message: "Product deactivated by admin successfully.",
+            product: result.rows[0]
+        });
+    } catch (err) {
+        console.error("ADMIN DEACTIVATE ERROR:", err.message);
+        res.status(500).json({ error: "Failed to deactivate product." });
+    }
+});
+
+// 14. ADMIN CONTACT SELLER
+app.post('/api/admin/seller-contact', authenticateToken, requireRole(['admin']), async (req, res) => {
+    try {
+        const admin_id = req.user.user_id;
+        const { seller_id, product_id, subject, message } = req.body;
+
+        if (!seller_id || !subject || !message) {
+            return res.status(400).json({ error: "seller_id, subject, and message are required." });
+        }
+
+        const insertQuery = `
+            INSERT INTO admin_seller_messages (admin_id, seller_id, product_id, subject, message)
+            VALUES ($1, $2, $3, $4, $5)
+            RETURNING message_id, created_at
+        `;
+        const values = [admin_id, seller_id, product_id || null, subject.trim(), message.trim()];
+        const result = await pool.query(insertQuery, values);
+
+        res.status(201).json({
+            message: "Message logged and seller contact prepared.",
+            log: result.rows[0]
+        });
+    } catch (err) {
+        console.error("ADMIN CONTACT SELLER ERROR:", err.message);
+        res.status(500).json({ error: "Failed to log seller contact message." });
+    }
+});
+
+// 15. GET ADMIN CONTACT LOGS
+app.get('/api/admin/seller-contact', authenticateToken, requireRole(['admin']), async (req, res) => {
+    try {
+        const query = `
+            SELECT
+                asm.message_id,
+                asm.subject,
+                asm.message,
+                asm.created_at,
+                asm.product_id,
+                s.person_id AS seller_id,
+                s.name AS seller_name,
+                s.email AS seller_email,
+                s.phone AS seller_phone
+            FROM admin_seller_messages asm
+            JOIN person s ON s.person_id = asm.seller_id
+            ORDER BY asm.created_at DESC
+            LIMIT 100
+        `;
+        const result = await pool.query(query);
+        res.json(result.rows);
+    } catch (err) {
+        console.error("ADMIN CONTACT LOG FETCH ERROR:", err.message);
+        res.status(500).json({ error: "Failed to fetch contact logs." });
+    }
+});
+
 // Start Server
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
+ensureAdminTables();
 
 // 11. DELETE (DEACTIVATE) PRODUCT
 

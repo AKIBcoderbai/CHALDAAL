@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Auth.css'; 
-import { FaBox, FaChartLine, FaDollarSign, FaStar, FaSignOutAlt } from 'react-icons/fa';
+import { FaBox, FaChartLine, FaDollarSign, FaStar, FaSignOutAlt, FaEnvelopeOpenText } from 'react-icons/fa';
 
 const SellerDashboard = ({ user, onLogout }) => {
     const navigate = useNavigate();
@@ -9,6 +9,7 @@ const SellerDashboard = ({ user, onLogout }) => {
     const [products, setProducts] = useState([]);
     const [categories, setCategories] = useState([]); 
     const [stats, setStats] = useState({ total_products: 0, total_sales: 0, total_profit: 0, rating: 0 });
+    const [adminMessages, setAdminMessages] = useState([]);
     
     const [formData, setFormData] = useState({
         name: '', price: '', original_price: '', stock_quantity: 10,
@@ -64,6 +65,14 @@ const SellerDashboard = ({ user, onLogout }) => {
             if (statsRes.ok) {
                 const statsData = await statsRes.json();
                 setStats(statsData);
+            }
+
+            const msgRes = await fetch(`http://localhost:3000/api/seller/admin-messages`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (msgRes.ok) {
+                const msgData = await msgRes.json();
+                setAdminMessages(msgData);
             }
         } catch (error) {
             console.error("Error loading dashboard:", error);
@@ -156,7 +165,7 @@ const handleAddProduct = async (e) => {
             {/* Header */}
             <div style={styles.header}>
                 <div>
-                    <h2>👋 Welcome, {user?.full_name}</h2>
+                    <h2>👋 Welcome, {user?.full_name || user?.name}</h2>
                     <p style={{color: '#666'}}>Seller Dashboard Overview</p>
                 </div>
                 <button onClick={onLogout} style={{...styles.navItem(true), background: '#e74c3c'}}>
@@ -187,6 +196,9 @@ const handleAddProduct = async (e) => {
             {/* Navigation Tabs */}
             <div style={styles.nav}>
                 <div style={styles.navItem(activeTab === 'overview')} onClick={() => setActiveTab('overview')}>Overview</div>
+                <div style={styles.navItem(activeTab === 'admin-messages')} onClick={() => setActiveTab('admin-messages')}>
+                    Admin messages {adminMessages.length > 0 ? `(${adminMessages.length})` : ''}
+                </div>
                 <div style={styles.navItem(activeTab === 'my-products')} onClick={() => setActiveTab('my-products')}>My Products</div>
                 <div style={styles.navItem(activeTab === 'add-product')} onClick={() => setActiveTab('add-product')}>+ Add New Product</div>
             </div>
@@ -200,6 +212,55 @@ const handleAddProduct = async (e) => {
                         <h3>📈 Performance Charts</h3>
                         <p>Detailed sales graphs will appear here soon.</p>
                         <p>For now, use the tabs to manage your inventory!</p>
+                    </div>
+                )}
+
+                {activeTab === 'admin-messages' && (
+                    <div>
+                        <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+                            <FaEnvelopeOpenText /> Messages from Chaldal admin
+                        </h3>
+                        <p style={{ color: '#666', marginBottom: '20px', fontSize: '14px' }}>
+                            Important notices about your listings, delivery issues, or policy — sent by the platform team.
+                        </p>
+                        {adminMessages.length === 0 ? (
+                            <p style={{ color: '#888', padding: '24px', textAlign: 'center', background: '#f9f9f9', borderRadius: '8px' }}>
+                                No messages yet. When an admin contacts you about an order or product, it will appear here.
+                            </p>
+                        ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                                {adminMessages.map((m) => (
+                                    <div
+                                        key={m.message_id}
+                                        style={{
+                                            border: '1px solid #e0e0e0',
+                                            borderRadius: '10px',
+                                            padding: '16px',
+                                            background: '#fafafa',
+                                            textAlign: 'left',
+                                        }}
+                                    >
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px', marginBottom: '8px' }}>
+                                            <strong style={{ fontSize: '16px', color: '#2d3436' }}>{m.subject}</strong>
+                                            <span style={{ fontSize: '12px', color: '#888' }}>
+                                                {m.created_at ? new Date(m.created_at).toLocaleString() : ''}
+                                            </span>
+                                        </div>
+                                        <p style={{ fontSize: '13px', color: '#636e72', marginBottom: '10px' }}>
+                                            From: {m.admin_name || 'Admin'}
+                                            {m.admin_email ? ` · ${m.admin_email}` : ''}
+                                        </p>
+                                        {m.product_id && (
+                                            <p style={{ fontSize: '13px', color: '#0984e3', marginBottom: '8px' }}>
+                                                Related product: #{m.product_id}
+                                                {m.product_name ? ` — ${m.product_name}` : ''}
+                                            </p>
+                                        )}
+                                        <p style={{ whiteSpace: 'pre-wrap', color: '#2d3436', lineHeight: 1.5 }}>{m.message}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 )}
 

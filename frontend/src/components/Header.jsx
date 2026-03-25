@@ -14,7 +14,9 @@ function Header({
     const navigate = useNavigate();
     return (
         <>
-            {location.pathname !== "/seller-dashboard" && location.pathname !== "/seller-login" && (
+            {location.pathname !== "/seller-dashboard" &&
+             location.pathname !== "/seller-login" &&
+             location.pathname !== "/admin-dashboard" && (
                 <header className="header">
                     <div className="logo-section" style={{ cursor: "pointer" }}>
                         {location.pathname === "/" ?

@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import './Auth.css';
 
 const Login = ({ onLogin }) => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from || '/';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -33,15 +35,7 @@ const Login = ({ onLogin }) => {
             address: data.user.address || '',
             address_id: data.user.address_id || null
         });
-        if (data.user.role === 'seller') {
-            navigate('/seller-dashboard');
-        } else if (data.user.role === 'rider') {
-            navigate('/rider-dashboard');
-        } else if (data.user.role === 'admin') {
-            navigate('/admin-dashboard');
-        } else {
-            navigate('/');
-        }
+        navigate(from, { replace: true });
       } else {
         setError(data.error || "Login Failed");
       }
