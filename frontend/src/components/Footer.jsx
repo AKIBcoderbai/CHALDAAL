@@ -10,13 +10,6 @@ function Footer({ user, handleLogout }) {
       <div style={{ marginTop: "16px", display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
         <button
           type="button"
-          onClick={() => navigate("/admin-dashboard")}
-          style={{ padding: "10px 20px", background: "#636e72", border: "none", borderRadius: "5px", color: "white", fontWeight: "bold", cursor: "pointer" }}
-        >
-          Admin panel
-        </button>
-        <button
-          type="button"
           onClick={() => {
             if (user) handleLogout();
             navigate("/seller-login");

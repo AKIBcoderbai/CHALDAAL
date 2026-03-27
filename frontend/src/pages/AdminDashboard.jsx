@@ -14,7 +14,6 @@ export default function AdminDashboard({ user, onLogout }) {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
-  /** Until frontend role routing exists: page is reachable with any login; APIs still require JWT with role admin. */
   const [forbidden, setForbidden] = useState(false);
 
   useEffect(() => {
@@ -171,15 +170,6 @@ export default function AdminDashboard({ user, onLogout }) {
         <button className="admin-logout" onClick={onLogout}>
           Logout
         </button>
-      </div>
-
-      <div className="admin-card admin-temp-banner" role="status">
-        <strong>Temporary access:</strong> Open this page anytime via the footer link,{" "}
-        <code>/admin-dashboard</code>, or <code>/admin</code>. The app login page does not route by role yet;{" "}
-        you still need a JWT issued for an <strong>admin</strong> account (e.g. sign up with role admin or use DB) for these APIs to return data.
-        {user?.full_name || user?.name ? (
-          <> Signed in as {user.full_name || user.name}.</>
-        ) : null}
       </div>
 
       {forbidden && (

@@ -123,17 +123,12 @@ const ensureAdminTables = async () => {
 
 // --- USER AUTHENTICATION ROUTES ---
 
-// 4. POLYMORPHIC SIGNUP
-app.post('/api/signup', async (req, res) => {
+const performSignup = async ({ fullName, email, password, phone, role, address }, res) => {
     const client = await pool.connect();
     try {
       
-        const { fullName, email, password, phone, role = 'user', address } = req.body;
-        
         const validRoles = ['user', 'admin', 'seller', 'rider'];
-        if (!validRoles.includes(role)) {
-            return res.status(400).json({ error: "Invalid role specified." });
-        }
+        if (!validRoles.includes(role)) return res.status(400).json({ error: "Invalid role specified." });
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -220,6 +215,32 @@ app.post('/api/signup', async (req, res) => {
     } finally {
         client.release();
     }
+};
+
+// 4. PUBLIC SIGNUP (ONLY user/rider)
+app.post('/api/signup', async (req, res) => {
+    const { fullName, email, password, phone, role = 'user', address } = req.body;
+    const allowedPublicRoles = ['user', 'rider'];
+    if (!allowedPublicRoles.includes(role)) {
+        return res.status(403).json({ error: "Signup for this role is not allowed from public signup." });
+    }
+    return performSignup({ fullName, email, password, phone, role, address }, res);
+});
+
+// 4b. SELLER SIGNUP (dedicated)
+app.post('/api/seller/signup', async (req, res) => {
+    const { fullName, email, password, phone, address } = req.body;
+    return performSignup({ fullName, email, password, phone, role: 'seller', address }, res);
+});
+
+// 4c. ADMIN SIGNUP (TEST/INTERNAL) - requires secret
+app.post('/api/admin/signup-test', async (req, res) => {
+    const secret = req.headers['x-admin-signup-secret'];
+    if (!process.env.ADMIN_SIGNUP_SECRET || secret !== process.env.ADMIN_SIGNUP_SECRET) {
+        return res.status(403).json({ error: "Admin signup is disabled." });
+    }
+    const { fullName, email, password, phone, address } = req.body;
+    return performSignup({ fullName, email, password, phone, role: 'admin', address }, res);
 });
 
 // 5. LOGIN
@@ -953,3 +974,5 @@ app.put('/api/rider/profileupdate', authenticateToken, async (req, res) => {
         console.error("UPDATE RIDER PROFILE ERROR:", err.message);
     }
 });
+
+

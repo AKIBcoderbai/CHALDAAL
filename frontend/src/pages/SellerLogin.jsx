@@ -16,10 +16,10 @@ const SellerLogin = ({ onLogin }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const endpoint = isSignup ? '/api/signup' : '/api/login';
+        const endpoint = isSignup ? '/api/seller/signup' : '/api/login';
         
        
-        const payload = isSignup ? { ...formData, fullName: formData.full_name, role: 'seller' } : formData;
+        const payload = isSignup ? { ...formData, fullName: formData.full_name } : formData;
 
         try {
             const response = await fetch(`http://localhost:3000${endpoint}`, {

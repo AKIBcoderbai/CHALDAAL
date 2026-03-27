@@ -14,6 +14,9 @@ import Home from "./pages/Home";
 import useProducts from "./hooks/useProducts";
 import useCart from "./hooks/useCart";
 import UserProfile from "./pages/UserProfile";
+import AdminDashboard from "./pages/AdminDashboard";
+import RiderDashboard from "./pages/RiderDashboard";
+import AdminSignupTest from "./pages/AdminSignupTest";
 
 export default function AppContent() {
   const navigate = useNavigate();
@@ -243,6 +246,8 @@ export default function AppContent() {
 
 
         <Route path="/signup" element={<Signup onLogin={handleLogin} defaultAddress={userAddress} />} />
+        {/* Hidden test route for creating admin accounts (requires secret) */}
+        <Route path="/_admin-signup-test" element={<AdminSignupTest />} />
 
         {/* HOME ROUTE */}
         <Route
@@ -309,6 +314,19 @@ export default function AppContent() {
         <Route
           path="/seller-dashboard"
           element={<SellerDashboard user={user} onLogout={handleLogout} />}
+        />
+
+        {/* RIDER ROUTES */}
+        <Route
+          path="/rider-dashboard"
+          element={<RiderDashboard user={user} onLogout={handleLogout} />}
+        />
+
+        {/* ADMIN ROUTES */}
+        <Route path="/admin" element={<Navigate to="/admin-dashboard" replace />} />
+        <Route
+          path="/admin-dashboard"
+          element={<AdminDashboard user={user} onLogout={handleLogout} />}
         />
       </Routes>
 

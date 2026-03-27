@@ -104,7 +104,6 @@ const Signup = ({ onLogin, defaultAddress }) => {
             style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #ccc', marginBottom: '15px' }}
           >
             <option value="user">Customer (Buy Groceries)</option>
-            <option value="seller">Seller (Manage a Store)</option>
             <option value="rider">Rider (Deliver Orders)</option>
           </select>
         </div>

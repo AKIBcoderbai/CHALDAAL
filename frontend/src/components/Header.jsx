@@ -16,7 +16,8 @@ function Header({
         <>
             {location.pathname !== "/seller-dashboard" &&
              location.pathname !== "/seller-login" &&
-             location.pathname !== "/admin-dashboard" && (
+             location.pathname !== "/admin-dashboard" &&
+             location.pathname !== "/rider-dashboard" && (
                 <header className="header">
                     <div className="logo-section" style={{ cursor: "pointer" }}>
                         {location.pathname === "/" ?
