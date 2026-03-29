@@ -85,7 +85,7 @@ export default function AppContent() {
     return () => {
       window.removeEventListener("session_expired", handleSessionExpired);
     };
-    handleSessionExpired();
+    
   }, [navigate]);
 
   // fetching products and handle all product related logic in this custom hook

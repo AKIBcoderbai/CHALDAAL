@@ -233,7 +233,7 @@ app.post('/api/seller/signup', async (req, res) => {
     return performSignup({ fullName, email, password, phone, role: 'seller', address }, res);
 });
 
-// 4c. ADMIN SIGNUP (TEST/INTERNAL) - requires secret
+// 4c. ADMIN SIGNUP (TEST) 
 app.post('/api/admin/signup-test', async (req, res) => {
     const secret = req.headers['x-admin-signup-secret'];
     if (!process.env.ADMIN_SIGNUP_SECRET || secret !== process.env.ADMIN_SIGNUP_SECRET) {
