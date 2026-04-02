@@ -16,7 +16,9 @@ import useCart from "./hooks/useCart";
 import UserProfile from "./pages/UserProfile";
 import AdminDashboard from "./pages/AdminDashboard";
 import RiderDashboard from "./pages/RiderDashboard";
+import OrderDetails from "./pages/OrderDetails";
 import AdminSignupTest from "./pages/AdminSignupTest";
+import ProductDetails from "./pages/ProductDetails";
 
 export default function AppContent() {
   const navigate = useNavigate();
@@ -251,6 +253,17 @@ export default function AppContent() {
 
         {/* HOME ROUTE */}
         <Route
+          path="/product/:id"
+          element={
+            <ProductDetails
+              cart={cart}
+              onAddToCart={handleAddToCart}
+              onUpdateQty={handleUpdateQty}
+              user={user}
+            />
+          }
+        />
+        <Route
           path="/"
           element={
             <Home
@@ -301,6 +314,13 @@ export default function AppContent() {
               user={user}
               onLogout={handleLogout}
             />
+          }
+        />
+
+        <Route
+          path="/order/:id"
+          element={
+            <OrderDetails user={user} />
           }
         />
 

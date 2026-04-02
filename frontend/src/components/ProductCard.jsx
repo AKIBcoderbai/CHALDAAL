@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FaClock, FaHeart, FaRegHeart, FaStar } from 'react-icons/fa';
 
 // reusable product card component for listing products in various places
@@ -6,6 +7,7 @@ const ProductCard = ({ product, cart, onAddToCart, onUpdateQty, wishlisted, onTo
   const hoverTimerRef = useRef(null);
   const touchTimerRef = useRef(null);
   const shellRef = useRef(null);
+  const navigate = useNavigate();
   const [showPreview, setShowPreview] = useState(false);
   const [previewSide, setPreviewSide] = useState("right");
   const [isTouched, setIsTouched] = useState(false);
@@ -17,7 +19,7 @@ const ProductCard = ({ product, cart, onAddToCart, onUpdateQty, wishlisted, onTo
   const discount = product.originalPrice > product.price 
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
     : 0;
-  const rating = Number(product.rating || 4.6).toFixed(1);
+  const rating = Number(product.rating || 0).toFixed(1);
   const etaLabel = product.eta || "25-35 min";
   const isLowStock = typeof product.stock === "number" && product.stock > 0 && product.stock < 10;
   const isOutOfStock = typeof product.stock === "number" && product.stock <= 0;
@@ -60,6 +62,10 @@ const ProductCard = ({ product, cart, onAddToCart, onUpdateQty, wishlisted, onTo
     if (touchTimerRef.current) clearTimeout(touchTimerRef.current);
     touchTimerRef.current = setTimeout(() => setIsTouched(false), 220);
   };
+  
+  const handleNavigateToDetails = () => {
+    navigate(`/product/${product.id}`);
+  };
 
   return (
     <div
@@ -86,7 +92,7 @@ const ProductCard = ({ product, cart, onAddToCart, onUpdateQty, wishlisted, onTo
           {wishlisted ? <FaHeart /> : <FaRegHeart />}
         </button>
 
-        <div className="image-container">
+        <div className="image-container" onClick={handleNavigateToDetails} style={{ cursor: 'pointer' }}>
           <img src={product.image} alt={product.name} />
         </div>
 
@@ -95,7 +101,7 @@ const ProductCard = ({ product, cart, onAddToCart, onUpdateQty, wishlisted, onTo
             <span className="meta-rating"><FaStar /> {rating}</span>
             <span className="meta-eta"><FaClock /> {etaLabel}</span>
           </div>
-          <h3>{product.name}</h3>
+          <h3 onClick={handleNavigateToDetails} style={{ cursor: 'pointer' }}>{product.name}</h3>
           <p className="unit">{product.unit}</p>
           <p className={`stock-pill ${isLowStock ? "low" : ""} ${stockStatus === "Out of stock" ? "out" : ""}`}>
             {stockStatus}

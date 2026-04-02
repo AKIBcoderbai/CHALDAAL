@@ -31,6 +31,28 @@ app.use(helmet());
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 
+// --- CLOUDINARY UPLOAD SETUP ---
+const multer = require('multer');
+const cloudinaryRoot = require('cloudinary');         // ROOT object — multer-storage-cloudinary needs this
+const cloudinary = cloudinaryRoot.v2;                 // v2 instance — used for .config()
+const CloudinaryStorage = require('multer-storage-cloudinary');
+
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+const storage = new CloudinaryStorage({
+    cloudinary: cloudinaryRoot,   // Pass ROOT — lib does cloudinaryRoot.v2.uploader internally
+    params: {
+        folder: 'chaaldaal_uploads',
+        allowed_formats: ['jpg', 'png', 'jpeg', 'webp']
+    },
+});
+
+const upload = multer({ storage: storage });
+
 // --- ROUTES ---
 
 // 1. Home Route
@@ -120,6 +142,68 @@ const ensureAdminTables = async () => {
         console.error("ADMIN TABLE INIT ERROR:", err.message);
     }
 };
+
+// --- PRODUCT DETAILS & REVIEWS ROUTES ---
+app.get('/api/products/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const query = `
+            SELECT 
+                p.product_id as id, p.name, p.description, p.unit_price as price, 
+                p.stock, p.unit, p.image_url as image, p.rating,
+                c.name as category, s.company_name as seller_name
+            FROM products p 
+            LEFT JOIN category c ON p.category_id = c.category_id
+            LEFT JOIN seller s ON p.seller_id = s.seller_id
+            WHERE p.product_id = $1 AND p.is_active = true
+        `;
+        const result = await pool.query(query, [id]);
+        if (result.rows.length === 0) return res.status(404).json({ error: "Product not found" });
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error("GET PRODUCT ERROR:", err.message);
+        res.status(500).send("Server Error");
+    }
+});
+
+app.get('/api/products/:id/reviews', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const query = `
+            SELECT r.review_id, r.rating, r.comment, p.name as user_name, p.image_url as user_image
+            FROM product_review r
+            JOIN "users" u ON r.user_id = u.user_id
+            JOIN person p ON u.user_id = p.person_id
+            WHERE r.product_id = $1 AND r.is_active = true
+            ORDER BY r.review_id DESC
+        `;
+        const result = await pool.query(query, [id]);
+        res.json(result.rows);
+    } catch (err) {
+        console.error("GET REVIEWS ERROR:", err.message);
+        res.status(500).send("Server Error");
+    }
+});
+
+app.post('/api/products/:id/reviews', authenticateToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { rating, comment } = req.body;
+        const user_id = req.user.user_id;
+
+        if (!rating || rating < 1 || rating > 5) {
+            return res.status(400).json({ error: "Rating must be between 1 and 5." });
+        }
+
+        // Calls the stored PL/pgSQL function to submit or update the user's review
+        await pool.query('SELECT submit_review($1, $2, $3, $4)', [user_id, id, rating, comment || null]);
+        
+        res.status(201).json({ message: "Review submitted successfully" });
+    } catch (err) {
+        console.error("ADD REVIEW ERROR:", err.message);
+        res.status(500).send("Server Error");
+    }
+});
 
 // --- USER AUTHENTICATION ROUTES ---
 
@@ -864,7 +948,96 @@ app.put('/api/users/avatar', authenticateToken, async (req, res) => {
     }
 });
 
+app.put('/api/profile/update', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.user_id;
+        const { name, phone, password } = req.body;
+        
+        // Update name and phone
+        if (name || phone) {
+            await pool.query(
+                `UPDATE person SET name = COALESCE($1, name), phone = COALESCE($2, phone) WHERE person_id = $3`,
+                [name || null, phone || null, userId]
+            );
+        }
 
+        // Update password securely
+        if (password && password.trim() !== "") {
+            const hashedPassword = await bcrypt.hash(password, 10);
+            await pool.query(
+                `UPDATE person SET password = $1 WHERE person_id = $2`,
+                [hashedPassword, userId]
+            );
+        }
+
+        res.json({ message: "Profile updated successfully!" });
+    } catch (err) {
+        console.error("UPDATE PROFILE ERROR:", err.message);
+        res.status(500).json({ error: "Failed to update profile info" });
+    }
+});
+
+app.get('/api/orders/:id', authenticateToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user.user_id;
+        
+        // Ensure user owns this order
+        const orderCheck = await pool.query(`SELECT order_id FROM orders WHERE order_id = $1 AND user_id = $2`, [id, userId]);
+        if (orderCheck.rows.length === 0) {
+            return res.status(404).json({ error: "Order not found" });
+        }
+
+        const query = `
+            SELECT 
+                o.order_id, o.order_time, o.status,
+                d.pickup_time, d.estimated_arrival,
+                o.rider_id, 
+                r_person.name as rider_name, r_person.image_url as rider_image, r_rider.rating as rider_rating,
+                COALESCE(
+                    (SELECT json_agg(json_build_object(
+                        'product_id', od.product_id,
+                        'name', od.product_name,
+                        'price', od.price,    
+                        'qty', od.quantity,
+                        'image', od.image_url
+                    ))
+                    FROM order_details od WHERE od.order_id = o.order_id), '[]'::json
+                ) as items
+            FROM orders o
+            LEFT JOIN delivery d ON d.order_id = o.order_id
+            LEFT JOIN person r_person ON r_person.person_id = o.rider_id
+            LEFT JOIN rider r_rider ON r_rider.rider_id = o.rider_id
+            WHERE o.order_id = $1
+        `;
+
+        const result = await pool.query(query, [id]);
+        console.log(result)
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error("GET ORDER DETAILS ERROR:", err.message);
+        res.status(500).json({ error: "Failed to fetch order details" });
+        console.log('No Orders')
+
+    }
+});
+
+app.post('/api/rider/reviews', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.user_id;
+        const { rider_id, rating, comment } = req.body;
+
+        if (!rating || rating < 1 || rating > 5) {
+            return res.status(400).json({ error: "Rating must be between 1 and 5." });
+        }
+
+        await pool.query('SELECT submit_rider_review($1, $2, $3, $4)', [userId, rider_id, rating, comment || null]);
+        res.json({ message: "Rider review submitted successfully" });
+    } catch (err) {
+        console.error("RIDER REVIEW ERROR:", err.message);
+        res.status(500).json({ error: "Failed to submit rider review" });
+    }
+});
 
 app.get('/api/rider/orders/available', authenticateToken, async (req, res) => {
     try {
@@ -975,4 +1148,20 @@ app.put('/api/rider/profileupdate', authenticateToken, async (req, res) => {
     }
 });
 
+
+
+app.post('/api/upload', authenticateToken, upload.single('image'), (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: "No file provided" });
+        }
+        
+        // multer-storage-cloudinary (v1/v2 compatibility) stores URL in secure_url, url, or path
+        const imageUrl = req.file.secure_url || req.file.url || req.file.path;
+        res.json({ image_url: imageUrl });
+    } catch (err) {
+        console.error("Upload Error:", err);
+        res.status(500).json({ error: "Failed to upload image" });
+    }
+});
 

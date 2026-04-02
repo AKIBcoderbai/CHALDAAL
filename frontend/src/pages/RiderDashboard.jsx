@@ -47,22 +47,44 @@ export default function RiderDashboard({ user, onLogout }) {
       console.error("Failed to fetch rider data");
     }
   };
-  const handleUpdateAvatar = async () => {
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setIsUploading(true);
     const token = localStorage.getItem("token");
+    
+    const uploadData = new FormData();
+    uploadData.append("image", file); 
+
     try {
-      const response = await fetch("http://localhost:3000/api/rider/profileupdate", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-        body: JSON.stringify({ image_url: avatarUrl })
-      });
-      
-      if (response.ok) {
-        alert("Rider profile image updated successfully!");
-      } else {
-        alert("Failed to update profile image.");
-      }
-    } catch (err) {
-      alert("Server connection failed.");
+        // 1. Upload to Cloudinary
+        const uploadRes = await fetch('http://localhost:3000/api/upload', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` },
+            body: uploadData
+        });
+
+        if (uploadRes.ok) {
+            const data = await uploadRes.json();
+            const newImageUrl = data.image_url;
+            setAvatarUrl(newImageUrl); // Update the UI instantly
+
+            // 2. Save the new URL to PostgreSQL
+            await fetch("http://localhost:3000/api/users/avatar", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+                body: JSON.stringify({ image_url: newImageUrl })
+            });
+            
+            alert("Profile image updated successfully!");
+        } else {
+            alert("Failed to upload image.");
+        }
+    } catch (error) {
+        alert("Server connection failed.");
+    } finally {
+        setIsUploading(false);
     }
   };
 
@@ -116,20 +138,21 @@ return (
             <h2 style={{ margin: 0, color: '#00cec9' }}>My Profile</h2>
             <p style={{ margin: '5px 0 10px 0', fontSize: '18px' }}>{user?.name}</p>
             
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <input
-                type="text"
-                placeholder="Paste Image URL..."
-                value={avatarUrl}
-                onChange={(e) => setAvatarUrl(e.target.value)}
-                style={{ padding: '5px 10px', borderRadius: '4px', border: '1px solid #636e72', background: '#f5f6fa', color: '#2d3436', width: '180px' }}
+            {/* Rider Avatar Update Input */}
+            <div style={{ marginTop: '10px' }}>
+              <input 
+                type="file" 
+                accept="image/*" 
+                onChange={handleImageUpload} 
+                id="rider-avatar-upload"
+                style={{ display: 'none' }}
               />
-              <button 
-                onClick={handleUpdateAvatar}
-                style={{ background: '#0984e3', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+              <label 
+                htmlFor="rider-avatar-upload" 
+                style={{ background: '#0984e3', color: 'white', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' }}
               >
-                Update
-              </button>
+                {isUploading ? "Uploading..." : "Change Avatar"}
+              </label>
             </div>
           </div>
         </div>

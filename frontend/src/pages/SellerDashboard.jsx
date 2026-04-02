@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './Auth.css'; 
+import './Auth.css';
 import { FaBox, FaChartLine, FaDollarSign, FaStar, FaSignOutAlt, FaEnvelopeOpenText } from 'react-icons/fa';
 
 const SellerDashboard = ({ user, onLogout }) => {
     const navigate = useNavigate();
-    const [activeTab, setActiveTab] = useState('overview'); 
+    const [activeTab, setActiveTab] = useState('overview');
     const [products, setProducts] = useState([]);
-    const [categories, setCategories] = useState([]); 
+    const [categories, setCategories] = useState([]);
     const [stats, setStats] = useState({ total_products: 0, total_sales: 0, total_profit: 0, rating: 0 });
     const [adminMessages, setAdminMessages] = useState([]);
-    
+    const [isUploading, setIsUploading] = useState(false);
+
     const [formData, setFormData] = useState({
         name: '', price: '', original_price: '', stock_quantity: 10,
         unit: '1 pcs', category_id: '', image_url: '' // category_id starts empty
@@ -49,7 +50,7 @@ const SellerDashboard = ({ user, onLogout }) => {
                 navigate("/login");
                 return;
             }
-            
+
             const prodRes = await fetch(`http://localhost:3000/api/seller/products/${user.user_id}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -79,7 +80,38 @@ const SellerDashboard = ({ user, onLogout }) => {
         }
     };
 
-const handleAddProduct = async (e) => {
+    const handleImageUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        setIsUploading(true);
+        const token = localStorage.getItem("token");
+
+        // We must use FormData to send actual files!
+        const uploadData = new FormData();
+        uploadData.append("image", file);
+
+        try {
+            const res = await fetch('http://localhost:3000/api/upload', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }, // Notice: No 'Content-Type' header! Browser sets it automatically for FormData.
+                body: uploadData
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                setFormData({ ...formData, image_url: data.image_url });
+            } else {
+                alert("Failed to upload image.");
+            }
+        } catch (error) {
+            alert("Upload server connection failed.");
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
+    const handleAddProduct = async (e) => {
         e.preventDefault();
         try {
             const token = localStorage.getItem("token");
@@ -90,17 +122,18 @@ const handleAddProduct = async (e) => {
             }
             const response = await fetch('http://localhost:3000/api/products', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                 },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify({ ...formData, seller_id: user.user_id })
             });
 
             if (response.ok) {
                 alert("Product Added Successfully!");
-                setFormData({ ...formData, name: '', price: '', image_url: '' }); 
-                fetchData(); 
-                setActiveTab('my-products'); 
+                setFormData({ ...formData, name: '', price: '', image_url: '' });
+                fetchData();
+                setActiveTab('my-products');
             } else {
                 //Catch and display the database rejection
                 const errData = await response.json();
@@ -111,39 +144,39 @@ const handleAddProduct = async (e) => {
         }
     };
 
-  const handleDeleteProduct = async (productId) => {
-      const confirmDeactivate = window.confirm("Are you sure you want to deactivate this product? It will be hidden from the storefront.");
-      if (!confirmDeactivate) return;
+    const handleDeleteProduct = async (productId) => {
+        const confirmDeactivate = window.confirm("Are you sure you want to deactivate this product? It will be hidden from the storefront.");
+        if (!confirmDeactivate) return;
 
-      try {
-          const token = localStorage.getItem("token");
-          if (!token) {
-              alert("Authentication token missing. Please login again.");
-              navigate("/login");
-              return;
-          }
+        try {
+            const token = localStorage.getItem("token");
+            if (!token) {
+                alert("Authentication token missing. Please login again.");
+                navigate("/login");
+                return;
+            }
 
-          const response = await fetch(`http://localhost:3000/api/products/${productId}`, {
-              method: 'DELETE',
-              headers: { 'Authorization': `Bearer ${token}` }
-          });
+            const response = await fetch(`http://localhost:3000/api/products/${productId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
 
-          if (response.ok) {
-              alert("Product deactivated successfully!");
-              setProducts(prevProducts => 
-                  prevProducts.map(p => 
-                      p.product_id === productId ? { ...p, is_active: false } : p
-                  )
-              );
-          } else {
-              const data = await response.json();
-              alert(data.error || "Failed to deactivate product.");
-          }
-      } catch (error) {
-          console.error("Delete Error:", error);
-          alert("Server connection failed.");
-      }
-  };
+            if (response.ok) {
+                alert("Product deactivated successfully!");
+                setProducts(prevProducts =>
+                    prevProducts.map(p =>
+                        p.product_id === productId ? { ...p, is_active: false } : p
+                    )
+                );
+            } else {
+                const data = await response.json();
+                alert(data.error || "Failed to deactivate product.");
+            }
+        } catch (error) {
+            console.error("Delete Error:", error);
+            alert("Server connection failed.");
+        }
+    };
 
     const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
@@ -166,9 +199,9 @@ const handleAddProduct = async (e) => {
             <div style={styles.header}>
                 <div>
                     <h2>👋 Welcome, {user?.full_name || user?.name}</h2>
-                    <p style={{color: '#666'}}>Seller Dashboard Overview</p>
+                    <p style={{ color: '#666' }}>Seller Dashboard Overview</p>
                 </div>
-                <button onClick={onLogout} style={{...styles.navItem(true), background: '#e74c3c'}}>
+                <button onClick={onLogout} style={{ ...styles.navItem(true), background: '#e74c3c' }}>
                     <FaSignOutAlt /> Logout
                 </button>
             </div>
@@ -176,19 +209,19 @@ const handleAddProduct = async (e) => {
             {/* Stats Cards */}
             <div style={styles.statsGrid}>
                 <div style={styles.statCard}>
-                    <div style={{...styles.iconBox, background: '#3498db'}}><FaBox /></div>
+                    <div style={{ ...styles.iconBox, background: '#3498db' }}><FaBox /></div>
                     <div><h3>{stats.total_products}</h3><p>Total Products</p></div>
                 </div>
                 <div style={styles.statCard}>
-                    <div style={{...styles.iconBox, background: '#2ecc71'}}><FaDollarSign /></div>
+                    <div style={{ ...styles.iconBox, background: '#2ecc71' }}><FaDollarSign /></div>
                     <div><h3>৳ {stats.total_profit}</h3><p>Total Profit</p></div>
                 </div>
                 <div style={styles.statCard}>
-                    <div style={{...styles.iconBox, background: '#9b59b6'}}><FaChartLine /></div>
+                    <div style={{ ...styles.iconBox, background: '#9b59b6' }}><FaChartLine /></div>
                     <div><h3>{stats.total_sales}</h3><p>Items Sold</p></div>
                 </div>
                 <div style={styles.statCard}>
-                    <div style={{...styles.iconBox, background: '#f1c40f'}}><FaStar /></div>
+                    <div style={{ ...styles.iconBox, background: '#f1c40f' }}><FaStar /></div>
                     <div><h3>{stats.rating}/5</h3><p>Seller Rating</p></div>
                 </div>
             </div>
@@ -203,12 +236,12 @@ const handleAddProduct = async (e) => {
                 <div style={styles.navItem(activeTab === 'add-product')} onClick={() => setActiveTab('add-product')}>+ Add New Product</div>
             </div>
 
-        {/* Content Area */}
-            <div style={{background: 'white', padding: '25px', borderRadius: '10px', boxShadow: '0 2px 15px rgba(0,0,0,0.05)'}}>
-                
+            {/* Content Area */}
+            <div style={{ background: 'white', padding: '25px', borderRadius: '10px', boxShadow: '0 2px 15px rgba(0,0,0,0.05)' }}>
+
                 {/* 1. OVERVIEW TAB */}
                 {activeTab === 'overview' && (
-                    <div style={{textAlign: 'center', padding: '40px', color: '#888'}}>
+                    <div style={{ textAlign: 'center', padding: '40px', color: '#888' }}>
                         <h3>📈 Performance Charts</h3>
                         <p>Detailed sales graphs will appear here soon.</p>
                         <p>For now, use the tabs to manage your inventory!</p>
@@ -266,20 +299,20 @@ const handleAddProduct = async (e) => {
 
                 {/* 2. ADD PRODUCT TAB  */}
                 {activeTab === 'add-product' && (
-                    <div style={{maxWidth: '600px'}}>
+                    <div style={{ maxWidth: '600px' }}>
                         <h3>Add New Product</h3>
                         <form onSubmit={handleAddProduct} className="auth-form">
                             <div className="form-group"><label>Name</label><input name="name" value={formData.name} onChange={handleChange} required /></div>
                             <div className="form-group"><label>Price</label><input type="number" name="price" value={formData.price} onChange={handleChange} required /></div>
                             <div className="form-group"><label>Stock</label><input type="number" name="stock_quantity" value={formData.stock_quantity} onChange={handleChange} required /></div>
-                            
+
                             <div className="form-group">
                                 <label>Category</label>
-                                <select 
-                                    name="category_id" 
-                                    value={formData.category_id} 
-                                    onChange={handleChange} 
-                                    style={{padding: '10px', width: '100%', borderRadius: '5px', border: '1px solid #ccc'}}
+                                <select
+                                    name="category_id"
+                                    value={formData.category_id}
+                                    onChange={handleChange}
+                                    style={{ padding: '10px', width: '100%', borderRadius: '5px', border: '1px solid #ccc' }}
                                 >
                                     {categories.map(cat => (
                                         <option key={cat.category_id} value={cat.category_id}>
@@ -289,19 +322,37 @@ const handleAddProduct = async (e) => {
                                 </select>
                             </div>
 
-                            <div className="form-group"><label>Image URL</label><input name="image_url" value={formData.image_url} onChange={handleChange} required /></div>
-                            
-                            <button 
-                                type="submit" 
+
+                            <div className="form-group">
+                                <label>Product Image</label>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleImageUpload}
+                                    style={{ padding: '10px 0' }}
+                                />
+                                {isUploading && <span style={{ color: '#0984e3', fontSize: '14px', fontWeight: 'bold' }}>⏳ Uploading to Cloudinary...</span>}
+                            </div>
+
+                            {/* Show a preview of the image once it finishes uploading! */}
+                            {formData.image_url && (
+                                <div style={{ textAlign: 'center', margin: '15px 0' }}>
+                                    <img src={formData.image_url} alt="Preview" style={{ height: '120px', borderRadius: '8px', border: '2px solid #2ecc71' }} />
+                                    <p style={{ color: '#2ecc71', fontSize: '12px', margin: '5px 0' }}>✅ Image Ready</p>
+                                </div>
+                            )}
+
+                            <button
+                                type="submit"
                                 style={{
-                                    background: '#ff9f43', 
-                                    color: 'white', 
-                                    padding: '12px 20px', 
-                                    border: 'none', 
-                                    borderRadius: '5px', 
-                                    cursor: 'pointer', 
-                                    fontWeight: 'bold', 
-                                    width: '100%', 
+                                    background: '#ff9f43',
+                                    color: 'white',
+                                    padding: '12px 20px',
+                                    border: 'none',
+                                    borderRadius: '5px',
+                                    cursor: 'pointer',
+                                    fontWeight: 'bold',
+                                    width: '100%',
                                     fontSize: '16px',
                                     marginTop: '15px'
                                 }}
@@ -329,16 +380,16 @@ const handleAddProduct = async (e) => {
                             <tbody>
                                 {products.map(p => (
                                     <tr key={p.product_id}>
-                                        <td style={styles.td}><img src={p.image_url} alt="" style={{width: '40px', borderRadius:'4px'}}/></td>
+                                        <td style={styles.td}><img src={p.image_url} alt="" style={{ width: '40px', borderRadius: '4px' }} /></td>
                                         <td style={styles.td}>{p.name}</td>
                                         <td style={styles.td}>৳ {p.price}</td>
                                         <td style={styles.td}>{p.stock_quantity}</td>
                                         <td style={styles.td}>
                                             {/* Conditionally render the button based on status */}
                                             {p.is_active ? (
-                                                <button 
+                                                <button
                                                     onClick={() => handleDeleteProduct(p.product_id)}
-                                                    style={{color: 'white', backgroundColor: '#e74c3c', border:'none', padding: '6px 10px', borderRadius: '4px', cursor:'pointer', fontWeight: 'bold'}}
+                                                    style={{ color: 'white', backgroundColor: '#e74c3c', border: 'none', padding: '6px 10px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
                                                 >
                                                     Deactivate
                                                 </button>
@@ -358,8 +409,8 @@ const handleAddProduct = async (e) => {
             </div>
 
 
-            </div>
-        
+        </div>
+
     );
 };
 

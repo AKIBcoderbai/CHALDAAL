@@ -1,0 +1,245 @@
+.od-container {
+  max-width: 1000px;
+  margin: 40px auto;
+  padding: 0 20px;
+}
+
+.back-btn {
+  background: none;
+  border: none;
+  color: #0984e3;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 20px;
+  padding: 0;
+}
+.back-btn:hover {
+  text-decoration: underline;
+}
+
+.od-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 30px;
+  background: white;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+.od-header h1 {
+  margin: 0 0 5px 0;
+  color: #2d3436;
+}
+
+.order-date {
+  margin: 0;
+  color: #636e72;
+}
+
+.od-status {
+  padding: 8px 16px;
+  border-radius: 30px;
+  font-weight: bold;
+  text-transform: uppercase;
+  font-size: 14px;
+}
+.status-pending { background: #ffeaa7; color: #d35400; }
+.status-ontheway { background: #81ecec; color: #00cec9; }
+.status-delivered { background: #55efc4; color: #00b894; }
+
+.od-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 30px;
+}
+
+.od-card {
+  background: white;
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+  margin-bottom: 30px;
+}
+
+.od-card h3 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 0;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 15px;
+  color: #2d3436;
+}
+
+.od-item-row {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 15px 0;
+  border-bottom: 1px solid #f1f2f6;
+}
+.od-item-row:last-child {
+  border-bottom: none;
+}
+
+.od-item-img {
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: #f8f9fa;
+  border: 1px solid #eee;
+}
+
+.od-item-info {
+  flex: 1;
+}
+
+.od-item-info h4 {
+  margin: 0 0 5px 0;
+  color: #2d3436;
+}
+
+.od-item-info p {
+  margin: 0;
+  color: #636e72;
+}
+
+.od-review-btn {
+  background: #fff;
+  border: 1px solid #0984e3;
+  color: #0984e3;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+.od-review-btn:hover {
+  background: #0984e3;
+  color: white;
+}
+
+.od-total {
+  text-align: right;
+  font-size: 20px;
+  font-weight: bold;
+  color: #d63031;
+  padding-top: 20px;
+  border-top: 2px dashed #eee;
+}
+
+.od-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+.timeline-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  color: #555;
+}
+.timeline-item strong {
+  color: #2d3436;
+}
+
+.rider-info-box {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.rider-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #0984e3;
+}
+
+.rider-details h4 {
+  margin: 0 0 5px 0;
+  color: #2d3436;
+}
+
+.rider-rating {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 14px;
+  color: #636e72;
+}
+
+.od-submit-btn {
+  width: 100%;
+  background: #2ed573;
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.od-submit-btn:hover {
+  background: #26b962;
+}
+
+/* Modal Styling */
+.od-modal-backdrop {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.od-modal {
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 500px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.od-cancel-btn {
+  width: 100%;
+  background: #f1f2f6;
+  color: #2d3436;
+  border: none;
+  padding: 12px;
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+}
+.od-cancel-btn:hover {
+  background: #dfe6e9;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+@media (max-width: 768px) {
+  .od-grid {
+    grid-template-columns: 1fr;
+  }
+}

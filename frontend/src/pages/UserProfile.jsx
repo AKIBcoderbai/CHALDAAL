@@ -1,182 +1,257 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { FaUserEdit, FaBox, FaSignOutAlt, FaCamera } from "react-icons/fa";
 import './UserProfile.css';
 
-
 export default function UserProfile({ user, onLogout }) {
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState("orders");
   const [orders, setOrders] = useState([]);
+  const [profileData, setProfileData] = useState(user || {});
   const [avatarUrl, setAvatarUrl] = useState(user?.image_url || "");
-  const [reviewData, setReviewData] = useState([]);
-  const [activeReview, setActiveReview] = useState(null);
-  let fetchOrdersSaved=null;
-  useEffect(() => {
-    const fetchOrders = async () => {
-      const token = localStorage.getItem("token");
-      try {
-        const response = await fetch("http://localhost:3000/api/profile/me", {
-          headers: { "Authorization": `Bearer ${token}` }
-        });
+  const [isUploading, setIsUploading] = useState(false);
 
-        if (response.status == 401 || response.status == 403) {
-          window.dispatchEvent(new Event('session_expired'));
-          return;
-        }
+  // Settings form state
+  const [updateForm, setUpdateForm] = useState({
+    name: user?.name || "",
+    phone: user?.phone || "",
+    password: ""
+  });
 
-        if (response.ok) {
-          const profileData = await response.json();
-          setOrders(profileData.orders || []);
-          if (profileData.image_url) {
-            setAvatarUrl(profileData.image_url);
-          }
-        }
-      } catch (err) {
-        console.error("Failed to load orders");
+  const fetchProfileInfo = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    try {
+      const response = await fetch("http://localhost:3000/api/profile/me", {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (response.status === 401 || response.status === 403) {
+        window.dispatchEvent(new Event('session_expired'));
+        return;
       }
-    };
+      if (response.ok) {
+        const data = await response.json();
+        setProfileData(data);
+        setOrders(data.orders || []);
+        if (data.image_url) setAvatarUrl(data.image_url);
+        setUpdateForm(prev => ({
+          ...prev,
+          name: data.name || prev.name,
+          phone: data.phone || prev.phone
+        }));
+      }
+    } catch (err) {
+      console.error("Failed to load profile");
+    }
+  };
 
-    fetchOrdersSaved=fetchOrders;
-    if (user) fetchOrders();
+  useEffect(() => {
+    if (user) fetchProfileInfo();
   }, [user]);
 
-  const handleUpdateAvatar = async () => {
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setIsUploading(true);
     const token = localStorage.getItem("token");
-    await fetch("http://localhost:3000/api/users/avatar", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-      body: JSON.stringify({ image_url: avatarUrl })
-    });
-    alert("Profile image updated!");
+
+    const uploadData = new FormData();
+    uploadData.append("image", file);
+
+    try {
+      const uploadRes = await fetch('http://localhost:3000/api/upload', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: uploadData
+      });
+
+      if (uploadRes.ok) {
+        const data = await uploadRes.json();
+        const newImageUrl = data.image_url;
+        setAvatarUrl(newImageUrl);
+
+        await fetch("http://localhost:3000/api/users/avatar", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+          body: JSON.stringify({ image_url: newImageUrl })
+        });
+        alert("Profile image updated successfully!");
+        fetchProfileInfo();
+      } else {
+        alert("Failed to upload image.");
+      }
+    } catch (error) {
+      alert("Server connection failed.");
+    } finally {
+      setIsUploading(false);
+    }
   };
 
-  const submitReview = async (e) => {
+  const handleUpdateProfile = async (e) => {
     e.preventDefault();
     const token = localStorage.getItem("token");
-    const response = await fetch("http://localhost:3000/api/profile/reviews", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-      body: JSON.stringify({
-        product_id: activeReview.productId,
-        rating: activeReview.rating,
-        comment: activeReview.comment
-      })
-    });
-    if (response.status == 401 || response.status == 403) {
-      window.dispatchEvent(new Event('session_expired'));
-      return;
-    }
-
-    if (response.ok) {
-      alert("Review submitted!");
-      setActiveReview({ productId: null, rating: 5, comment: "" });
-      if(fetchOrdersSaved) fetchOrdersSaved();
+    try {
+      const res = await fetch("http://localhost:3000/api/profile/update", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          name: updateForm.name,
+          phone: updateForm.phone,
+          password: updateForm.password
+        })
+      });
+      if (res.ok) {
+        alert("Profile info updated successfully!");
+        setUpdateForm({ ...updateForm, password: "" }); // clear password field
+        fetchProfileInfo();
+      } else {
+        alert("Failed to update profile.");
+      }
+    } catch (err) {
+      alert("Update failed due to network error.");
     }
   };
 
-  if (!user) return <div style={{ padding: '50px' }}>Please log in.</div>;
+  if (!user) return <div className="no-access">Please log in to view your profile.</div>;
 
   return (
-    <div className="profile-container" style={{ padding: '40px', maxWidth: '800px', margin: '0 auto' }}>
-
-      {/* 1. PROFILE HEADER */}
-      <div className="profile-header" style={{ display: 'flex', gap: '20px', marginBottom: '40px' }}>
-        {avatarUrl ? (
-          <img src={avatarUrl} alt="Profile" />
-        ) : (
-          <div style={{
-            width: '100px', height: '100px', borderRadius: '50%',
-            background: '#eee', display: 'flex', alignItems: 'center',
-            justifyContent: 'center', fontWeight: 'bold', color: '#888',
-            border: '3px solid #f0f0f0'
-          }}>
-            Profile
-          </div>
-        )}
-        <div>
-          <h2>{user.name}</h2>
-          <p>{user.email}</p>
-          <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-            <input
-              type="text"
-              placeholder="Paste Image URL..."
-              value={avatarUrl}
-              onChange={(e) => setAvatarUrl(e.target.value)}
+    <div className="profile-dashboard">
+      <div className="profile-sidebar">
+        <div className="sidebar-header">
+          <div className="avatar-wrapper">
+            <img 
+              src={avatarUrl || "https://cdn-icons-png.flaticon.com/512/149/149071.png"} 
+              alt="Avatar" 
+              className="sidebar-avatar" 
             />
-            <button onClick={handleUpdateAvatar}>Update Image</button>
+            <label htmlFor="avatar-upload" className="avatar-upload-btn">
+              <FaCamera />
+            </label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              id="avatar-upload"
+              style={{ display: 'none' }}
+              disabled={isUploading}
+            />
           </div>
+          <h3>{profileData.name || user.name}</h3>
+          <p>{profileData.email || user.email}</p>
         </div>
-        <button onClick={onLogout} style={{ marginLeft: 'auto', height: '40px', background: 'red', color: 'white' }}>
-          Logout
-        </button>
+
+        <nav className="sidebar-nav">
+          <button 
+            className={activeTab === "orders" ? "active" : ""} 
+            onClick={() => setActiveTab("orders")}
+          >
+            <FaBox /> My Orders
+          </button>
+          <button 
+            className={activeTab === "settings" ? "active" : ""} 
+            onClick={() => setActiveTab("settings")}
+          >
+            <FaUserEdit /> Settings
+          </button>
+          <button className="logout-btn" onClick={onLogout}>
+            <FaSignOutAlt /> Logout
+          </button>
+        </nav>
       </div>
 
-      {/* 2. ORDER HISTORY */}
-      <h3>Order History</h3>
-      {orders.length === 0 ? <p>No orders yet.</p> : (
-        <div className="order-list">
-          {orders.map(order => (
-            <div key={order.order_id} style={{ border: '1px solid #ddd', padding: '15px', marginBottom: '15px', borderRadius: '8px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-                <strong>Order #{order.order_id}</strong>
-                <span style={{
-                  padding: '4px 8px', borderRadius: '4px',
-                  background: order.status.toLowerCase() === 'delivered' ? 'lightgreen' : 'gold'
-                }}>
-                  Status: {order.status}
-                </span>
+      <div className="profile-content">
+        {activeTab === "orders" && (
+          <div className="tab-pane">
+            <h2>Order History</h2>
+            {orders.length === 0 ? (
+              <div className="empty-state">You haven't placed any orders yet.</div>
+            ) : (
+              <div className="orders-grid">
+                {orders.map(order => (
+                  <div 
+                    key={order.order_id} 
+                    className="order-card"
+                    onClick={() => navigate(`/order/${order.order_id}`)}
+                  >
+                    <div className="order-card-header">
+                      <span className="order-number">Order #{order.order_id}</span>
+                      <span className={`order-status status-${order.status.toLowerCase()}`}>
+                        {order.status}
+                      </span>
+                    </div>
+                    <div className="order-card-body">
+                      <div className="items-preview">
+                        {order.items.slice(0, 3).map((item, idx) => (
+                           <div key={idx} className="item-thumb-row">
+                             <img src={item.image} alt={item.name} />
+                             <span className="item-name">{item.qty}x {item.name}</span>
+                           </div>
+                        ))}
+                        {order.items.length > 3 && (
+                          <div className="more-items">+{order.items.length - 3} more items...</div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="order-card-footer">
+                      <button className="view-details-btn">View Full Details &rarr;</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === "settings" && (
+          <div className="tab-pane">
+            <h2>Account Settings</h2>
+            <form className="settings-form" onSubmit={handleUpdateProfile}>
+              <div className="form-group">
+                <label>Email Address</label>
+                <input type="text" value={profileData.email || user.email} disabled className="disabled-input" />
+                <small>Email address cannot be changed.</small>
               </div>
 
-              {order.items.map(item => (
-                <div key={item.product_id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '10px 0' }}>
-                  <span>{item.qty}x {item.name}</span>
+              <div className="form-group">
+                <label>Full Name</label>
+                <input 
+                  type="text" 
+                  value={updateForm.name} 
+                  onChange={(e) => setUpdateForm({...updateForm, name: e.target.value})} 
+                  required 
+                />
+              </div>
 
-                  {/* Show Review Button ONLY if delivered */}
-                  {order.status.toLowerCase() === 'delivered' && (
-                    <button onClick={() => setActiveReview({ productId: item.product_id, rating: 5, comment: "" })}>
-                      Leave Review
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-          ))}
-        </div>
-      )}
+              <div className="form-group">
+                <label>Phone Number</label>
+                <input 
+                  type="text" 
+                  value={updateForm.phone} 
+                  onChange={(e) => setUpdateForm({...updateForm, phone: e.target.value})} 
+                  required 
+                />
+              </div>
 
-      {/* 3. REVIEW MODAL/FORM */}
-      {activeReview && (
-        <div style={{ padding: '20px', background: '#f9f9f9', border: '1px solid #ccc', marginTop: '20px', borderRadius: '8px' }}>
-          <h4>Write a Review for Product #{activeReview.productId}</h4>
-          <form onSubmit={submitReview}>
-            <select 
-              value={activeReview.rating} 
-              onChange={(e) => setActiveReview({ ...activeReview, rating: Number(e.target.value) })}
-            >
-              <option value={5}>5 Stars</option>
-              <option value={4}>4 Stars</option>
-              <option value={3}>3 Stars</option>
-              <option value={2}>2 Stars</option>
-              <option value={1}>1 Star</option>
-            </select>
-            <br /><br />
-            <textarea
-              placeholder="How was it?"
-              value={activeReview.comment || ""}
-              onChange={(e) => setActiveReview({ ...activeReview, comment: e.target.value })}
-              required
-              style={{ width: '100%', height: '80px', padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }}
-            />
-            <br /><br />
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button type="submit" style={{ padding: '8px 16px', background: '#2ed573', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-                  Submit Review
-              </button>
-              <button type="button" onClick={() => setActiveReview(null)} style={{ padding: '8px 16px', background: '#ccc', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-                  Cancel
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
+              <div className="form-group divider-group">
+                <h3>Security</h3>
+                <label>New Password (leave blank to keep current)</label>
+                <input 
+                  type="password" 
+                  placeholder="••••••••"
+                  value={updateForm.password}
+                  onChange={(e) => setUpdateForm({...updateForm, password: e.target.value})}
+                />
+              </div>
 
+              <button type="submit" className="save-btn">Save Changes</button>
+            </form>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

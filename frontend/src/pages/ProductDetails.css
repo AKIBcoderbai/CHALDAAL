@@ -1,0 +1,337 @@
+.product-details-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 30px 20px;
+  background-color: #fafafa;
+  min-height: 100vh;
+}
+
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: none;
+  color: #555;
+  cursor: pointer;
+  font-size: 16px;
+  margin-bottom: 25px;
+}
+.back-btn:hover {
+  text-decoration: underline;
+  color: #e74c3c;
+}
+
+.pd-top-section {
+  display: flex;
+  gap: 40px;
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+  margin-bottom: 40px;
+}
+
+/* Image with Zoom styling */
+.pd-image-section {
+  flex: 0 0 45%;
+}
+
+.pd-image-wrapper {
+  position: relative;
+  width: 100%;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: crosshair;
+  background: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.pd-main-image {
+  width: 100%;
+  height: auto;
+  max-height: 500px;
+  object-fit: contain;
+  display: block;
+}
+
+/* 
+ * The zoom lens is essentially a pseudo-layer over the image wrapper. 
+ * We use background-image to display the zoomed-in version and background-position to track mouse.
+ */
+.pd-zoom-lens {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-repeat: no-repeat;
+  background-size: 250%; /* Adjust magnification */
+  z-index: 10;
+  pointer-events: none; /* Let the mouse events pass through to wrapper */
+  border-radius: 8px;
+}
+
+.pd-info-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.pd-category {
+  color: #0984e3;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.pd-title {
+  font-size: 28px;
+  color: #2d3436;
+  margin-bottom: 15px;
+}
+
+.pd-rating {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.stars {
+  color: #ffaa00;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.review-count {
+  color: #888;
+  font-size: 14px;
+}
+
+.pd-price-row {
+  margin-bottom: 25px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.pd-price {
+  font-size: 32px;
+  font-weight: 800;
+  color: #d63031;
+}
+
+.pd-unit {
+  font-size: 16px;
+  color: #636e72;
+  margin-left: 8px;
+}
+
+.pd-description {
+  font-size: 16px;
+  line-height: 1.6;
+  color: #555;
+  margin-bottom: 30px;
+}
+
+.pd-stock {
+  margin-bottom: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.stock-in { color: #2ecc71; font-weight: bold; }
+.stock-low { color: #f39c12; font-weight: bold; }
+.stock-out { color: #e74c3c; font-weight: bold; }
+
+.seller-name {
+  font-size: 14px;
+  color: #888;
+}
+
+.pd-cart-action {
+  margin-top: auto;
+}
+
+.pd-add-btn {
+  width: 100%;
+  padding: 15px;
+  background: #ff9f43;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.pd-add-btn:hover:not(:disabled) {
+  background: #e67e22;
+}
+
+.pd-add-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.pd-qty-control {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: #fdfdfd;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.pd-qty-control button {
+  width: 50px;
+  height: 50px;
+  background: transparent;
+  border: none;
+  font-size: 24px;
+  color: #e74c3c;
+  cursor: pointer;
+}
+
+.pd-qty-control button:hover {
+  background: #eee;
+}
+
+.pd-qty-control span {
+  font-size: 20px;
+  font-weight: bold;
+}
+
+
+/* Reviews Section */
+.pd-bottom-section {
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+.pd-reviews-container h2 {
+  margin-bottom: 25px;
+  color: #2d3436;
+}
+
+.pd-review-form {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 40px;
+}
+
+.pd-review-form h3 {
+  margin-bottom: 15px;
+  font-size: 18px;
+}
+
+.form-group {
+  margin-bottom: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.form-group select, 
+.form-group textarea {
+  padding: 10px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-family: inherit;
+}
+
+.pd-submit-review {
+  background: #3498db;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+}
+.pd-submit-review:hover {
+  background: #2980b9;
+}
+
+.login-prompt {
+  background: #fdf5e6;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 40px;
+  color: #d35400;
+  text-align: center;
+}
+.login-prompt button {
+  background: none;
+  border: none;
+  color: #e67e22;
+  text-decoration: underline;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.pd-review-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.review-card {
+  padding: 20px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+}
+
+.review-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.reviewer-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.reviewer-info img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.reviewer-name {
+  font-weight: 600;
+  color: #333;
+}
+
+.review-stars {
+  display: flex;
+  gap: 2px;
+}
+
+.review-comment {
+  color: #555;
+  line-height: 1.5;
+}
+
+@media (max-width: 768px) {
+  .pd-top-section {
+    flex-direction: column;
+  }
+}
