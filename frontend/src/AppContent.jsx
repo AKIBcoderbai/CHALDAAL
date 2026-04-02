@@ -14,7 +14,10 @@ import Home from "./pages/Home";
 import useProducts from "./hooks/useProducts";
 import useCart from "./hooks/useCart";
 import UserProfile from "./pages/UserProfile";
-import AdminDashboard from "./pages/AdminDashboard";
+import AdminLayout from "./pages/admin/AdminLayout";
+import AdminAnalytics from "./pages/admin/AdminAnalytics";
+import AdminMessaging from "./pages/admin/AdminMessaging";
+import AdminProducts from "./pages/admin/AdminProducts";
 import RiderDashboard from "./pages/RiderDashBoard";
 import OrderDetails from "./pages/OrderDetails";
 import AdminSignupTest from "./pages/AdminSignupTest";
@@ -350,11 +353,14 @@ export default function AppContent() {
         />
 
         {/* ADMIN ROUTES */}
-        <Route path="/admin" element={<Navigate to="/admin-dashboard" replace />} />
-        <Route
-          path="/admin-dashboard"
-          element={<AdminDashboard user={user} onLogout={handleLogout} />}
-        />
+        <Route path="/admin-dashboard" element={<Navigate to="/admin" replace />} />
+        
+        <Route path="/admin" element={<AdminLayout user={user} onLogout={handleLogout} />}>
+          <Route index element={<Navigate to="analytics" replace />} />
+          <Route path="analytics" element={<AdminAnalytics />} />
+          <Route path="messaging" element={<AdminMessaging />} />
+          <Route path="products" element={<AdminProducts />} />
+        </Route>
       </Routes>
 
       <CartSidebar

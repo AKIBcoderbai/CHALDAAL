@@ -1,0 +1,115 @@
+.messaging-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+}
+
+.admin-form .form-group {
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-form label {
+  font-size: 14px;
+  font-weight: bold;
+  color: #2c3e50;
+  margin-bottom: 8px;
+}
+
+.admin-form select,
+.admin-form input,
+.admin-form textarea {
+  padding: 12px;
+  border: 1px solid #dfe6e9;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 15px;
+  transition: border-color 0.2s;
+  background-color: #fafafa;
+}
+
+.admin-form select:focus,
+.admin-form input:focus,
+.admin-form textarea:focus {
+  outline: none;
+  border-color: #3498db;
+  background-color: #fff;
+}
+
+.submit-btn {
+  background: #3498db;
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+  width: 100%;
+}
+
+.submit-btn:hover {
+  background: #2980b9;
+}
+
+.submit-btn:disabled {
+  background: #95a5a6;
+  cursor: not-allowed;
+}
+
+/* Log Styles */
+.admin-log-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.admin-log-item {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  padding: 15px;
+  border-radius: 8px;
+}
+
+.log-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.log-header strong {
+  color: #2c3e50;
+  font-size: 16px;
+}
+
+.log-date {
+  font-size: 12px;
+  color: #95a5a6;
+}
+
+.log-seller-badge {
+  display: inline-block;
+  background: #e3f2fd;
+  color: #0984e3;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.log-body {
+  margin: 0;
+  color: #7f8fa6;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+@media (max-width: 900px) {
+  .messaging-grid {
+    grid-template-columns: 1fr;
+  }
+}

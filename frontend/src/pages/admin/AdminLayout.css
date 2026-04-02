@@ -1,0 +1,136 @@
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f4f6f9;
+}
+
+.forbidden-view {
+  align-items: center;
+  justify-content: center;
+}
+
+.forbidden-card {
+  background: white;
+  padding: 40px;
+  border-radius: 10px;
+  text-align: center;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.admin-sidebar {
+  width: 250px;
+  background-color: #2c3e50;
+  color: white;
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-sidebar-header {
+  padding: 30px 20px;
+  border-bottom: 1px solid #34495e;
+}
+
+.admin-sidebar-header h2 {
+  margin: 0 0 10px 0;
+  font-size: 24px;
+}
+
+.admin-sidebar-header p {
+  color: #bdc3c7;
+  margin: 0;
+  font-size: 14px;
+}
+
+.admin-nav {
+  display: flex;
+  flex-direction: column;
+  padding: 20px 0;
+  flex: 1;
+}
+
+.admin-nav a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 15px 25px;
+  color: #ecf0f1;
+  text-decoration: none;
+  font-size: 16px;
+  transition: background 0.2s;
+  border-left: 4px solid transparent;
+}
+
+.admin-nav a:hover, .admin-nav a.active {
+  background-color: #34495e;
+  border-left-color: #3498db;
+}
+
+.admin-nav-logout {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 15px 25px;
+  margin-top: auto;
+  border: none;
+  background: transparent;
+  color: #e74c3c;
+  cursor: pointer;
+  font-size: 16px;
+  text-align: left;
+  border-left: 4px solid transparent;
+}
+
+.admin-nav-logout:hover {
+  background-color: #34495e;
+}
+
+.admin-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.admin-topbar {
+  background: white;
+  padding: 20px 30px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.admin-topbar h3 {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 22px;
+}
+
+.admin-content {
+  flex: 1;
+  padding: 30px;
+  overflow-y: auto;
+}
+
+/* Reusable card styles for nested components */
+.admin-card {
+  background: white;
+  border-radius: 10px;
+  padding: 25px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+  margin-bottom: 30px;
+}
+
+.admin-card h3 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  color: #2c3e50;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 15px;
+}
+
+@media (max-width: 768px) {
+  .admin-layout {
+    flex-direction: column;
+  }
+  .admin-sidebar {
+    width: 100%;
+  }
+}

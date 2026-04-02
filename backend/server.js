@@ -661,6 +661,43 @@ app.get('/api/categories', async (req, res) => {
 
 // --- ADMIN ROUTES ---
 
+app.get('/api/admin/analytics', authenticateToken, requireRole(['admin']), async (req, res) => {
+    try {
+        const usersCountRes = await pool.query("SELECT COUNT(*) FROM person WHERE role = 'user'");
+        const sellersCountRes = await pool.query("SELECT COUNT(*) FROM person WHERE role = 'seller'");
+        const ridersCountRes = await pool.query("SELECT COUNT(*) FROM person WHERE role = 'rider'");
+        
+        const productsCountRes = await pool.query("SELECT COUNT(*) FROM products");
+        const productsSoldRes = await pool.query("SELECT COALESCE(SUM(sell_count), 0) as total_sold FROM products");
+        
+        const ordersCountRes = await pool.query("SELECT COUNT(*) FROM orders");
+        const revenueRes = await pool.query("SELECT COALESCE(SUM(amount), 0) as total_revenue FROM payment WHERE status IN ('pending', 'completed')");
+
+        // Advanced: sales over time (last 7 days grouped by date)
+        const recentSalesRes = await pool.query(`
+            SELECT DATE(order_time) as sale_date, COUNT(*) as order_count
+            FROM orders 
+            WHERE order_time >= CURRENT_DATE - INTERVAL '7 days'
+            GROUP BY DATE(order_time)
+            ORDER BY sale_date ASC
+        `);
+
+        res.json({
+            users: parseInt(usersCountRes.rows[0].count),
+            sellers: parseInt(sellersCountRes.rows[0].count),
+            riders: parseInt(ridersCountRes.rows[0].count),
+            totalProducts: parseInt(productsCountRes.rows[0].count),
+            totalProductsSold: parseInt(productsSoldRes.rows[0].total_sold),
+            totalOrders: parseInt(ordersCountRes.rows[0].count),
+            totalRevenue: parseFloat(revenueRes.rows[0].total_revenue),
+            recentSales: recentSalesRes.rows
+        });
+    } catch (err) {
+        console.error("ADMIN ANALYTICS ERROR:", err.message);
+        res.status(500).json({ error: "Failed to fetch analytics data." });
+    }
+});
+
 // 12. GET ALL PRODUCTS FOR ADMIN MONITORING
 app.get('/api/admin/products', authenticateToken, requireRole(['admin']), async (req, res) => {
     try {
