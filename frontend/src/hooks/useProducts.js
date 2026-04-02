@@ -28,6 +28,7 @@ export default function useProducts() {
                     category: item.category,
                     unit: item.unit,
                     stock: item.stock,
+                    rating:item.rating
                 }));
 
                 setProducts(mappedData);

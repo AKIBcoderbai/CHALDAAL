@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { FaUserEdit, FaBox, FaSignOutAlt, FaCamera } from "react-icons/fa";
 import './UserProfile.css';
 
-export default function UserProfile({ user, onLogout }) {
+export default function UserProfile({ user, onUpdateUser, onLogout }) {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("orders");
   const [orders, setOrders] = useState([]);
@@ -76,6 +76,9 @@ export default function UserProfile({ user, onLogout }) {
           headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
           body: JSON.stringify({ image_url: newImageUrl })
         });
+        if (onUpdateUser) {
+              onUpdateUser({ image_url: newImageUrl }); 
+            }
         alert("Profile image updated successfully!");
         fetchProfileInfo();
       } else {
@@ -107,6 +110,13 @@ export default function UserProfile({ user, onLogout }) {
       if (res.ok) {
         alert("Profile info updated successfully!");
         setUpdateForm({ ...updateForm, password: "" }); // clear password field
+        if (onUpdateUser) {
+          onUpdateUser({ 
+            name: updateForm.name, 
+            full_name: updateForm.name, 
+            phone: updateForm.phone 
+          });
+        }
         fetchProfileInfo();
       } else {
         alert("Failed to update profile.");

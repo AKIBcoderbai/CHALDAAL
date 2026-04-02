@@ -57,8 +57,10 @@ export default function OrderDetails({ user }) {
       });
       if (res.ok) {
         alert("Product review submitted!");
+        
         setActiveReviewProdId(null);
         setReviewForm({ rating: 5, comment: "" });
+        await fetchOrderDetails(); 
       }
     } catch (err) {
       alert("Failed to submit review");
@@ -80,8 +82,11 @@ export default function OrderDetails({ user }) {
       });
       if (res.ok) {
         alert("Rider review submitted!");
+        
         setRiderReviewVisible(false);
         setReviewForm({ rating: 5, comment: "" });
+        // This will instantly update the Rider's 5-star average on the screen!
+        await fetchOrderDetails(); 
       }
     } catch (err) {
       alert("Failed to submit rider review");

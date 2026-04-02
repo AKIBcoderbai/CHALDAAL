@@ -15,7 +15,7 @@ import useProducts from "./hooks/useProducts";
 import useCart from "./hooks/useCart";
 import UserProfile from "./pages/UserProfile";
 import AdminDashboard from "./pages/AdminDashboard";
-import RiderDashboard from "./pages/RiderDashboard";
+import RiderDashboard from "./pages/RiderDashBoard";
 import OrderDetails from "./pages/OrderDetails";
 import AdminSignupTest from "./pages/AdminSignupTest";
 import ProductDetails from "./pages/ProductDetails";
@@ -206,6 +206,12 @@ export default function AppContent() {
     }
   };
 
+  const handleUpdateUser = (updatedFields) => {
+    const updatedUser = { ...user, ...updatedFields };
+    setUser(updatedUser);
+    localStorage.setItem("chaldal_user", JSON.stringify(updatedUser));
+  };
+
   return (
     <div className="app-container">
       {/* --- HEADER --- */}
@@ -312,6 +318,7 @@ export default function AppContent() {
           element={
             <UserProfile
               user={user}
+              onUpdateUser={handleUpdateUser}
               onLogout={handleLogout}
             />
           }

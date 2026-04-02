@@ -71,7 +71,7 @@ app.get('/api/products', async (req, res) => {
                 p.stock,
                 p.unit,
                 p.image_url as image,
-                p.rating,
+                p.rating as rating,
                 c.name as category
             FROM products p 
             JOIN category c ON p.category_id = c.category_id 
@@ -902,6 +902,49 @@ app.delete('/api/cart/clear', authenticateToken, async (req, res) => {
     }
 });
 
+
+app.put('/api/cart/sync', authenticateToken, async (req, res) => {
+    const client = await pool.connect();
+    try {
+        const userId = req.user.user_id;
+        const { cart } = req.body;
+
+        await client.query('BEGIN');
+
+        // 1. Find or create the user's cart ID
+        const cartResult = await client.query(`SELECT cart_id FROM cart WHERE user_id = $1 LIMIT 1`, [userId]);
+        let cartId;
+        if (cartResult.rows.length === 0) {
+            const newCart = await client.query('INSERT INTO cart(user_id) VALUES ($1) RETURNING cart_id', [userId]);
+            cartId = newCart.rows[0].cart_id;
+        } else {
+            cartId = cartResult.rows[0].cart_id;
+        }
+
+        // 2. Wipe the old cart slate clean
+        await client.query(`DELETE FROM cart_items WHERE cart_id = $1`, [cartId]);
+
+        // 3. Insert the perfectly accurate new items
+        if (cart && cart.length > 0) {
+            for (const item of cart) {
+                await client.query(
+                    `INSERT INTO cart_items(cart_id, product_id, quantity, price) VALUES($1, $2, $3, $4)`,
+                    [cartId, item.id || item.product_id, item.qty, item.price]
+                );
+            }
+        }
+
+        await client.query('COMMIT');
+        res.json({ message: "Cart synced perfectly!" });
+    } catch (err) {
+        await client.query('ROLLBACK');
+        console.error("Cart Sync Error:", err);
+        res.status(500).json({ error: "Failed to sync cart" });
+    } finally {
+        client.release();
+    }
+});
+
 //user profile logic now
 
 app.get('/api/profile/me',authenticateToken, async (req, res) => {
@@ -991,18 +1034,21 @@ app.get('/api/orders/:id', authenticateToken, async (req, res) => {
         const query = `
             SELECT 
                 o.order_id, o.order_time, o.status,
-                d.pickup_time, d.estimated_arrival,
+                d.pickup_time, 
+                d.arrival_time AS estimated_arrival,
                 o.rider_id, 
                 r_person.name as rider_name, r_person.image_url as rider_image, r_rider.rating as rider_rating,
                 COALESCE(
                     (SELECT json_agg(json_build_object(
                         'product_id', od.product_id,
-                        'name', od.product_name,
+                        'name', pr.name,             
                         'price', od.price,    
                         'qty', od.quantity,
-                        'image', od.image_url
+                        'image', pr.image_url        
                     ))
-                    FROM order_details od WHERE od.order_id = o.order_id), '[]'::json
+                    FROM order_details od 
+                    JOIN products pr ON od.product_id = pr.product_id
+                    WHERE od.order_id = o.order_id), '[]'::json
                 ) as items
             FROM orders o
             LEFT JOIN delivery d ON d.order_id = o.order_id
@@ -1012,13 +1058,10 @@ app.get('/api/orders/:id', authenticateToken, async (req, res) => {
         `;
 
         const result = await pool.query(query, [id]);
-        console.log(result)
         res.json(result.rows[0]);
     } catch (err) {
         console.error("GET ORDER DETAILS ERROR:", err.message);
         res.status(500).json({ error: "Failed to fetch order details" });
-        console.log('No Orders')
-
     }
 });
 

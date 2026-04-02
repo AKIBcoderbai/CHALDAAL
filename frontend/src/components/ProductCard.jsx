@@ -19,7 +19,7 @@ const ProductCard = ({ product, cart, onAddToCart, onUpdateQty, wishlisted, onTo
   const discount = product.originalPrice > product.price 
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
     : 0;
-  const rating = Number(product.rating || 0).toFixed(1);
+  const rating = product.rating?(Number(product.rating)).toFixed(2):0;
   const etaLabel = product.eta || "25-35 min";
   const isLowStock = typeof product.stock === "number" && product.stock > 0 && product.stock < 10;
   const isOutOfStock = typeof product.stock === "number" && product.stock <= 0;

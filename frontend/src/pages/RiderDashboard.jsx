@@ -8,6 +8,7 @@ export default function RiderDashboard({ user, onLogout }) {
   const [availableOrders, setAvailableOrders] = useState([]);
   const [myJobs, setMyJobs] = useState([]);
   const [avatarUrl, setAvatarUrl] = useState(user?.image_url || "");
+  const [isUploading, setIsUploading] = useState(false);
   // Location States
   const [isMapOpen, setIsMapOpen] = useState(false);
   const [riderLocation, setRiderLocation] = useState("Update your location to see nearby deliveries");
