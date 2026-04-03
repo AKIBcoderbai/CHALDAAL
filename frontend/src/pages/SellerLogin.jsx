@@ -56,44 +56,44 @@ const SellerLogin = ({ onLogin }) => {
     };
 
     return (
-        <div className="auth-container" style={{background: '#2d3436'}}>
-            <div className="auth-box">
-                <h2 style={{color: '#ff9f43'}}>💼 Seller {isSignup ? 'Registration' : 'Portal'}</h2>
-                <p style={{color: '#ddd'}}>Manage your business on Chaldal</p>
+        <div className="auth-container">
+            <div className="auth-card">
+                <h2>{isSignup ? 'Seller Registration' : 'Seller Portal'}</h2>
+                <p className="auth-subtitle">Manage your business on Chaldal</p>
                 
                 <form onSubmit={handleSubmit} className="auth-form">
                     {isSignup && (
                         <>
                             <div className="form-group">
-                                <label style={{color: '#fff'}}>Business / Full Name</label>
-                                <input type="text" name="full_name" required onChange={handleChange} />
+                                <label>Business / Full Name</label>
+                                <input type="text" name="full_name" required onChange={handleChange} placeholder="Enter your business name" />
                             </div>
                             <div className="form-group">
-                                <label style={{color: '#fff'}}>Phone</label>
-                                <input type="text" name="phone" required onChange={handleChange} />
+                                <label>Phone</label>
+                                <input type="text" name="phone" required onChange={handleChange} placeholder="017..." />
                             </div>
                         </>
                     )}
                     
                     <div className="form-group">
-                        <label style={{color: '#fff'}}>Email Address</label>
-                        <input type="email" name="email" required onChange={handleChange} />
+                        <label>Email Address</label>
+                        <input type="email" name="email" required onChange={handleChange} placeholder="seller@example.com" />
                     </div>
                     
                     <div className="form-group">
-                        <label style={{color: '#fff'}}>Password</label>
-                        <input type="password" name="password" required onChange={handleChange} />
+                        <label>Password</label>
+                        <input type="password" name="password" required onChange={handleChange} placeholder="Enter password" />
                     </div>
 
-                    <button type="submit" className="auth-btn" style={{background: '#ff9f43', border: 'none'}}>
+                    <button type="submit" className="auth-btn">
                         {isSignup ? 'Register Business' : 'Login to Dashboard'}
                     </button>
                 </form>
 
-                <p className="switch-auth" style={{color: '#aaa'}}>
+                <p className="switch-auth">
                     {isSignup ? "Already a seller?" : "Want to sell with us?"} 
-                    <span onClick={() => setIsSignup(!isSignup)} style={{color: '#ff9f43', cursor: 'pointer', marginLeft: '5px'}}>
-                        {isSignup ? " Login" : " Apply Now"}
+                    <span onClick={() => setIsSignup(!isSignup)} style={{ cursor: 'pointer', marginLeft: '5px', color: '#e91e63', fontWeight: 'bold' }}>
+                        {isSignup ? "Login" : "Apply Now"}
                     </span>
                 </p>
             </div>

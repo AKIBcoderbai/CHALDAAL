@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Auth.css';
+import './SellerDashboard.css';
 import { FaBox, FaChartLine, FaDollarSign, FaStar, FaSignOutAlt, FaEnvelopeOpenText, FaEdit, FaUserEdit, FaCamera } from 'react-icons/fa';
 
 const SellerDashboard = ({ user, onLogout, onUpdateUser }) => {
@@ -305,93 +306,80 @@ const SellerDashboard = ({ user, onLogout, onUpdateUser }) => {
         }
     };
 
-    const styles = {
-        container: { padding: '20px', background: '#f4f6f8', minHeight: '100vh' },
-        header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' },
-        statsGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '30px' },
-        statCard: { background: 'white', padding: '20px', borderRadius: '10px', boxShadow: '0 2px 10px rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', gap: '15px' },
-        iconBox: { width: '50px', height: '50px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', color: 'white' },
-        nav: { display: 'flex', gap: '15px', marginBottom: '20px', borderBottom: '1px solid #ddd', paddingBottom: '10px' },
-        navItem: (isActive) => ({ padding: '10px 20px', cursor: 'pointer', borderRadius: '5px', background: isActive ? '#2d3436' : 'transparent', color: isActive ? 'white' : '#555', fontWeight: '600' }),
-        table: { width: '100%', borderCollapse: 'collapse', background: 'white', borderRadius: '8px', overflow: 'hidden' },
-        th: { padding: '15px', background: '#2d3436', color: 'white', textAlign: 'left' },
-        td: { padding: '12px 15px', borderBottom: '1px solid #eee' }
-    };
-
     return (
-        <div style={styles.container}>
+        <div className="sd-container">
             {/* Header */}
-            <div style={styles.header}>
+            <div className="sd-header">
                 <div>
-                    <h2>👋 Welcome, {user?.full_name || user?.name}</h2>
-                    <p style={{ color: '#666' }}>Seller Dashboard</p>
+                    <h2>Welcome, {user?.full_name || user?.name}</h2>
+                    <p>Seller Dashboard</p>
                 </div>
-                <button onClick={onLogout} style={{ ...styles.navItem(true), background: '#e74c3c' }}>
+                <button onClick={onLogout} className="sd-logout-btn">
                     <FaSignOutAlt /> Logout
                 </button>
             </div>
 
             {/* Stats Cards */}
-            <div style={styles.statsGrid}>
-                <div style={styles.statCard}>
-                    <div style={{ ...styles.iconBox, background: '#3498db' }}><FaBox /></div>
+            <div className="sd-stats-grid">
+                <div className="sd-stat-card">
+                    <div className="sd-icon-box" style={{ background: '#eafaf1', color: '#2ecc71' }}><FaBox /></div>
                     <div><h3>{stats.total_products}</h3><p>Total Products</p></div>
                 </div>
-                <div style={styles.statCard}>
-                    <div style={{ ...styles.iconBox, background: '#2ecc71' }}><FaDollarSign /></div>
+                <div className="sd-stat-card">
+                    <div className="sd-icon-box" style={{ background: '#fff9e6', color: '#f1c40f' }}><FaDollarSign /></div>
                     <div><h3>৳ {stats.total_profit}</h3><p>Total Profit</p></div>
                 </div>
-                <div style={styles.statCard}>
-                    <div style={{ ...styles.iconBox, background: '#9b59b6' }}><FaChartLine /></div>
+                <div className="sd-stat-card">
+                    <div className="sd-icon-box" style={{ background: '#e3f2fd', color: '#3498db' }}><FaChartLine /></div>
                     <div><h3>{stats.total_sales}</h3><p>Items Sold</p></div>
                 </div>
-                <div style={styles.statCard}>
-                    <div style={{ ...styles.iconBox, background: '#f1c40f' }}><FaStar /></div>
+                <div className="sd-stat-card">
+                    <div className="sd-icon-box" style={{ background: '#f5eef8', color: '#9b59b6' }}><FaStar /></div>
                     <div><h3>{stats.rating}/5</h3><p>Seller Rating</p></div>
                 </div>
             </div>
 
             {/* Navigation Tabs */}
-            <div style={styles.nav}>
-                <div style={styles.navItem(activeTab === 'my-products')} onClick={() => setActiveTab('my-products')}>My Products</div>
-                <div style={styles.navItem(activeTab === 'add-product')} onClick={() => setActiveTab('add-product')}>+ Add New Product</div>
-                <div style={styles.navItem(activeTab === 'admin-messages')} onClick={() => setActiveTab('admin-messages')}>
+            <div className="sd-nav">
+                <div className={`sd-nav-item ${activeTab === 'my-products' ? 'active' : ''}`} onClick={() => setActiveTab('my-products')}>My Products</div>
+                <div className={`sd-nav-item ${activeTab === 'add-product' ? 'active' : ''}`} onClick={() => setActiveTab('add-product')}>+ Add New Product</div>
+                <div className={`sd-nav-item ${activeTab === 'admin-messages' ? 'active' : ''}`} onClick={() => setActiveTab('admin-messages')}>
                     Messages {adminMessages.length > 0 ? `(${adminMessages.length})` : ''}
                 </div>
-                <div style={styles.navItem(activeTab === 'advertise')} onClick={() => setActiveTab('advertise')}>
+                <div className={`sd-nav-item ${activeTab === 'advertise' ? 'active' : ''}`} onClick={() => setActiveTab('advertise')}>
                     Advertise {myAds.filter(a => a.is_active).length > 0 ? `(${myAds.filter(a => a.is_active).length} active)` : ''}
                 </div>
-                <div style={styles.navItem(activeTab === 'settings')} onClick={() => setActiveTab('settings')}>
+                <div className={`sd-nav-item ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')}>
                     <FaUserEdit /> Profile Settings
                 </div>
             </div>
 
             {/* Content Area */}
-            <div style={{ background: 'white', padding: '25px', borderRadius: '10px', boxShadow: '0 2px 15px rgba(0,0,0,0.05)', position: 'relative' }}>
+            <div className="sd-content-area">
 
                 {/* --- MY PRODUCTS TAB --- */}
                 {activeTab === 'my-products' && (
                     <div>
                         <h3>My Inventory</h3>
-                        <table style={styles.table}>
+                        <table className="sd-table">
                             <thead>
                                 <tr>
-                                    <th style={styles.th}>Image</th>
-                                    <th style={styles.th}>Name</th>
-                                    <th style={styles.th}>Price</th>
-                                    <th style={styles.th}>Stock</th>
-                                    <th style={styles.th}>Status</th>
-                                    <th style={styles.th}>Action</th>
+                                    <th>Image</th>
+                                    <th>Name</th>
+                                    <th>Price</th>
+                                    <th>Stock</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {products.map(p => (
                                     <tr key={p.product_id}>
-                                        <td style={styles.td}><img src={p.image_url} alt="" style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px' }} /></td>
-                                        <td style={styles.td}>{p.name}</td>
-                                        <td style={styles.td}>৳ {p.price}</td>
-                                        <td style={styles.td}>{p.stock_quantity}</td>
-                                        <td style={styles.td}>
+                                        <td><img src={p.image_url} alt="" style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px' }} /></td>
+                                        <td>{p.name}</td>
+                                        <td>৳ {p.price}</td>
+                                        <td>{p.stock_quantity}</td>
+                                        <td>
                                             <span style={{ 
                                                 color: p.is_active ? '#27ae60' : '#e74c3c', 
                                                 backgroundColor: p.is_active ? '#eafaf1' : '#fadbd8', 
@@ -400,13 +388,13 @@ const SellerDashboard = ({ user, onLogout, onUpdateUser }) => {
                                                 {p.is_active ? "Active" : "Inactive"}
                                             </span>
                                         </td>
-                                        <td style={styles.td}>
+                                        <td>
                                             <button
                                                 onClick={() => {
                                                     setEditingProduct(p);
                                                     setEditForm({ price: p.price, image_url: p.image_url, is_active: p.is_active });
                                                 }}
-                                                style={{ background: '#0984e3', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}
+                                                className="sd-edit-btn"
                                             >
                                                 <FaEdit /> Edit
                                             </button>
@@ -471,23 +459,22 @@ const SellerDashboard = ({ user, onLogout, onUpdateUser }) => {
                         </div>
 
                         {/* === CREATE AD FORM === */}
-                        <div style={{ background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)', borderRadius: '12px', padding: '28px', marginBottom: '32px', color: '#eee' }}>
-                            <h4 style={{ color: '#ffd645', marginBottom: '20px', fontSize: '16px', fontWeight: '700', letterSpacing: '-0.01em' }}>Create New Advertisement</h4>
+                        <div style={{ border: '1px solid #eaeaea', background: '#fafbfc', borderRadius: '12px', padding: '28px', marginBottom: '32px' }}>
+                            <h4 style={{ color: '#333', marginBottom: '25px', fontSize: '18px', fontWeight: '800', letterSpacing: '-0.01em' }}>Create New Advertisement</h4>
                             <form onSubmit={handleCreateAd}>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
 
                                     {/* Product Select */}
-                                    <div style={{ gridColumn: '1 / -1' }}>
-                                        <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: '#aaa', fontWeight: '600' }}>Select Product to Advertise *</label>
+                                    <div className="form-group" style={{ gridColumn: '1 / -1', marginBottom: 0 }}>
+                                        <label>Select Product to Advertise *</label>
                                         <select
                                             value={adForm.product_id}
                                             onChange={e => setAdForm({ ...adForm, product_id: e.target.value })}
                                             required
-                                            style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.06)', color: '#eee', fontSize: '14px' }}
                                         >
-                                            <option value="" style={{ background: '#1a1a2e' }}>-- Choose a product --</option>
+                                            <option value="">-- Choose a product --</option>
                                             {products.filter(p => p.is_active).map(p => (
-                                                <option key={p.product_id} value={p.product_id} style={{ background: '#1a1a2e' }}>
+                                                <option key={p.product_id} value={p.product_id}>
                                                     {p.name} — ৳{p.price}
                                                 </option>
                                             ))}
@@ -495,8 +482,8 @@ const SellerDashboard = ({ user, onLogout, onUpdateUser }) => {
                                     </div>
 
                                     {/* Ad Title */}
-                                    <div style={{ gridColumn: '1 / -1' }}>
-                                        <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: '#aaa', fontWeight: '600' }}>Ad Title * <span style={{ color: '#666', fontWeight: '400' }}>(shown on banner)</span></label>
+                                    <div className="form-group" style={{ gridColumn: '1 / -1', marginBottom: 0 }}>
+                                        <label>Ad Title * <span style={{ color: '#888', fontWeight: '400' }}>(shown on banner)</span></label>
                                         <input
                                             type="text"
                                             placeholder="e.g. Fresh Arrivals — Get 20% Off!"
@@ -504,26 +491,24 @@ const SellerDashboard = ({ user, onLogout, onUpdateUser }) => {
                                             onChange={e => setAdForm({ ...adForm, title: e.target.value })}
                                             maxLength={200}
                                             required
-                                            style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.06)', color: '#eee', fontSize: '14px' }}
                                         />
                                     </div>
 
                                     {/* Tagline */}
-                                    <div style={{ gridColumn: '1 / -1' }}>
-                                        <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: '#aaa', fontWeight: '600' }}>Tagline <span style={{ color: '#666', fontWeight: '400' }}>(optional subtitle)</span></label>
+                                    <div className="form-group" style={{ gridColumn: '1 / -1', marginBottom: 0 }}>
+                                        <label>Tagline <span style={{ color: '#888', fontWeight: '400' }}>(optional subtitle)</span></label>
                                         <input
                                             type="text"
                                             placeholder="e.g. Premium Quality. Delivered Fast."
                                             value={adForm.tagline}
                                             onChange={e => setAdForm({ ...adForm, tagline: e.target.value })}
                                             maxLength={300}
-                                            style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.06)', color: '#eee', fontSize: '14px' }}
                                         />
                                     </div>
 
                                     {/* Budget */}
-                                    <div>
-                                        <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: '#aaa', fontWeight: '600' }}>Ad Budget (৳) *</label>
+                                    <div className="form-group" style={{ marginBottom: 0 }}>
+                                        <label>Ad Budget (৳) *</label>
                                         <input
                                             type="number"
                                             min="1"
@@ -531,30 +516,28 @@ const SellerDashboard = ({ user, onLogout, onUpdateUser }) => {
                                             value={adForm.budget}
                                             onChange={e => setAdForm({ ...adForm, budget: e.target.value })}
                                             required
-                                            style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.06)', color: '#eee', fontSize: '14px' }}
                                         />
-                                        <p style={{ fontSize: '11px', color: '#666', marginTop: '4px' }}>Budget is recorded for accounting purposes.</p>
+                                        <p style={{ fontSize: '11px', color: '#888', marginTop: '6px' }}>Budget is recorded for accounting purposes.</p>
                                     </div>
 
                                     {/* Duration */}
-                                    <div>
-                                        <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: '#aaa', fontWeight: '600' }}>Duration (days) *</label>
+                                    <div className="form-group" style={{ marginBottom: 0 }}>
+                                        <label>Duration (days) *</label>
                                         <select
                                             value={adForm.duration_days}
                                             onChange={e => setAdForm({ ...adForm, duration_days: parseInt(e.target.value) })}
-                                            style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.06)', color: '#eee', fontSize: '14px' }}
                                         >
-                                            <option value={3} style={{ background: '#1a1a2e' }}>3 days</option>
-                                            <option value={7} style={{ background: '#1a1a2e' }}>7 days</option>
-                                            <option value={14} style={{ background: '#1a1a2e' }}>14 days</option>
-                                            <option value={30} style={{ background: '#1a1a2e' }}>30 days</option>
+                                            <option value={3}>3 days</option>
+                                            <option value={7}>7 days</option>
+                                            <option value={14}>14 days</option>
+                                            <option value={30}>30 days</option>
                                         </select>
                                     </div>
 
                                     {/* Gradient Color */}
-                                    <div style={{ gridColumn: '1 / -1' }}>
-                                        <label style={{ display: 'block', marginBottom: '10px', fontSize: '13px', color: '#aaa', fontWeight: '600' }}>Banner Theme Color</label>
-                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                                    <div className="form-group" style={{ gridColumn: '1 / -1', marginBottom: 0, marginTop: '10px' }}>
+                                        <label>Banner Theme Color</label>
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '5px' }}>
                                             {gradientOptions.map(opt => (
                                                 <div
                                                     key={opt.value}
@@ -563,28 +546,28 @@ const SellerDashboard = ({ user, onLogout, onUpdateUser }) => {
                                                     style={{
                                                         width: '40px', height: '40px', borderRadius: '10px',
                                                         background: opt.value, cursor: 'pointer',
-                                                        border: adForm.gradient === opt.value ? '3px solid #ffd645' : '3px solid transparent',
+                                                        border: adForm.gradient === opt.value ? '3px solid #333' : '3px solid transparent',
                                                         transition: 'border 0.2s, transform 0.2s',
                                                         transform: adForm.gradient === opt.value ? 'scale(1.15)' : 'scale(1)',
-                                                        boxShadow: adForm.gradient === opt.value ? '0 0 12px rgba(255,214,69,0.5)' : 'none'
+                                                        boxShadow: adForm.gradient === opt.value ? '0 4px 10px rgba(0,0,0,0.1)' : '0 2px 5px rgba(0,0,0,0.05)'
                                                     }}
                                                 />
                                             ))}
                                         </div>
                                         {/* Preview */}
-                                        <div style={{ marginTop: '12px', height: '50px', borderRadius: '10px', background: adForm.gradient, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: '700', color: 'white', textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>
+                                        <div style={{ marginTop: '20px', height: '60px', borderRadius: '10px', background: adForm.gradient, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '15px', fontWeight: '700', color: 'white', textShadow: '0 1px 4px rgba(0,0,0,0.3)', boxShadow: 'inset 0 0 20px rgba(0,0,0,0.05)' }}>
                                             Preview: {adForm.title || 'Your Ad Title'}
                                         </div>
                                     </div>
                                 </div>
 
-                                <p style={{ marginBottom: '20px', fontSize: '12px', color: '#888', lineHeight: '1.5' }}>
-                                        After submission, your ad will be reviewed by admin before appearing on the homepage banner.
-                                    </p>
+                                <p style={{ marginTop: '20px', marginBottom: '20px', fontSize: '13px', color: '#666', lineHeight: '1.5', background: '#f0f4f8', padding: '12px', borderRadius: '8px', borderLeft: '4px solid #3498db' }}>
+                                    After submission, your ad will be reviewed by admin before appearing on the homepage banner.
+                                </p>
                                 <button
                                     type="submit"
                                     disabled={adSubmitting}
-                                    style={{ marginTop: '4px', width: '100%', padding: '14px', background: adSubmitting ? '#555' : '#ffd645', color: adSubmitting ? '#aaa' : '#1a1a1a', fontWeight: '700', fontSize: '14px', border: 'none', borderRadius: '8px', cursor: adSubmitting ? 'not-allowed' : 'pointer', transition: 'background 0.2s', letterSpacing: '-0.01em' }}
+                                    style={{ marginTop: '4px', width: '100%', padding: '14px', background: adSubmitting ? '#ddd' : '#ffd645', color: adSubmitting ? '#888' : '#333', fontWeight: '700', fontSize: '15px', border: 'none', borderRadius: '8px', cursor: adSubmitting ? 'not-allowed' : 'pointer', transition: 'background 0.2s, transform 0.1s' }}
                                 >
                                     {adSubmitting ? 'Submitting...' : 'Submit Advertisement for Review'}
                                 </button>

@@ -40,7 +40,9 @@
   font-size: 14px;
 }
 
-.form-group input {
+.form-group input,
+.form-group select,
+.form-group textarea {
   width: 100%;
   padding: 12px;
   border: 1px solid #ddd;
@@ -49,7 +51,9 @@
   transition: border 0.2s;
 }
 
-.form-group input:focus {
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
   border-color: #ffd645;
   outline: none;
 }
