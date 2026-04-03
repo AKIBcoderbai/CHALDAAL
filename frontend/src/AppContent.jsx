@@ -20,10 +20,11 @@ import AdminMessaging from "./pages/admin/AdminMessaging";
 import AdminProducts from "./pages/admin/AdminProducts";
 import AdminSellers from "./pages/admin/AdminSellers";
 import SellerDetails from "./pages/admin/SellerDetails";
-import RiderDashboard from "./pages/RiderDashBoard";
+import RiderDashboard from "./pages/RiderDashboard";
 import OrderDetails from "./pages/OrderDetails";
 import AdminSignupTest from "./pages/AdminSignupTest";
 import ProductDetails from "./pages/ProductDetails";
+import AdDetailPage from "./pages/AdDetailPage";
 
 export default function AppContent() {
   const navigate = useNavigate();
@@ -264,8 +265,7 @@ export default function AppContent() {
         <Route path="/_admin-signup-test" element={<AdminSignupTest />} />
 
         {/* HOME ROUTE */}
-        <Route
-          path="/product/:id"
+        <Route path="/product/:id"
           element={
             <ProductDetails
               cart={cart}
@@ -275,6 +275,9 @@ export default function AppContent() {
             />
           }
         />
+
+        {/* AD DETAIL PAGE - opens in new tab */}
+        <Route path="/ad/:id" element={<AdDetailPage />} />
         <Route
           path="/"
           element={

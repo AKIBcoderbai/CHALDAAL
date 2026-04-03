@@ -138,6 +138,23 @@ const ensureAdminTables = async () => {
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         `);
+
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS advertisements (
+                ad_id SERIAL PRIMARY KEY,
+                seller_id INTEGER NOT NULL REFERENCES person(person_id) ON DELETE CASCADE,
+                product_id INTEGER NOT NULL REFERENCES products(product_id) ON DELETE CASCADE,
+                title VARCHAR(200) NOT NULL,
+                tagline VARCHAR(300),
+                budget DECIMAL(10,2) NOT NULL DEFAULT 0,
+                duration_days INTEGER NOT NULL DEFAULT 7,
+                gradient VARCHAR(300) DEFAULT 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                is_active BOOLEAN DEFAULT TRUE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                expires_at TIMESTAMP
+            )
+        `);
+        console.log("✅ All required tables verified/created.");
     } catch (err) {
         console.error("ADMIN TABLE INIT ERROR:", err.message);
     }
@@ -885,9 +902,196 @@ app.get('/api/admin/seller-contact', authenticateToken, requireRole(['admin']), 
     }
 });
 
+// ==========================================
+// --- ADVERTISEMENT ROUTES ---
+// ==========================================
+
+// PUBLIC: Get all active, non-expired ads with product + seller info
+app.get('/api/advertisements', async (req, res) => {
+    try {
+        const query = `
+            SELECT
+                a.ad_id,
+                a.title,
+                a.tagline,
+                a.gradient,
+                a.budget,
+                a.duration_days,
+                a.created_at,
+                a.expires_at,
+                p.product_id,
+                p.name AS product_name,
+                p.unit_price AS price,
+                p.image_url AS product_image,
+                p.description AS product_description,
+                p.unit,
+                p.rating,
+                per.name AS seller_name,
+                s.company_name
+            FROM advertisements a
+            JOIN products p ON p.product_id = a.product_id
+            JOIN person per ON per.person_id = a.seller_id
+            JOIN seller s ON s.seller_id = a.seller_id
+            WHERE a.is_active = TRUE
+              AND (a.expires_at IS NULL OR a.expires_at > NOW())
+            ORDER BY a.created_at DESC
+        `;
+        const result = await pool.query(query);
+        res.json(result.rows);
+    } catch (err) {
+        console.error("GET ADS ERROR:", err.message);
+        res.status(500).json({ error: "Failed to fetch advertisements." });
+    }
+});
+
+// PUBLIC: Get single ad detail by id
+app.get('/api/advertisements/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const query = `
+            SELECT
+                a.ad_id,
+                a.title,
+                a.tagline,
+                a.gradient,
+                a.budget,
+                a.duration_days,
+                a.created_at,
+                a.expires_at,
+                p.product_id,
+                p.name AS product_name,
+                p.unit_price AS price,
+                p.image_url AS product_image,
+                p.description AS product_description,
+                p.unit,
+                p.rating,
+                p.stock,
+                per.name AS seller_name,
+                per.email AS seller_email,
+                per.phone AS seller_phone,
+                s.company_name,
+                c.name AS category
+            FROM advertisements a
+            JOIN products p ON p.product_id = a.product_id
+            JOIN person per ON per.person_id = a.seller_id
+            JOIN seller s ON s.seller_id = a.seller_id
+            LEFT JOIN category c ON c.category_id = p.category_id
+            WHERE a.ad_id = $1
+        `;
+        const result = await pool.query(query, [id]);
+        if (result.rows.length === 0) return res.status(404).json({ error: "Ad not found." });
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error("GET AD DETAIL ERROR:", err.message);
+        res.status(500).json({ error: "Failed to fetch ad detail." });
+    }
+});
+
+// SELLER: Create a new advertisement
+app.post('/api/seller/advertisements', authenticateToken, async (req, res) => {
+    try {
+        if (req.user.role !== 'seller') {
+            return res.status(403).json({ error: "Access denied. Not a seller account." });
+        }
+        const seller_id = req.user.user_id;
+        const { product_id, title, tagline, budget, duration_days, gradient } = req.body;
+
+        if (!product_id || !title || !budget || !duration_days) {
+            return res.status(400).json({ error: "product_id, title, budget, and duration_days are required." });
+        }
+
+        // Verify the product belongs to this seller
+        const ownerCheck = await pool.query(
+            `SELECT product_id FROM products WHERE product_id = $1 AND seller_id = $2`,
+            [product_id, seller_id]
+        );
+        if (ownerCheck.rows.length === 0) {
+            return res.status(403).json({ error: "You can only advertise your own products." });
+        }
+
+        const expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + parseInt(duration_days));
+
+        const defaultGradient = gradient || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+
+        const result = await pool.query(`
+            INSERT INTO advertisements (seller_id, product_id, title, tagline, budget, duration_days, gradient, is_active, expires_at)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, TRUE, $8)
+            RETURNING ad_id, title, created_at, expires_at
+        `, [seller_id, product_id, title.trim(), tagline?.trim() || null, budget, duration_days, defaultGradient, expiresAt]);
+
+        res.status(201).json({
+            message: "Advertisement created successfully!",
+            ad: result.rows[0]
+        });
+    } catch (err) {
+        console.error("CREATE AD ERROR:", err.message);
+        res.status(500).json({ error: "Failed to create advertisement." });
+    }
+});
+
+// SELLER: Get own advertisements
+app.get('/api/seller/advertisements', authenticateToken, async (req, res) => {
+    try {
+        if (req.user.role !== 'seller') {
+            return res.status(403).json({ error: "Access denied. Not a seller account." });
+        }
+        const seller_id = req.user.user_id;
+        const query = `
+            SELECT
+                a.ad_id,
+                a.title,
+                a.tagline,
+                a.gradient,
+                a.budget,
+                a.duration_days,
+                a.is_active,
+                a.created_at,
+                a.expires_at,
+                p.name AS product_name,
+                p.image_url AS product_image,
+                p.unit_price AS price
+            FROM advertisements a
+            JOIN products p ON p.product_id = a.product_id
+            WHERE a.seller_id = $1
+            ORDER BY a.created_at DESC
+        `;
+        const result = await pool.query(query, [seller_id]);
+        res.json(result.rows);
+    } catch (err) {
+        console.error("GET SELLER ADS ERROR:", err.message);
+        res.status(500).json({ error: "Failed to fetch your advertisements." });
+    }
+});
+
+// SELLER: Cancel/deactivate an advertisement
+app.delete('/api/seller/advertisements/:id', authenticateToken, async (req, res) => {
+    try {
+        if (req.user.role !== 'seller') {
+            return res.status(403).json({ error: "Access denied. Not a seller account." });
+        }
+        const seller_id = req.user.user_id;
+        const { id } = req.params;
+
+        const result = await pool.query(
+            `UPDATE advertisements SET is_active = FALSE WHERE ad_id = $1 AND seller_id = $2 RETURNING ad_id`,
+            [id, seller_id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: "Ad not found or unauthorized." });
+        }
+        res.json({ message: "Advertisement cancelled successfully." });
+    } catch (err) {
+        console.error("CANCEL AD ERROR:", err.message);
+        res.status(500).json({ error: "Failed to cancel advertisement." });
+    }
+});
+
 // Start Server
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
     console.log(`Server is running on port ${PORT}`);
+    await ensureAdminTables();
 });
 
 

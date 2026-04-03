@@ -961,3 +961,25 @@ BEGIN
   WHERE p.seller_id = sellerId;
 END;
 $$ LANGUAGE plpgsql;
+
+-- ==========================================
+-- ADVERTISEMENT SYSTEM
+-- ==========================================
+
+CREATE TABLE IF NOT EXISTS advertisements (
+    ad_id SERIAL PRIMARY KEY,
+    seller_id INTEGER NOT NULL REFERENCES person(person_id) ON DELETE CASCADE,
+    product_id INTEGER NOT NULL REFERENCES products(product_id) ON DELETE CASCADE,
+    title VARCHAR(200) NOT NULL,
+    tagline VARCHAR(300),
+    budget DECIMAL(10,2) NOT NULL DEFAULT 0,
+    duration_days INTEGER NOT NULL DEFAULT 7,
+    gradient VARCHAR(300) DEFAULT 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_ads_seller ON advertisements(seller_id);
+CREATE INDEX IF NOT EXISTS idx_ads_product ON advertisements(product_id);
+CREATE INDEX IF NOT EXISTS idx_ads_active ON advertisements(is_active, expires_at);

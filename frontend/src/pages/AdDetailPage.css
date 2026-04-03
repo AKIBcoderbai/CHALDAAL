@@ -1,0 +1,539 @@
+/* =============================================
+   AD DETAIL PAGE — Premium Styles
+   ============================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+.ad-page-wrapper {
+  min-height: 100vh;
+  font-family: 'Inter', system-ui, sans-serif;
+  background: #0f0f13;
+  color: #eee;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* ---- Blurred gradient background blob ---- */
+.ad-hero-bg {
+  position: fixed;
+  top: -30%;
+  left: -20%;
+  width: 140%;
+  height: 70%;
+  opacity: 0.18;
+  filter: blur(80px);
+  pointer-events: none;
+  z-index: 0;
+  border-radius: 50%;
+}
+
+/* ---- TOP BAR ---- */
+.ad-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 40px;
+  background: rgba(15, 15, 19, 0.82);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.ad-topbar-logo {
+  font-size: 20px;
+  font-weight: 900;
+  color: #ffd645;
+  letter-spacing: -0.02em;
+  margin-right: auto;
+}
+
+.ad-sponsored-label {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.4);
+  letter-spacing: 0.04em;
+  font-weight: 500;
+}
+
+.ad-topbar-home {
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffd645;
+  text-decoration: none;
+  padding: 7px 16px;
+  border: 1.5px solid #ffd645;
+  border-radius: 8px;
+  transition: background 0.2s, color 0.2s;
+}
+.ad-topbar-home:hover {
+  background: #ffd645;
+  color: #1a1a1a;
+}
+
+/* ---- MAIN CONTENT GRID ---- */
+.ad-main-content {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 420px 1fr;
+  gap: 40px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 48px 40px 80px;
+}
+
+/* ---- LEFT: IMAGE PANEL ---- */
+.ad-image-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.ad-image-frame {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 24px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+
+.ad-img-skeleton {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.12) 50%, rgba(255,255,255,0.05) 75%);
+  background-size: 200% 100%;
+  animation: adShimmer 1.4s infinite;
+}
+@keyframes adShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.ad-product-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 20px;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  position: relative;
+  z-index: 1;
+}
+.ad-product-img.visible {
+  opacity: 1;
+}
+
+.ad-expired-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  font-size: 18px;
+  font-weight: 700;
+  color: #ff6b6b;
+  letter-spacing: 0.05em;
+}
+
+/* Seller chip */
+.ad-seller-chip {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  padding: 14px 18px;
+  backdrop-filter: blur(10px);
+}
+
+.ad-seller-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--ad-gradient, linear-gradient(135deg, #667eea, #764ba2));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 800;
+  color: white;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.ad-seller-chip-name {
+  font-weight: 700;
+  font-size: 15px;
+  color: #fff;
+}
+.ad-seller-chip-label {
+  font-size: 11px;
+  color: #27ae60;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+/* ---- RIGHT: DETAILS PANEL ---- */
+.ad-details-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+/* Badges */
+.ad-badge-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ad-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: 20px;
+  letter-spacing: 0.04em;
+}
+.ad-badge--sponsored {
+  background: rgba(255, 214, 69, 0.15);
+  color: #ffd645;
+  border: 1px solid rgba(255, 214, 69, 0.3);
+}
+.ad-badge--category {
+  background: rgba(102, 126, 234, 0.15);
+  color: #9ab0ff;
+  border: 1px solid rgba(102,126,234,0.3);
+}
+.ad-badge--expired {
+  background: rgba(255,107,107,0.15);
+  color: #ff6b6b;
+  border: 1px solid rgba(255,107,107,0.3);
+}
+
+/* Main title */
+.ad-main-title {
+  font-size: 36px;
+  font-weight: 900;
+  line-height: 1.1;
+  color: #fff;
+  letter-spacing: -0.02em;
+}
+
+/* Tagline */
+.ad-tagline {
+  font-size: 16px;
+  color: rgba(255,255,255,0.55);
+  font-style: italic;
+  font-weight: 500;
+  line-height: 1.5;
+  border-left: 3px solid rgba(255,255,255,0.15);
+  padding-left: 14px;
+}
+
+/* Product info card */
+.ad-product-info-card {
+  background: rgba(255,255,255,0.035);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 16px;
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  backdrop-filter: blur(8px);
+}
+
+.ad-product-name {
+  font-size: 22px;
+  font-weight: 800;
+  color: #fff;
+}
+
+.ad-product-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.ad-meta-tag {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.6);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.ad-meta-tag--instock {
+  background: rgba(39,174,96,0.15);
+  color: #2ecc71;
+  border-color: rgba(39,174,96,0.25);
+}
+.ad-meta-tag--outstock {
+  background: rgba(255,107,107,0.12);
+  color: #ff6b6b;
+  border-color: rgba(255,107,107,0.2);
+}
+
+.ad-price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-top: 6px;
+}
+.ad-price-label {
+  font-size: 13px;
+  color: rgba(255,255,255,0.4);
+  font-weight: 500;
+}
+.ad-price-value {
+  font-size: 32px;
+  font-weight: 900;
+  color: #ffd645;
+  letter-spacing: -0.02em;
+}
+
+/* Star rating */
+.ad-rating-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+.ad-stars {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.star {
+  font-size: 18px;
+  color: rgba(255,255,255,0.2);
+}
+.star.filled {
+  color: #ffd645;
+}
+.ad-rating-num {
+  font-size: 14px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.6);
+  margin-left: 6px;
+}
+
+/* Description */
+.ad-description {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 16px;
+  padding: 20px 24px;
+}
+.ad-description h3 {
+  font-size: 14px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.5);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.ad-description p {
+  font-size: 15px;
+  line-height: 1.7;
+  color: rgba(255,255,255,0.7);
+}
+
+/* Seller info card */
+.ad-seller-info-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 16px;
+  padding: 20px 24px;
+}
+.ad-seller-info-card h3 {
+  font-size: 14px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.5);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
+.ad-seller-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.ad-seller-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.ad-si-label {
+  font-size: 13px;
+  color: rgba(255,255,255,0.4);
+  min-width: 110px;
+  font-weight: 500;
+}
+.ad-si-value {
+  font-size: 14px;
+  color: rgba(255,255,255,0.85);
+  font-weight: 600;
+}
+
+/* Validity */
+.ad-validity {
+  font-size: 13px;
+  color: rgba(255,255,255,0.4);
+  font-weight: 500;
+}
+.ad-validity strong {
+  color: rgba(255,255,255,0.65);
+}
+
+/* CTA Buttons */
+.ad-cta-group {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.ad-btn-primary {
+  flex: 1;
+  min-width: 200px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px 28px;
+  background: #ffd645;
+  color: #1a1a1a;
+  font-size: 16px;
+  font-weight: 800;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  letter-spacing: -0.01em;
+  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+  box-shadow: 0 8px 24px rgba(255, 214, 69, 0.35);
+}
+.ad-btn-primary:hover {
+  background: #ffe87a;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(255, 214, 69, 0.5);
+}
+.ad-btn-primary:active {
+  transform: scale(0.97);
+}
+
+.ad-btn-secondary {
+  padding: 16px 24px;
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.6);
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.1);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.ad-btn-secondary:hover {
+  background: rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.9);
+}
+
+/* Disclaimer */
+.ad-disclaimer {
+  font-size: 11px;
+  color: rgba(255,255,255,0.25);
+  line-height: 1.6;
+  margin-top: 4px;
+}
+
+/* ---- LOADING SCREEN ---- */
+.ad-loading-screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  color: rgba(255,255,255,0.5);
+  font-size: 15px;
+}
+.ad-loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 3px solid rgba(255,255,255,0.1);
+  border-top-color: #ffd645;
+  border-radius: 50%;
+  animation: adSpin 0.8s linear infinite;
+}
+@keyframes adSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* ---- ERROR SCREEN ---- */
+.ad-error-screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  text-align: center;
+  padding: 40px;
+}
+.ad-error-icon {
+  font-size: 64px;
+}
+.ad-error-screen h2 {
+  font-size: 28px;
+  font-weight: 800;
+  color: #fff;
+}
+.ad-error-screen p {
+  font-size: 16px;
+  color: rgba(255,255,255,0.5);
+  max-width: 400px;
+  margin-bottom: 10px;
+}
+
+/* ---- RESPONSIVE ---- */
+@media (max-width: 900px) {
+  .ad-topbar {
+    padding: 12px 20px;
+  }
+  .ad-main-content {
+    grid-template-columns: 1fr;
+    padding: 24px 20px 60px;
+    gap: 28px;
+  }
+  .ad-image-frame {
+    max-width: 360px;
+    margin: 0 auto;
+  }
+  .ad-main-title {
+    font-size: 26px;
+  }
+  .ad-price-value {
+    font-size: 26px;
+  }
+  .ad-btn-primary {
+    min-width: unset;
+  }
+}

@@ -29,6 +29,29 @@ const SellerDashboard = ({ user, onLogout, onUpdateUser }) => {
     const [editingProduct, setEditingProduct] = useState(null);
     const [editForm, setEditForm] = useState({ price: '', image_url: '', is_active: true });
 
+    // --- Advertisement State ---
+    const [myAds, setMyAds] = useState([]);
+    const [adForm, setAdForm] = useState({
+        product_id: '',
+        title: '',
+        tagline: '',
+        budget: '',
+        duration_days: 7,
+        gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+    });
+    const [adSubmitting, setAdSubmitting] = useState(false);
+
+    const gradientOptions = [
+        { label: '🟣 Purple Dream', value: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
+        { label: '🔴 Crimson Sunset', value: 'linear-gradient(135deg, #ff9a9e 0%, #ff5252 100%)' },
+        { label: '🔵 Ocean Blue', value: 'linear-gradient(135deg, #a1c4fd 0%, #1976d2 100%)' },
+        { label: '🟢 Emerald', value: 'linear-gradient(135deg, #84fab0 0%, #08d19b 100%)' },
+        { label: '🟡 Golden Hour', value: 'linear-gradient(135deg, #f6d365 0%, #fda085 100%)' },
+        { label: '🩷 Pink Blossom', value: 'linear-gradient(135deg, #fbc2eb 0%, #e91e63 100%)' },
+        { label: '🌊 Teal Waves', value: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)' },
+        { label: '🌌 Midnight', value: 'linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%)' },
+    ];
+
     useEffect(() => {
         if (!user || user.role !== 'seller') {
             navigate('/seller-login');
@@ -72,6 +95,11 @@ const SellerDashboard = ({ user, onLogout, onUpdateUser }) => {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (msgRes.ok) setAdminMessages(await msgRes.json());
+
+            const adsRes = await fetch('http://localhost:3000/api/seller/advertisements', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (adsRes.ok) setMyAds(await adsRes.json());
         } catch (error) {
             console.error("Error loading dashboard:", error);
         }
@@ -217,14 +245,63 @@ const SellerDashboard = ({ user, onLogout, onUpdateUser }) => {
 
             if (response.ok) {
                 alert("Product updated successfully!");
-                setEditingProduct(null); // Close modal
-                fetchData(); // Refresh UI instantly
+                setEditingProduct(null);
+                fetchData();
             } else {
                 const errData = await response.json();
                 alert(errData.error || "Failed to update product.");
             }
         } catch (error) {
             alert("Network error.");
+        }
+    };
+
+    const handleCreateAd = async (e) => {
+        e.preventDefault();
+        if (!adForm.product_id) { alert('Please select a product.'); return; }
+        if (!adForm.title.trim()) { alert('Please enter an ad title.'); return; }
+        if (!adForm.budget || parseFloat(adForm.budget) <= 0) { alert('Please enter a valid budget.'); return; }
+
+        setAdSubmitting(true);
+        try {
+            const token = localStorage.getItem("token");
+            const res = await fetch('http://localhost:3000/api/seller/advertisements', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify(adForm)
+            });
+            if (res.ok) {
+                alert('Advertisement created successfully! It will now appear on the banner carousel.');
+                setAdForm({ product_id: '', title: '', tagline: '', budget: '', duration_days: 7, gradient: gradientOptions[0].value });
+                fetchData();
+                setActiveTab('advertise');
+            } else {
+                const err = await res.json();
+                alert(err.error || 'Failed to create advertisement.');
+            }
+        } catch (err) {
+            alert('Network error.');
+        } finally {
+            setAdSubmitting(false);
+        }
+    };
+
+    const handleCancelAd = async (adId) => {
+        if (!window.confirm('Cancel this advertisement? It will be removed from the banner.')) return;
+        try {
+            const token = localStorage.getItem("token");
+            const res = await fetch(`http://localhost:3000/api/seller/advertisements/${adId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                alert('Advertisement cancelled.');
+                fetchData();
+            } else {
+                alert('Failed to cancel ad.');
+            }
+        } catch {
+            alert('Network error.');
         }
     };
 
@@ -280,6 +357,9 @@ const SellerDashboard = ({ user, onLogout, onUpdateUser }) => {
                 <div style={styles.navItem(activeTab === 'add-product')} onClick={() => setActiveTab('add-product')}>+ Add New Product</div>
                 <div style={styles.navItem(activeTab === 'admin-messages')} onClick={() => setActiveTab('admin-messages')}>
                     Messages {adminMessages.length > 0 ? `(${adminMessages.length})` : ''}
+                </div>
+                <div style={styles.navItem(activeTab === 'advertise')} onClick={() => setActiveTab('advertise')}>
+                    📢 Advertise {myAds.filter(a => a.is_active).length > 0 ? `(${myAds.filter(a => a.is_active).length} active)` : ''}
                 </div>
                 <div style={styles.navItem(activeTab === 'settings')} onClick={() => setActiveTab('settings')}>
                     <FaUserEdit /> Profile Settings
@@ -377,6 +457,192 @@ const SellerDashboard = ({ user, onLogout, onUpdateUser }) => {
                                 <p style={{ color: '#666', margin: '5px 0' }}>{m.message}</p>
                             </div>
                         ))}
+                    </div>
+                )}
+
+                {/* --- ADVERTISE TAB --- */}
+                {activeTab === 'advertise' && (
+                    <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                            <div>
+                                <h3 style={{ margin: 0 }}>📢 Banner Advertisements</h3>
+                                <p style={{ color: '#666', fontSize: '13px', marginTop: '4px' }}>Promote your products on the homepage banner carousel. Customers will see your ad and can click to view product details.</p>
+                            </div>
+                        </div>
+
+                        {/* === CREATE AD FORM === */}
+                        <div style={{ background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)', borderRadius: '12px', padding: '28px', marginBottom: '32px', color: '#eee' }}>
+                            <h4 style={{ color: '#ffd645', marginBottom: '20px', fontSize: '16px' }}>✨ Create New Advertisement</h4>
+                            <form onSubmit={handleCreateAd}>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+
+                                    {/* Product Select */}
+                                    <div style={{ gridColumn: '1 / -1' }}>
+                                        <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: '#aaa', fontWeight: '600' }}>Select Product to Advertise *</label>
+                                        <select
+                                            value={adForm.product_id}
+                                            onChange={e => setAdForm({ ...adForm, product_id: e.target.value })}
+                                            required
+                                            style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.06)', color: '#eee', fontSize: '14px' }}
+                                        >
+                                            <option value="" style={{ background: '#1a1a2e' }}>-- Choose a product --</option>
+                                            {products.filter(p => p.is_active).map(p => (
+                                                <option key={p.product_id} value={p.product_id} style={{ background: '#1a1a2e' }}>
+                                                    {p.name} — ৳{p.price}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    {/* Ad Title */}
+                                    <div style={{ gridColumn: '1 / -1' }}>
+                                        <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: '#aaa', fontWeight: '600' }}>Ad Title * <span style={{ color: '#666', fontWeight: '400' }}>(shown on banner)</span></label>
+                                        <input
+                                            type="text"
+                                            placeholder="e.g. Fresh Arrivals — Get 20% Off!"
+                                            value={adForm.title}
+                                            onChange={e => setAdForm({ ...adForm, title: e.target.value })}
+                                            maxLength={200}
+                                            required
+                                            style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.06)', color: '#eee', fontSize: '14px' }}
+                                        />
+                                    </div>
+
+                                    {/* Tagline */}
+                                    <div style={{ gridColumn: '1 / -1' }}>
+                                        <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: '#aaa', fontWeight: '600' }}>Tagline <span style={{ color: '#666', fontWeight: '400' }}>(optional subtitle)</span></label>
+                                        <input
+                                            type="text"
+                                            placeholder="e.g. Premium Quality. Delivered Fast."
+                                            value={adForm.tagline}
+                                            onChange={e => setAdForm({ ...adForm, tagline: e.target.value })}
+                                            maxLength={300}
+                                            style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.06)', color: '#eee', fontSize: '14px' }}
+                                        />
+                                    </div>
+
+                                    {/* Budget */}
+                                    <div>
+                                        <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: '#aaa', fontWeight: '600' }}>Ad Budget (৳) *</label>
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            placeholder="e.g. 500"
+                                            value={adForm.budget}
+                                            onChange={e => setAdForm({ ...adForm, budget: e.target.value })}
+                                            required
+                                            style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.06)', color: '#eee', fontSize: '14px' }}
+                                        />
+                                        <p style={{ fontSize: '11px', color: '#666', marginTop: '4px' }}>Budget is recorded for accounting purposes.</p>
+                                    </div>
+
+                                    {/* Duration */}
+                                    <div>
+                                        <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: '#aaa', fontWeight: '600' }}>Duration (days) *</label>
+                                        <select
+                                            value={adForm.duration_days}
+                                            onChange={e => setAdForm({ ...adForm, duration_days: parseInt(e.target.value) })}
+                                            style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.06)', color: '#eee', fontSize: '14px' }}
+                                        >
+                                            <option value={3} style={{ background: '#1a1a2e' }}>3 days</option>
+                                            <option value={7} style={{ background: '#1a1a2e' }}>7 days</option>
+                                            <option value={14} style={{ background: '#1a1a2e' }}>14 days</option>
+                                            <option value={30} style={{ background: '#1a1a2e' }}>30 days</option>
+                                        </select>
+                                    </div>
+
+                                    {/* Gradient Color */}
+                                    <div style={{ gridColumn: '1 / -1' }}>
+                                        <label style={{ display: 'block', marginBottom: '10px', fontSize: '13px', color: '#aaa', fontWeight: '600' }}>Banner Theme Color</label>
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                                            {gradientOptions.map(opt => (
+                                                <div
+                                                    key={opt.value}
+                                                    onClick={() => setAdForm({ ...adForm, gradient: opt.value })}
+                                                    title={opt.label}
+                                                    style={{
+                                                        width: '40px', height: '40px', borderRadius: '10px',
+                                                        background: opt.value, cursor: 'pointer',
+                                                        border: adForm.gradient === opt.value ? '3px solid #ffd645' : '3px solid transparent',
+                                                        transition: 'border 0.2s, transform 0.2s',
+                                                        transform: adForm.gradient === opt.value ? 'scale(1.15)' : 'scale(1)',
+                                                        boxShadow: adForm.gradient === opt.value ? '0 0 12px rgba(255,214,69,0.5)' : 'none'
+                                                    }}
+                                                />
+                                            ))}
+                                        </div>
+                                        {/* Preview */}
+                                        <div style={{ marginTop: '12px', height: '50px', borderRadius: '10px', background: adForm.gradient, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: '700', color: 'white', textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>
+                                            Preview: {adForm.title || 'Your Ad Title'}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    disabled={adSubmitting}
+                                    style={{ marginTop: '20px', width: '100%', padding: '14px', background: adSubmitting ? '#999' : '#ffd645', color: '#1a1a1a', fontWeight: '800', fontSize: '15px', border: 'none', borderRadius: '8px', cursor: adSubmitting ? 'not-allowed' : 'pointer', transition: 'background 0.2s' }}
+                                >
+                                    {adSubmitting ? '⏳ Submitting...' : '🚀 Launch Advertisement'}
+                                </button>
+                            </form>
+                        </div>
+
+                        {/* === MY ADS LIST === */}
+                        <h4 style={{ marginBottom: '16px', color: '#333' }}>Your Advertisements ({myAds.length})</h4>
+                        {myAds.length === 0 ? (
+                            <div style={{ padding: '40px', textAlign: 'center', background: '#f9f9f9', borderRadius: '10px', color: '#999' }}>
+                                <div style={{ fontSize: '40px', marginBottom: '12px' }}>📭</div>
+                                <p>You have no advertisements yet. Create one above!</p>
+                            </div>
+                        ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                {myAds.map(ad => {
+                                    const expired = ad.expires_at && new Date(ad.expires_at) < new Date();
+                                    const expiresStr = ad.expires_at ? new Date(ad.expires_at).toLocaleDateString('en-BD') : 'No expiry';
+                                    return (
+                                        <div key={ad.ad_id} style={{ display: 'flex', alignItems: 'center', gap: '16px', background: 'white', border: '1px solid #eee', borderRadius: '10px', padding: '14px 18px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+                                            {/* Gradient swatch */}
+                                            <div style={{ width: '48px', height: '48px', borderRadius: '10px', background: ad.gradient, flexShrink: 0 }} />
+
+                                            {/* Product image */}
+                                            <img src={ad.product_image} alt={ad.product_name} style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #eee' }} />
+
+                                            {/* Info */}
+                                            <div style={{ flex: 1, minWidth: 0 }}>
+                                                <div style={{ fontWeight: '700', fontSize: '15px', color: '#222', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{ad.title}</div>
+                                                <div style={{ fontSize: '12px', color: '#888', marginTop: '2px' }}>{ad.product_name} · ৳{ad.price}</div>
+                                                <div style={{ display: 'flex', gap: '8px', marginTop: '6px', flexWrap: 'wrap' }}>
+                                                    <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '12px', background: !ad.is_active ? '#fadbd8' : expired ? '#fef9c3' : '#eafaf1', color: !ad.is_active ? '#e74c3c' : expired ? '#f59e0b' : '#27ae60', fontWeight: '700' }}>
+                                                        {!ad.is_active ? 'Cancelled' : expired ? 'Expired' : '● Active'}
+                                                    </span>
+                                                    <span style={{ fontSize: '11px', color: '#aaa' }}>Budget: ৳{ad.budget}</span>
+                                                    <span style={{ fontSize: '11px', color: '#aaa' }}>Expires: {expiresStr}</span>
+                                                </div>
+                                            </div>
+
+                                            {/* Actions */}
+                                            <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+                                                <button
+                                                    onClick={() => window.open(`/ad/${ad.ad_id}`, '_blank')}
+                                                    style={{ padding: '7px 14px', background: '#0984e3', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}
+                                                >
+                                                    👁 Preview
+                                                </button>
+                                                {ad.is_active && !expired && (
+                                                    <button
+                                                        onClick={() => handleCancelAd(ad.ad_id)}
+                                                        style={{ padding: '7px 14px', background: '#e74c3c', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}
+                                                    >
+                                                        Cancel
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
                     </div>
                 )}
 
