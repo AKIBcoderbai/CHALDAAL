@@ -1,23 +1,61 @@
-import { useNavigate } from "react-router-dom";
+import React from 'react';
+import { FaFacebook, FaTwitter, FaInstagram, FaLinkedin } from 'react-icons/fa';
+import { Link } from 'react-router-dom';
+//import './App.css'; // Make sure you have basic styles for this
 
 function Footer({ user, handleLogout }) {
-  const navigate = useNavigate();
-
   return (
-    <footer style={{ marginTop: "20px", padding: "20px 10px", backgroundColor: "#2d3436", color: "white", textAlign: "center" }}>
-      <h3>Partner with Chaldal</h3>
-      <p>Sell your products to millions of customers.</p>
-      <div style={{ marginTop: "16px", display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
-        <button
-          type="button"
-          onClick={() => {
-            if (user) handleLogout();
-            navigate("/seller-login");
-          }}
-          style={{ padding: "10px 20px", background: "#ff9f43", border: "none", borderRadius: "5px", color: "white", fontWeight: "bold", cursor: "pointer" }}
-        >
-          Seller Login
-        </button>
+    <footer className="main-footer">
+      <div className="footer-container">
+        
+        <div className="footer-col brand-col">
+          <h2 className="footer-logo">Chaldal<span>Clone</span></h2>
+          <p>Your one-stop destination for daily essentials, fresh groceries, and electronics. Fast delivery, trusted service.</p>
+          <div className="social-links">
+            <a href="#"><FaFacebook /></a>
+            <a href="#"><FaTwitter /></a>
+            <a href="#"><FaInstagram /></a>
+            <a href="#"><FaLinkedin /></a>
+          </div>
+        </div>
+
+        <div className="footer-col">
+          <h3>Quick Links</h3>
+          <ul>
+            <li><Link to="/">Home</Link></li>
+            <li><Link to="/about">About Us</Link></li>
+            <li><Link to="/offers">Special Offers</Link></li>
+            <li><Link to="/faq">FAQs</Link></li>
+          </ul>
+        </div>
+
+        <div className="footer-col">
+          <h3>Customer Service</h3>
+          <ul>
+            <li><Link to="/contact">Contact Us</Link></li>
+            <li><Link to="/shipping">Shipping Policy</Link></li>
+            <li><Link to="/returns">Returns & Refunds</Link></li>
+            <li><Link to="/privacy">Privacy Policy</Link></li>
+          </ul>
+        </div>
+
+        <div className="footer-col">
+          <h3>Partner With Us</h3>
+          <ul>
+            {!user && <li><Link to="/seller-login">Become a Seller</Link></li>}
+            <li><Link to="/rider-jobs">Delivery Rider Jobs</Link></li>
+            <li><Link to="/affiliate">Affiliate Program</Link></li>
+          </ul>
+        </div>
+
+      </div>
+      
+      <div className="footer-bottom">
+        <p>&copy; {new Date().getFullYear()} Chaldal Clone Project. Developed by BUET CSE.</p>
+        <div className="payment-methods">
+          {/* You can add tiny payment icons here */}
+          <span>bKash</span> | <span>Nagad</span> | <span>Visa</span>
+        </div>
       </div>
     </footer>
   );

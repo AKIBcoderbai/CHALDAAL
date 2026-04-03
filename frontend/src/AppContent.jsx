@@ -306,6 +306,7 @@ export default function AppContent() {
               user={user}
               handleLogout={handleLogout}
               setIsCartOpen={setIsCartOpen}
+              isCartOpen={isCartOpen}
             />
           }
         />
