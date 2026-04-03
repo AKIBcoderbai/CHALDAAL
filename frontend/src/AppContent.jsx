@@ -18,6 +18,8 @@ import AdminLayout from "./pages/admin/AdminLayout";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import AdminMessaging from "./pages/admin/AdminMessaging";
 import AdminProducts from "./pages/admin/AdminProducts";
+import AdminSellers from "./pages/admin/AdminSellers";
+import SellerDetails from "./pages/admin/SellerDetails";
 import RiderDashboard from "./pages/RiderDashBoard";
 import OrderDetails from "./pages/OrderDetails";
 import AdminSignupTest from "./pages/AdminSignupTest";
@@ -130,6 +132,11 @@ export default function AppContent() {
     if (!user) {
       alert("Please log in to place an order.");
       navigate("/login");
+      return false;
+    }
+
+    if (user && (user.role === 'admin' || user.role === 'seller' || user.role === 'rider')) {
+      alert("You must be a standard customer to place an order.");
       return false;
     }
 
@@ -343,7 +350,7 @@ export default function AppContent() {
 
         <Route
           path="/seller-dashboard"
-          element={<SellerDashboard user={user} onLogout={handleLogout} />}
+          element={<SellerDashboard user={user} onLogout={handleLogout} onUpdateUser={handleUpdateUser} />}
         />
 
         {/* RIDER ROUTES */}
@@ -360,6 +367,8 @@ export default function AppContent() {
           <Route path="analytics" element={<AdminAnalytics />} />
           <Route path="messaging" element={<AdminMessaging />} />
           <Route path="products" element={<AdminProducts />} />
+          <Route path="sellers" element={<AdminSellers />} />
+          <Route path="sellers/:id" element={<SellerDetails />} />
         </Route>
       </Routes>
 

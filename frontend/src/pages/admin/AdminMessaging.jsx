@@ -13,6 +13,10 @@ export default function AdminMessaging() {
   const [loading, setLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
 
+  // Searchable combo box state
+  const [sellerSearch, setSellerSearch] = useState("");
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
   useEffect(() => {
     fetchMessagingData();
   }, []);
@@ -54,6 +58,15 @@ export default function AdminMessaging() {
     if (!selectedSellerId) return [];
     return products.filter((p) => String(p.seller_id) === String(selectedSellerId));
   }, [products, selectedSellerId]);
+
+  const filteredComboSellers = useMemo(() => {
+    if (!sellerSearch.trim()) return uniqueSellers;
+    const q = sellerSearch.toLowerCase();
+    return uniqueSellers.filter(s => 
+      s.seller_name.toLowerCase().includes(q) || 
+      (s.seller_email && s.seller_email.toLowerCase().includes(q))
+    );
+  }, [uniqueSellers, sellerSearch]);
 
   const submitContact = async (e) => {
     e.preventDefault();
@@ -103,23 +116,42 @@ export default function AdminMessaging() {
         <section className="admin-card">
           <h3>Compose Message</h3>
           <form onSubmit={submitContact} className="admin-form">
-            <div className="form-group">
+            <div className="form-group custom-combo">
               <label>Select Seller</label>
-              <select
-                value={selectedSellerId}
-                onChange={(e) => {
-                  setSelectedSellerId(e.target.value);
-                  setSelectedProductId("");
-                }}
-                required
-              >
-                <option value="">-- Choose Seller --</option>
-                {uniqueSellers.map((seller) => (
-                  <option key={seller.seller_id} value={seller.seller_id}>
-                    {seller.seller_name} ({seller.seller_email})
-                  </option>
-                ))}
-              </select>
+              <div className="combo-input-wrapper">
+                <input 
+                  type="text" 
+                  placeholder="Type to search seller by name or email..."
+                  value={sellerSearch}
+                  onFocus={() => setIsDropdownOpen(true)}
+                  onChange={(e) => {
+                    setSellerSearch(e.target.value);
+                    if (!isDropdownOpen) setIsDropdownOpen(true);
+                  }}
+                />
+                {isDropdownOpen && (
+                  <div className="combo-dropdown">
+                    {filteredComboSellers.length > 0 ? (
+                      filteredComboSellers.map((seller) => (
+                        <div 
+                          key={seller.seller_id} 
+                          className="combo-option"
+                          onClick={() => {
+                            setSelectedSellerId(seller.seller_id);
+                            setSellerSearch(`${seller.seller_name} (${seller.seller_email})`);
+                            setSelectedProductId("");
+                            setIsDropdownOpen(false);
+                          }}
+                        >
+                          {seller.seller_name} <span className="combo-muted">({seller.seller_email})</span>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="combo-option muted">No sellers found.</div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="form-group">

@@ -207,7 +207,7 @@ app.post('/api/products/:id/reviews', authenticateToken, async (req, res) => {
 
 // --- USER AUTHENTICATION ROUTES ---
 
-const performSignup = async ({ fullName, email, password, phone, role, address }, res) => {
+const performSignup = async ({ fullName, email, password, phone, role, address,companyName }, res) => {
     const client = await pool.connect();
     try {
       
@@ -232,7 +232,7 @@ const performSignup = async ({ fullName, email, password, phone, role, address }
         if (role === 'user') {
             await client.query(`INSERT INTO "users" (user_id) VALUES ($1)`, [pId]);
         } else if (role === 'seller') {
-            await client.query(`INSERT INTO seller (seller_id) VALUES ($1)`, [pId]);
+            await client.query(`INSERT INTO seller (seller_id,company_name) VALUES ($1,$2)`, [pId,companyName||fullName]);
         } else if (role === 'admin') {
             await client.query(`INSERT INTO admin (admin_id) VALUES ($1)`, [pId]);
         } else if (role === 'rider') {
@@ -314,7 +314,7 @@ app.post('/api/signup', async (req, res) => {
 // 4b. SELLER SIGNUP (dedicated)
 app.post('/api/seller/signup', async (req, res) => {
     const { fullName, email, password, phone, address } = req.body;
-    return performSignup({ fullName, email, password, phone, role: 'seller', address }, res);
+    return performSignup({ fullName, email, password, phone, role: 'seller', address,fullName}, res);
 });
 
 // 4c. ADMIN SIGNUP (TEST) 
@@ -548,7 +548,7 @@ app.get('/api/seller/products/:seller_id',authenticateToken, async (req, res) =>
                 unit_price as price, 
                 stock as stock_quantity, 
                 image_url,
-                is_active    /* NEW: Send status to frontend */
+                is_active 
             FROM products 
             WHERE seller_id = $1 
             ORDER BY product_id DESC
@@ -605,13 +605,20 @@ app.get('/api/seller/stats/:seller_id', authenticateToken, async (req, res) => {
         
         const prodQuery = `SELECT COUNT(*) FROM products WHERE seller_id = $1`;
         const prodResult = await pool.query(prodQuery, [seller_id]);
-        
+
+        const sellerQuery = `CALL get_seller_stats($1, NULL, NULL, NULL)`;
+        const sellerStatsResult = await pool.query(sellerQuery, [seller_id]);
+
+        const stats = sellerStatsResult.rows[0];
+
         res.json({
             total_products: parseInt(prodResult.rows[0].count),
-            total_sales: 0, 
-            total_profit: 0, 
-            rating: 5.0 
+            total_profit: parseInt(stats.totalprofit || 0),
+            total_sales: parseInt(stats.totalsales || 0),
+            rating: parseFloat(stats.sellerrating || 0).toFixed(1) 
         });
+        console.log(stats)
+
     } catch (err) {
         res.status(500).send('Server Error');
     }
@@ -660,7 +667,9 @@ app.get('/api/categories', async (req, res) => {
 });
 
 // --- ADMIN ROUTES ---
+// --- ADMIN ROUTES ---
 
+// 1. FIXED ANALYTICS ROUTE
 app.get('/api/admin/analytics', authenticateToken, requireRole(['admin']), async (req, res) => {
     try {
         const usersCountRes = await pool.query("SELECT COUNT(*) FROM person WHERE role = 'user'");
@@ -668,19 +677,37 @@ app.get('/api/admin/analytics', authenticateToken, requireRole(['admin']), async
         const ridersCountRes = await pool.query("SELECT COUNT(*) FROM person WHERE role = 'rider'");
         
         const productsCountRes = await pool.query("SELECT COUNT(*) FROM products");
-        const productsSoldRes = await pool.query("SELECT COALESCE(SUM(sell_count), 0) as total_sold FROM products");
+        
+        const productsSoldRes = await pool.query(`
+            SELECT COALESCE(SUM(od.quantity), 0) as total_sold 
+            FROM order_details od
+            JOIN orders o ON o.order_id = od.order_id
+            WHERE o.status = 'delivered'
+        `);
         
         const ordersCountRes = await pool.query("SELECT COUNT(*) FROM orders");
-        const revenueRes = await pool.query("SELECT COALESCE(SUM(amount), 0) as total_revenue FROM payment WHERE status IN ('pending', 'completed')");
+        
 
-        // Advanced: sales over time (last 7 days grouped by date)
+        let query=`
+            SELECT COALESCE(SUM(od.quantity * od.price), 0) as total_revenue
+            FROM order_details od
+            JOIN orders o ON o.order_id = od.order_id
+            WHERE o.status = $1
+        `;
+        const revenueRes = await pool.query(query, ['delivered']);
+
         const recentSalesRes = await pool.query(`
             SELECT DATE(order_time) as sale_date, COUNT(*) as order_count
-            FROM orders 
+            FROM orders
             WHERE order_time >= CURRENT_DATE - INTERVAL '7 days'
             GROUP BY DATE(order_time)
             ORDER BY sale_date ASC
         `);
+
+        const deliveredCountRes=await pool.query(
+            `SELECT COUNT(*) FROM orders
+            WHERE status=$1`,['delivered']
+        )
 
         res.json({
             users: parseInt(usersCountRes.rows[0].count),
@@ -689,6 +716,7 @@ app.get('/api/admin/analytics', authenticateToken, requireRole(['admin']), async
             totalProducts: parseInt(productsCountRes.rows[0].count),
             totalProductsSold: parseInt(productsSoldRes.rows[0].total_sold),
             totalOrders: parseInt(ordersCountRes.rows[0].count),
+            totalDeliveredOrders:parseInt(deliveredCountRes.rows[0].count),
             totalRevenue: parseFloat(revenueRes.rows[0].total_revenue),
             recentSales: recentSalesRes.rows
         });
@@ -697,6 +725,57 @@ app.get('/api/admin/analytics', authenticateToken, requireRole(['admin']), async
         res.status(500).json({ error: "Failed to fetch analytics data." });
     }
 });
+
+app.get('/api/admin/sellers', authenticateToken, requireRole(['admin']), async (req, res) => {
+    try {
+        const query = `
+            SELECT 
+                per.person_id AS seller_id,
+                per.name, 
+                per.email, 
+                per.phone, 
+                s.company_name,
+                COALESCE(SUM(od.quantity), 0) AS total_products_sold
+            FROM person per
+            JOIN seller s ON per.person_id = s.seller_id
+            LEFT JOIN products p ON s.seller_id = p.seller_id
+            LEFT JOIN order_details od ON p.product_id = od.product_id
+            GROUP BY per.person_id, per.name, per.email, per.phone, s.company_name
+            ORDER BY total_products_sold DESC;
+        `;
+        const result = await pool.query(query);
+        res.json(result.rows);
+    } catch (err) {
+        console.error("ADMIN SELLERS FETCH ERROR:", err.message);
+        res.status(500).json({ error: "Failed to fetch sellers for admin." });
+    }
+});
+
+// Admin endpoint to view a specific seller's statistics
+app.get('/api/admin/sellers/:id/stats', authenticateToken, requireRole(['admin']), async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        const prodQuery = `SELECT COUNT(*) FROM products WHERE seller_id = $1`;
+        const prodResult = await pool.query(prodQuery, [id]);
+
+        const sellerQuery = `CALL get_seller_stats($1, NULL, NULL, NULL)`;
+        const sellerStatsResult = await pool.query(sellerQuery, [id]);
+        
+        const stats = sellerStatsResult.rows[0];
+        
+        res.json({
+            total_products: parseInt(prodResult.rows[0].count),
+            total_profit: parseInt(stats.totalprofit || 0),
+            total_sales: parseInt(stats.totalsales || 0),
+            rating: parseFloat(stats.sellerrating || 0).toFixed(1) 
+        });
+    } catch (err) {
+        console.error("ADMIN SELLER STATS ERROR:", err.message);
+        res.status(500).json({ error: "Failed to fetch specific seller stats." });
+    }
+});
+
 
 // 12. GET ALL PRODUCTS FOR ADMIN MONITORING
 app.get('/api/admin/products', authenticateToken, requireRole(['admin']), async (req, res) => {
@@ -810,7 +889,7 @@ app.get('/api/admin/seller-contact', authenticateToken, requireRole(['admin']), 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
-ensureAdminTables();
+
 
 // 11. DELETE (DEACTIVATE) PRODUCT
 
@@ -835,6 +914,40 @@ app.delete('/api/products/:id', authenticateToken, async (req, res) => {
     } catch (err) {
         console.error("DELETE PRODUCT ERROR:", err.message);
         res.status(500).send('Server Error');
+    }
+});
+
+// update product price / image and status
+app.put('/api/products/:id', authenticateToken, async (req, res) => {
+    try {
+        if (req.user.role !== 'seller') {
+            return res.status(403).json({ error: "Access denied. Not a seller account." });
+        }
+
+        const { id } = req.params;
+        const seller_id = req.user.user_id;
+        const { price, image_url, is_active } = req.body;
+
+        const query = `
+            UPDATE products 
+            SET 
+                unit_price = COALESCE($1, unit_price),
+                image_url = COALESCE($2, image_url),
+                is_active = COALESCE($3, is_active)
+            WHERE product_id = $4 AND seller_id = $5 
+            RETURNING *;
+        `;
+
+        const result = await pool.query(query, [price, image_url, is_active, id, seller_id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: "Product not found or unauthorized" });
+        }
+
+        res.json({ message: "Product updated successfully!", product: result.rows[0] });
+    } catch (err) {
+        console.error("UPDATE PRODUCT ERROR:", err.message);
+        res.status(500).json({ error: "Server Error" });
     }
 });
 
@@ -943,6 +1056,11 @@ app.delete('/api/cart/clear', authenticateToken, async (req, res) => {
 app.put('/api/cart/sync', authenticateToken, async (req, res) => {
     const client = await pool.connect();
     try {
+        if(req.user.role!='user')
+        {
+            console.log('You are not a user so you dont have cart')
+            return;
+        }
         const userId = req.user.user_id;
         const { cart } = req.body;
 
@@ -1227,6 +1345,8 @@ app.put('/api/rider/profileupdate', authenticateToken, async (req, res) => {
         console.error("UPDATE RIDER PROFILE ERROR:", err.message);
     }
 });
+
+
 
 
 

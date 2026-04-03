@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { FaChartBar, FaEnvelope, FaBoxOpen, FaSignOutAlt } from "react-icons/fa";
+import { FaChartBar, FaEnvelope, FaBoxOpen, FaSignOutAlt, FaUsers } from "react-icons/fa";
 import "./AdminLayout.css";
 
 export default function AdminLayout({ user, onLogout }) {
@@ -56,6 +56,12 @@ export default function AdminLayout({ user, onLogout }) {
           >
            <FaBoxOpen /> Manage Products
           </Link>
+          <Link 
+            to="/admin/sellers" 
+            className={(location.pathname === "/admin/sellers" || location.pathname.includes("/admin/sellers/")) ? "active": ""}
+          >
+           <FaUsers /> Sellers
+          </Link>
 
           <button className="admin-nav-logout" onClick={onLogout}>
             <FaSignOutAlt /> Logout
@@ -68,6 +74,7 @@ export default function AdminLayout({ user, onLogout }) {
           <h3>
             {location.pathname.includes("analytics") ? "Platform Analytics" : 
              location.pathname.includes("messaging") ? "Seller Communications" :
+             location.pathname.includes("sellers") ? "Seller Management" :
              location.pathname.includes("products") ? "Product Moderation" : "Admin Dashboard"}
           </h3>
         </header>

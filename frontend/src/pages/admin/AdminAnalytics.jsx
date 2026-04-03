@@ -93,6 +93,7 @@ export default function AdminAnalytics() {
         <ul className="details-list">
           <li><strong>Total Catalog Items:</strong> {data.totalProducts}</li>
           <li><strong>Total Lifetime Orders:</strong> {data.totalOrders}</li>
+          <li><strong>Total Delivered Orders:</strong> {data.totalDeliveredOrders}</li>
           <li><strong>Registered Riders:</strong> {data.riders}</li>
         </ul>
       </div>

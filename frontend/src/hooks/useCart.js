@@ -72,6 +72,16 @@ export default function useCart() {
   }, [cart, isLoaded]);
 
   const handleAddToCart = (product) => {
+    const userStr = localStorage.getItem("chaldal_user");
+    if (userStr) {
+      try {
+        const userObj = JSON.parse(userStr);
+        if (userObj.role === 'admin' || userObj.role === 'seller' || userObj.role === 'rider') {
+          alert("You must be a standard customer to add items to the cart.");
+          return;
+        }
+      } catch (err) {}
+    }
     setCart((prevCart) => {
       const existing = prevCart.find((item) => item.id === product.id);
       if (existing) {

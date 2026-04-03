@@ -858,3 +858,106 @@ JOIN "users" u ON o.user_id = u.user_id
 JOIN person p ON p.person_id = u.user_id
 WHERE d.order_id = o.order_id 
   AND d.contact_name IS NULL;
+
+
+create or replace function increment_seller_delivered_count()
+returns trigger as $$
+begin
+    
+    if new.status = 'delivered' and old.status <> 'delivered' then
+        
+        update seller s
+        set orders_delivered = s.orders_delivered + 1
+        where s.seller_id in (
+            select distinct p.seller_id
+            from order_details od
+            join products p on p.product_id = od.product_id
+            where od.order_id = NEW.order_id
+        );
+
+    end if;
+    return new;
+end;
+$$ language plpgsql;
+
+create trigger trigger_order_delivered
+after update of status on orders
+for each row
+execute function increment_seller_delivered_count();
+
+update seller 
+set company_name = person.name 
+from person 
+where seller.seller_id = person.person_id 
+and seller.company_name is null;
+
+CREATE TABLE IF NOT EXISTS rider_review (
+          review_id serial primary key,
+          rating int check(rating >=1 and rating <=5),
+          comment text,
+          user_id int not null,
+          rider_id int not null,
+          is_active boolean default true,
+          foreign key (user_id) references "users"(user_id) on delete cascade,
+          foreign key (rider_id) references rider(rider_id) on delete cascade,
+          CONSTRAINT unique_user_rider_review UNIQUE (user_id, rider_id)
+      );
+
+CREATE OR REPLACE FUNCTION submit_rider_review(v_userId int, v_riderId int, v_rating int, v_text varchar)
+RETURNS void AS $$
+BEGIN
+  INSERT INTO rider_review (user_id, rider_id, rating, comment)
+  VALUES (v_userId, v_riderId, v_rating, v_text)
+  ON CONFLICT (user_id, rider_id) 
+  DO UPDATE SET rating = EXCLUDED.rating, comment = EXCLUDED.comment, is_active = true;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION update_rider_rating()
+RETURNS trigger AS $$
+BEGIN
+  UPDATE rider SET
+  rating = (
+    SELECT COALESCE(AVG(rating), 0)
+    FROM rider_review
+    WHERE rider_id = NEW.rider_id AND is_active = true
+  )
+  WHERE rider_id = NEW.rider_id;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER rider_rating_update_trig
+AFTER INSERT OR UPDATE OF rating, is_active 
+ON rider_review
+FOR EACH ROW EXECUTE FUNCTION update_rider_rating();
+
+update products
+set seller_id=34
+where seller_id is null;
+
+CREATE OR REPLACE PROCEDURE get_seller_stats(
+    sellerId IN int,
+    totalProfit OUT numeric,
+    totalSales OUT int,
+    sellerRating OUT numeric
+)
+AS $$
+BEGIN
+  SELECT 
+      COALESCE(SUM(od.price * od.quantity), 0),
+      COALESCE(SUM(od.quantity), 0)
+  INTO 
+      totalProfit, totalSales
+  FROM order_details od
+  JOIN products p ON p.product_id = od.product_id
+  WHERE p.seller_id = sellerId;
+
+  SELECT 
+      COALESCE(AVG(p.rating), 0)
+  INTO 
+      sellerRating
+  FROM products p
+  WHERE p.seller_id = sellerId;
+END;
+$$ LANGUAGE plpgsql;

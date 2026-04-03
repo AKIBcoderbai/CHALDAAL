@@ -14,8 +14,7 @@ function Header({
     const navigate = useNavigate();
     return (
         <>
-            {location.pathname !== "/seller-dashboard" &&
-             location.pathname !== "/seller-login" &&
+            {location.pathname !== "/seller-login" &&
              location.pathname !== "/admin-dashboard" &&
              location.pathname !== "/rider-dashboard" && (
                 <header className="header">
@@ -90,7 +89,7 @@ function Header({
                             <div className="custom-tooltip">{userAddress}</div>
                         </div>
 
-                        {user && user.role !== 'seller' ? (
+                        {user ? (
                             user.role === 'rider' ? (
                                 <div
                                     className="user-profile"
@@ -100,9 +99,17 @@ function Header({
                                     <FaUser /> <span>{user.full_name || user.name}</span>
                                 </div>
                             ) : user.role === 'admin' ? (
-                                < div
+                                <div
                                     className="user-profile"
-                                    onClick={() => navigate("/admin-dashboard")}
+                                    onClick={() => navigate("/admin")}
+                                    style={{ cursor: "pointer" }}
+                                >
+                                    <FaUser /> <span>{user.full_name || user.name}</span>
+                                </div>
+                            ) : user.role === 'seller' ? (
+                                <div
+                                    className="user-profile"
+                                    onClick={() => navigate("/seller-dashboard")}
                                     style={{ cursor: "pointer" }}
                                 >
                                     <FaUser /> <span>{user.full_name || user.name}</span>
@@ -122,10 +129,12 @@ function Header({
                             </button>
                         )}
 
-                        <div className="cart-badge-btn" onClick={() => setIsCartOpen(true)}>
-                            <FaShoppingBag style={{ color: "#d63031" }} />
-                            <span>{cart.reduce((acc, item) => acc + item.qty, 0)} Items</span>
-                        </div>
+                        {(!user || user.role === 'user') && (
+                            <div className="cart-badge-btn" onClick={() => setIsCartOpen(true)}>
+                                <FaShoppingBag style={{ color: "#d63031" }} />
+                                <span>{cart.reduce((acc, item) => acc + item.qty, 0)} Items</span>
+                            </div>
+                        )}
                     </div>
                 </header >
             )

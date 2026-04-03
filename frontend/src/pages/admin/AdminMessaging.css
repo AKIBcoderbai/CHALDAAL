@@ -108,6 +108,51 @@
   line-height: 1.5;
 }
 
+/* Custom Combo Box */
+.combo-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.combo-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid #dfe6e9;
+  border-radius: 6px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 1000;
+  margin-top: 4px;
+}
+
+.combo-option {
+  padding: 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #f1f2f6;
+  font-size: 14px;
+  transition: background 0.2s;
+  color: #2c3e50;
+}
+
+.combo-option:last-child {
+  border-bottom: none;
+}
+
+.combo-option:hover {
+  background-color: #f8fbff;
+  color: #3498db;
+}
+
+.combo-muted {
+  color: #95a5a6;
+  font-size: 13px;
+  margin-left: 5px;
+}
+
 @media (max-width: 900px) {
   .messaging-grid {
     grid-template-columns: 1fr;
