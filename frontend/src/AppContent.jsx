@@ -27,7 +27,10 @@ import ProductDetails from "./pages/ProductDetails";
 
 export default function AppContent() {
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    const savedUser = localStorage.getItem("chaldal_user");
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -48,23 +51,16 @@ export default function AppContent() {
   // --- Helper to get Real Address Name ---
   const fetchAddressName = async (lat, lng) => {
     try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`,
-      );
+      const response = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`);
       const data = await response.json();
-      return data.display_name;
+      return data.locality ? `${data.locality}, ${data.city}` : (data.city || data.countryName);
     } catch (error) {
       return `Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`;
     }
   };
 
   // --- 1. PERSIST LOGIN & LOGOUT LOGIC ---
-  useEffect(() => {
-    const savedUser = localStorage.getItem("chaldal_user");
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
-  }, []);
+  // (Initialization handled synchronously in useState)
 
   const handleLogin = (userData) => {
     setUser(userData);
@@ -356,7 +352,7 @@ export default function AppContent() {
         {/* RIDER ROUTES */}
         <Route
           path="/rider-dashboard"
-          element={<RiderDashboard user={user} onLogout={handleLogout} />}
+          element={<RiderDashboard user={user} onLogout={handleLogout} onUpdateUser={handleUpdateUser} />}
         />
 
         {/* ADMIN ROUTES */}

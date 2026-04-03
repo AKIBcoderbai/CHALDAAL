@@ -1334,6 +1334,30 @@ app.get('/api/rider/profile', authenticateToken, async (req, res) => {
     }
 });
 
+app.get('/api/rider/history', authenticateToken, async (req, res) => {
+    try {
+        const riderId = req.user.user_id;
+
+        const ratingResult = await pool.query('SELECT rating FROM rider WHERE rider_id = $1', [riderId]);
+        const rating = ratingResult.rows.length > 0 ? ratingResult.rows[0].rating : 0;
+
+        const query = `
+            SELECT o.order_id, o.status, o.order_time, d.arrival_time, a.street, a.city, d.contact_name as customer_name
+            FROM orders o
+            JOIN address a ON o.address_id = a.address_id
+            JOIN delivery d ON o.order_id = d.order_id
+            WHERE o.rider_id = $1 AND o.status = 'delivered'
+            ORDER BY d.arrival_time DESC;
+        `;
+        const historyResult = await pool.query(query, [riderId]);
+        
+        res.json({ rating: parseFloat(rating), deliveries: historyResult.rows });
+    } catch (err) {
+        console.error("FETCH RIDER HISTORY ERROR:", err.message);
+        res.status(500).json({ error: "Failed to fetch rider history" });
+    }
+});
+
 app.put('/api/rider/profileupdate', authenticateToken, async (req, res) => {
     try {
         const riderId = req.user.user_id;
