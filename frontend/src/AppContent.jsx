@@ -305,6 +305,7 @@ export default function AppContent() {
               toggleWishlist={toggleWishlist}
               user={user}
               handleLogout={handleLogout}
+              setIsCartOpen={setIsCartOpen}
             />
           }
         />

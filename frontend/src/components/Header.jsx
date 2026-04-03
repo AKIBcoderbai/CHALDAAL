@@ -128,7 +128,7 @@ function Header({
                             </button>
                         )}
 
-                        {(!user || user.role === 'user') && (
+                        {(!user || user.role === 'user') && location.pathname !== "/" && (
                             <div className="cart-badge-btn" onClick={() => setIsCartOpen(true)}>
                                 <FaShoppingBag style={{ color: "#d63031" }} />
                                 <span>{cart.reduce((acc, item) => acc + item.qty, 0)} Items</span>
