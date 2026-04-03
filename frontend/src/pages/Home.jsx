@@ -28,8 +28,6 @@ function Home({
       />
 
       <main className="main-content">
-        <BannerCarousel />
-
         <section className="discovery-toolbar">
           <div className="discover-left">
             <span className="discover-label">Quick Filters</span>
@@ -75,33 +73,37 @@ function Home({
           </div>
         </section>
 
+        <BannerCarousel />
+
         <div className="results-summary">
           Showing <strong>{displayedProducts.length}</strong> products
         </div>
 
-        <div className="product-grid">
-          {isLoading ? (
-            Array.from({ length: 10 }).map((_, idx) => (
-              <div key={`skeleton-${idx}`} className="product-skeleton-card" />
-            ))
-          ) : displayedProducts.length > 0 ? (
-            displayedProducts.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                cart={cart}
-                onAddToCart={handleAddToCart}
-                onUpdateQty={handleUpdateQty}
-                wishlisted={wishlistIds.includes(product.id)}
-                onToggleWishlist={toggleWishlist}
-              />
-            ))
-          ) : (
-            <div style={{ padding: "20px", color: "#666", gridColumn: "1 / -1" }}>
-              <h3>No products found in {selectedCategory}</h3>
-              <p>Check the database if you added products for this category!</p>
-            </div>
-          )}
+        <div className="products-scroll-wrapper">
+          <div className="product-grid">
+            {isLoading ? (
+              Array.from({ length: 10 }).map((_, idx) => (
+                <div key={`skeleton-${idx}`} className="product-skeleton-card" />
+              ))
+            ) : displayedProducts.length > 0 ? (
+              displayedProducts.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  cart={cart}
+                  onAddToCart={handleAddToCart}
+                  onUpdateQty={handleUpdateQty}
+                  wishlisted={wishlistIds.includes(product.id)}
+                  onToggleWishlist={toggleWishlist}
+                />
+              ))
+            ) : (
+              <div style={{ padding: "20px", color: "#666", gridColumn: "1 / -1" }}>
+                <h3>No products found in {selectedCategory}</h3>
+                <p>Check the database if you added products for this category!</p>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* FOOTER */}

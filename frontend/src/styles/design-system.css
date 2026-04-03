@@ -18,7 +18,7 @@
   --ds-transition-fast: 160ms ease;
   --ds-transition-base: 220ms ease;
   --ds-focus-ring: 0 0 0 3px rgba(255, 214, 69, 0.45);
-  --ds-container-max: 1280px;
+  --ds-container-max: 1600px;
 }
 
 body[data-theme='dark'] {

@@ -183,10 +183,12 @@ body[data-theme='dark'] .product-card:hover {
     transform: scale(1);
     box-shadow: 0 0 0 rgba(0, 0, 0, 0);
   }
+
   40% {
     transform: scale(0.985);
     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.14);
   }
+
   100% {
     transform: scale(1);
     box-shadow: 0 0 0 rgba(0, 0, 0, 0);
@@ -787,8 +789,8 @@ body[data-theme='dark'] .preview-image-wrap {
 .discovery-toolbar {
   width: calc(100% - 48px);
   max-width: var(--ds-container-max);
-  margin: 0 auto 8px;
-  padding: 12px 14px;
+  margin: 20px auto 24px;
+  padding: 14px 18px;
   border: 1px solid var(--border-color);
   background: var(--surface-color);
   border-radius: var(--ds-radius-md);
@@ -796,9 +798,6 @@ body[data-theme='dark'] .preview-image-wrap {
   justify-content: space-between;
   align-items: center;
   gap: 14px;
-  position: sticky;
-  top: 74px;
-  z-index: 900;
   box-shadow: var(--ds-shadow-1);
 }
 
@@ -820,7 +819,7 @@ body[data-theme='dark'] .preview-image-wrap {
   border: 1px solid var(--border-color);
   background: transparent;
   color: var(--text-color);
-  padding: 6px 10px;
+  padding: 6px 12px;
   border-radius: 999px;
   font-size: 13px;
   font-weight: 600;
@@ -1045,12 +1044,14 @@ body[data-theme='dark'] .preview-image-wrap {
     font-size: 22px;
   }
 }
+
 /* --- Fix for Long Addresses in Header --- */
 
 .location-selector {
   /* Add a maximum width so it never breaks the layout */
-  max-width: 220px; 
-  position: relative; /* For tooltip context if needed */
+  max-width: 220px;
+  position: relative;
+  /* For tooltip context if needed */
 }
 
 .location-selector span {
@@ -1058,11 +1059,11 @@ body[data-theme='dark'] .preview-image-wrap {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  
+
   /* Ensure it takes available space but doesn't force expansion */
   display: inline-block;
   vertical-align: middle;
-  max-width: 100%; 
+  max-width: 100%;
 }
 
 /* Optional: On Mobile, make it even smaller */
@@ -1071,6 +1072,7 @@ body[data-theme='dark'] .preview-image-wrap {
     max-width: 150px;
   }
 }
+
 /* --- Location Selector Styles --- */
 .location-selector {
   display: flex;
@@ -1080,8 +1082,10 @@ body[data-theme='dark'] .preview-image-wrap {
   padding: 6px 12px;
   border-radius: 4px;
   cursor: pointer;
-  position: relative; /* Anchors the tooltip */
-  max-width: 200px;   /* Fixed width to prevent layout shifting */
+  position: relative;
+  /* Anchors the tooltip */
+  max-width: 200px;
+  /* Fixed width to prevent layout shifting */
   transition: background 0.2s;
 }
 
@@ -1097,20 +1101,23 @@ body[data-theme='dark'] .preview-image-wrap {
   font-size: 14px;
   font-weight: 600;
   color: var(--text-color);
-  flex: 1; /* Takes available space */
+  flex: 1;
+  /* Takes available space */
 }
 
 /* --- ✨ The Floating Tooltip Bubble --- */
 .custom-tooltip {
   visibility: hidden;
   opacity: 0;
-  
+
   /* Positioning: Floats below the box */
   position: absolute;
-  top: 110%; /* Just below the selector */
+  top: 110%;
+  /* Just below the selector */
   left: 50%;
-  transform: translateX(-50%); /* Centers it */
-  
+  transform: translateX(-50%);
+  /* Centers it */
+
   /* Styling */
   background-color: #333;
   color: #fff;
@@ -1119,22 +1126,27 @@ body[data-theme='dark'] .preview-image-wrap {
   border-radius: 6px;
   font-size: 12px;
   width: max-content;
-  max-width: 280px; /* Maximum width of popup */
-  z-index: 2000; /* Sit on top of everything */
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-  white-space: normal; /* Allow text to wrap inside the bubble */
+  max-width: 280px;
+  /* Maximum width of popup */
+  z-index: 2000;
+  /* Sit on top of everything */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  white-space: normal;
+  /* Allow text to wrap inside the bubble */
   line-height: 1.4;
-  
+
   /* Animation */
   transition: opacity 0.2s, top 0.2s;
-  pointer-events: none; /* Prevents flickering if mouse touches it */
+  pointer-events: none;
+  /* Prevents flickering if mouse touches it */
 }
 
 /* The Triangle Arrow on top of the bubble */
 .custom-tooltip::after {
   content: "";
   position: absolute;
-  bottom: 100%; /* Top of tooltip */
+  bottom: 100%;
+  /* Top of tooltip */
   left: 50%;
   margin-left: -5px;
   border-width: 5px;
@@ -1146,7 +1158,8 @@ body[data-theme='dark'] .preview-image-wrap {
 .location-selector:hover .custom-tooltip {
   visibility: visible;
   opacity: 1;
-  top: 120%; /* Slight slide-down animation */
+  top: 120%;
+  /* Slight slide-down animation */
 }
 
 .theme-toggle-container {
@@ -1196,7 +1209,8 @@ body[data-theme='dark'] .content {
 }
 
 /* Global Select Styling for dropdowns */
-select, .form-group select {
+select,
+.form-group select {
   padding: 10px 12px;
   border: 1px solid var(--border-color);
   border-radius: var(--ds-radius-sm, 6px);
@@ -1214,15 +1228,49 @@ select, .form-group select {
   background-size: 16px auto;
 }
 
-body[data-theme='dark'] select, body[data-theme='dark'] .form-group select {
+body[data-theme='dark'] select,
+body[data-theme='dark'] .form-group select {
   background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
 }
 
-select:focus, .form-group select:focus {
+select:focus,
+.form-group select:focus {
   border-color: #ffd645;
   box-shadow: 0 0 0 2px rgba(255, 214, 69, 0.2);
 }
 
 .sort-select {
   width: auto;
+}
+
+.products-scroll-wrapper {
+  max-height: calc(100vh - 240px); /* Taller product compartment */
+  min-height: 800px; /* guarantees 2.2 cards height since 1 card is 360px */
+  overflow-y: auto;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-color);
+  /* ensures the scrollbar looks nice and bounded */
+
+  /* Modern scrollbar styling for webkit */
+  scrollbar-width: thin;
+  scrollbar-color: #ffd645 transparent;
+}
+
+.products-scroll-wrapper::-webkit-scrollbar {
+  width: 8px;
+}
+
+.products-scroll-wrapper::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.products-scroll-wrapper::-webkit-scrollbar-thumb {
+  background-color: #ffd645;
+  border-radius: 20px;
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+
+body[data-theme='dark'] .products-scroll-wrapper::-webkit-scrollbar-thumb {
+  background-color: #d6a920;
 }

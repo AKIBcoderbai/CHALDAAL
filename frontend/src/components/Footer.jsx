@@ -4,7 +4,7 @@ function Footer({ user, handleLogout }) {
   const navigate = useNavigate();
 
   return (
-    <footer style={{ marginTop: "50px", padding: "40px", backgroundColor: "#2d3436", color: "white", textAlign: "center" }}>
+    <footer style={{ marginTop: "20px", padding: "20px 10px", backgroundColor: "#2d3436", color: "white", textAlign: "center" }}>
       <h3>Partner with Chaldal</h3>
       <p>Sell your products to millions of customers.</p>
       <div style={{ marginTop: "16px", display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>

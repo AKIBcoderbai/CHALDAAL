@@ -12,8 +12,8 @@
 /* === BANNER ITEM === */
 .banner-item {
   flex: 0 0 auto;
-  min-width: 190px;
-  height: 290px;
+  min-width: 170px;
+  height: 200px;
   border-radius: var(--ds-radius-md);
   position: relative;
   overflow: hidden;
