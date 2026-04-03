@@ -150,8 +150,48 @@ const ensureAdminTables = async () => {
                 duration_days INTEGER NOT NULL DEFAULT 7,
                 gradient VARCHAR(300) DEFAULT 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                 is_active BOOLEAN DEFAULT TRUE,
+                status VARCHAR(20) DEFAULT 'pending',
+                admin_note TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 expires_at TIMESTAMP
+            )
+        `);
+
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS ad_settings (
+                id INT PRIMARY KEY DEFAULT 1,
+                max_display_limit INT NOT NULL DEFAULT 5
+            )
+        `);
+        await pool.query(`INSERT INTO ad_settings (id, max_display_limit) VALUES (1, 5) ON CONFLICT DO NOTHING`);
+
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS return_requests (
+                return_id SERIAL PRIMARY KEY,
+                order_id INT NOT NULL REFERENCES orders(order_id) ON DELETE CASCADE,
+                user_id INT NOT NULL REFERENCES "users"(user_id) ON DELETE CASCADE,
+                reason VARCHAR(100) NOT NULL,
+                description TEXT,
+                condition VARCHAR(50),
+                status VARCHAR(20) DEFAULT 'pending',
+                admin_note TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                resolved_at TIMESTAMP
+            )
+        `);
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS return_items (
+                return_id INT NOT NULL REFERENCES return_requests(return_id) ON DELETE CASCADE,
+                product_id INT NOT NULL REFERENCES products(product_id),
+                quantity INT NOT NULL DEFAULT 1,
+                PRIMARY KEY (return_id, product_id)
+            )
+        `);
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS return_images (
+                image_id SERIAL PRIMARY KEY,
+                return_id INT NOT NULL REFERENCES return_requests(return_id) ON DELETE CASCADE,
+                image_url VARCHAR(500) NOT NULL
             )
         `);
         console.log("✅ All required tables verified/created.");
@@ -906,9 +946,12 @@ app.get('/api/admin/seller-contact', authenticateToken, requireRole(['admin']), 
 // --- ADVERTISEMENT ROUTES ---
 // ==========================================
 
-// PUBLIC: Get all active, non-expired ads with product + seller info
+// PUBLIC: Get all active, non-expired APPROVED ads with product + seller info (respects limit)
 app.get('/api/advertisements', async (req, res) => {
     try {
+        const settingsRes = await pool.query(`SELECT max_display_limit FROM ad_settings WHERE id = 1`);
+        const limit = settingsRes.rows.length > 0 ? settingsRes.rows[0].max_display_limit : 5;
+
         const query = `
             SELECT
                 a.ad_id,
@@ -932,11 +975,13 @@ app.get('/api/advertisements', async (req, res) => {
             JOIN products p ON p.product_id = a.product_id
             JOIN person per ON per.person_id = a.seller_id
             JOIN seller s ON s.seller_id = a.seller_id
-            WHERE a.is_active = TRUE
+            WHERE a.status = 'approved'
+              AND a.is_active = TRUE
               AND (a.expires_at IS NULL OR a.expires_at > NOW())
             ORDER BY a.created_at DESC
+            LIMIT $1
         `;
-        const result = await pool.query(query);
+        const result = await pool.query(query, [limit]);
         res.json(result.rows);
     } catch (err) {
         console.error("GET ADS ERROR:", err.message);
@@ -1015,13 +1060,13 @@ app.post('/api/seller/advertisements', authenticateToken, async (req, res) => {
         const defaultGradient = gradient || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
 
         const result = await pool.query(`
-            INSERT INTO advertisements (seller_id, product_id, title, tagline, budget, duration_days, gradient, is_active, expires_at)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, TRUE, $8)
-            RETURNING ad_id, title, created_at, expires_at
+            INSERT INTO advertisements (seller_id, product_id, title, tagline, budget, duration_days, gradient, is_active, status, expires_at)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, TRUE, 'pending', $8)
+            RETURNING ad_id, title, status, created_at, expires_at
         `, [seller_id, product_id, title.trim(), tagline?.trim() || null, budget, duration_days, defaultGradient, expiresAt]);
 
         res.status(201).json({
-            message: "Advertisement created successfully!",
+            message: "Advertisement submitted for review! Admin will approve it shortly.",
             ad: result.rows[0]
         });
     } catch (err) {
@@ -1074,7 +1119,7 @@ app.delete('/api/seller/advertisements/:id', authenticateToken, async (req, res)
         const { id } = req.params;
 
         const result = await pool.query(
-            `UPDATE advertisements SET is_active = FALSE WHERE ad_id = $1 AND seller_id = $2 RETURNING ad_id`,
+            `UPDATE advertisements SET is_active = FALSE, status = 'cancelled' WHERE ad_id = $1 AND seller_id = $2 RETURNING ad_id`,
             [id, seller_id]
         );
 
@@ -1085,6 +1130,268 @@ app.delete('/api/seller/advertisements/:id', authenticateToken, async (req, res)
     } catch (err) {
         console.error("CANCEL AD ERROR:", err.message);
         res.status(500).json({ error: "Failed to cancel advertisement." });
+    }
+});
+
+// ==========================================
+// --- ADMIN ADVERTISEMENT MODERATION ---
+// ==========================================
+
+// GET ad display settings
+app.get('/api/admin/ad-settings', authenticateToken, requireRole(['admin']), async (req, res) => {
+    try {
+        const result = await pool.query(`SELECT max_display_limit FROM ad_settings WHERE id = 1`);
+        res.json(result.rows[0] || { max_display_limit: 5 });
+    } catch (err) {
+        console.error("GET AD SETTINGS ERROR:", err.message);
+        res.status(500).json({ error: "Failed to fetch ad settings." });
+    }
+});
+
+// UPDATE ad display limit
+app.put('/api/admin/ad-settings', authenticateToken, requireRole(['admin']), async (req, res) => {
+    try {
+        const { max_display_limit } = req.body;
+        if (!max_display_limit || max_display_limit < 1) {
+            return res.status(400).json({ error: "max_display_limit must be at least 1." });
+        }
+        await pool.query(
+            `INSERT INTO ad_settings (id, max_display_limit) VALUES (1, $1) ON CONFLICT (id) DO UPDATE SET max_display_limit = $1`,
+            [max_display_limit]
+        );
+        res.json({ message: "Ad display limit updated.", max_display_limit });
+    } catch (err) {
+        console.error("UPDATE AD SETTINGS ERROR:", err.message);
+        res.status(500).json({ error: "Failed to update ad settings." });
+    }
+});
+
+// GET all advertisements for admin
+app.get('/api/admin/advertisements', authenticateToken, requireRole(['admin']), async (req, res) => {
+    try {
+        const query = `
+            SELECT
+                a.ad_id, a.title, a.tagline, a.gradient, a.budget, a.duration_days,
+                a.status, a.admin_note, a.is_active, a.created_at, a.expires_at,
+                p.product_id, p.name AS product_name, p.unit_price AS price, p.image_url AS product_image,
+                per.name AS seller_name, per.email AS seller_email,
+                s.company_name
+            FROM advertisements a
+            JOIN products p ON p.product_id = a.product_id
+            JOIN person per ON per.person_id = a.seller_id
+            JOIN seller s ON s.seller_id = a.seller_id
+            ORDER BY
+                CASE a.status WHEN 'pending' THEN 0 WHEN 'approved' THEN 1 ELSE 2 END,
+                a.created_at DESC
+        `;
+        const result = await pool.query(query);
+        res.json(result.rows);
+    } catch (err) {
+        console.error("ADMIN GET ADS ERROR:", err.message);
+        res.status(500).json({ error: "Failed to fetch advertisements." });
+    }
+});
+
+// ADMIN: Approve advertisement
+app.patch('/api/admin/advertisements/:id/approve', authenticateToken, requireRole(['admin']), async (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = await pool.query(
+            `UPDATE advertisements SET status = 'approved', admin_note = NULL WHERE ad_id = $1 RETURNING ad_id, title, status`,
+            [id]
+        );
+        if (result.rows.length === 0) return res.status(404).json({ error: "Ad not found." });
+        res.json({ message: "Advertisement approved.", ad: result.rows[0] });
+    } catch (err) {
+        console.error("ADMIN APPROVE AD ERROR:", err.message);
+        res.status(500).json({ error: "Failed to approve advertisement." });
+    }
+});
+
+// ADMIN: Reject advertisement
+app.patch('/api/admin/advertisements/:id/reject', authenticateToken, requireRole(['admin']), async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { note } = req.body;
+        const result = await pool.query(
+            `UPDATE advertisements SET status = 'rejected', admin_note = $1 WHERE ad_id = $2 RETURNING ad_id, title, status`,
+            [note || null, id]
+        );
+        if (result.rows.length === 0) return res.status(404).json({ error: "Ad not found." });
+        res.json({ message: "Advertisement rejected.", ad: result.rows[0] });
+    } catch (err) {
+        console.error("ADMIN REJECT AD ERROR:", err.message);
+        res.status(500).json({ error: "Failed to reject advertisement." });
+    }
+});
+
+// ADMIN: Cancel an active approved advertisement
+app.patch('/api/admin/advertisements/:id/cancel', authenticateToken, requireRole(['admin']), async (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = await pool.query(
+            `UPDATE advertisements SET is_active = FALSE, status = 'cancelled' WHERE ad_id = $1 RETURNING ad_id`,
+            [id]
+        );
+        if (result.rows.length === 0) return res.status(404).json({ error: "Ad not found." });
+        res.json({ message: "Advertisement cancelled by admin." });
+    } catch (err) {
+        console.error("ADMIN CANCEL AD ERROR:", err.message);
+        res.status(500).json({ error: "Failed to cancel advertisement." });
+    }
+});
+
+// ==========================================
+// --- PRODUCT RETURN SYSTEM ---
+// ==========================================
+
+// USER: Submit a return request
+app.post('/api/returns', authenticateToken, async (req, res) => {
+    const client = await pool.connect();
+    try {
+        if (req.user.role !== 'user') {
+            return res.status(403).json({ error: "Only customers can submit return requests." });
+        }
+        const user_id = req.user.user_id;
+        const { order_id, reason, description, condition, items, images } = req.body;
+
+        if (!order_id || !reason || !items || items.length === 0) {
+            return res.status(400).json({ error: "order_id, reason, and at least one item are required." });
+        }
+
+        // Verify the order belongs to this user and is delivered
+        const orderCheck = await client.query(
+            `SELECT order_id FROM orders WHERE order_id = $1 AND user_id = $2 AND UPPER(status) = 'DELIVERED'`,
+            [order_id, user_id]
+        );
+        if (orderCheck.rows.length === 0) {
+            return res.status(403).json({ error: "Order not found, not delivered, or does not belong to you." });
+        }
+
+        // Check no existing return for this order
+        const existing = await client.query(`SELECT return_id FROM return_requests WHERE order_id = $1 AND user_id = $2`, [order_id, user_id]);
+        if (existing.rows.length > 0) {
+            return res.status(409).json({ error: "A return request for this order already exists." });
+        }
+
+        await client.query('BEGIN');
+
+        const returnResult = await client.query(
+            `INSERT INTO return_requests (order_id, user_id, reason, description, condition, status)
+             VALUES ($1, $2, $3, $4, $5, 'pending') RETURNING return_id`,
+            [order_id, user_id, reason, description || null, condition || null]
+        );
+        const return_id = returnResult.rows[0].return_id;
+
+        // Insert return items
+        for (const item of items) {
+            await client.query(
+                `INSERT INTO return_items (return_id, product_id, quantity) VALUES ($1, $2, $3)`,
+                [return_id, item.product_id, item.quantity || 1]
+            );
+        }
+
+        // Insert images
+        if (images && images.length > 0) {
+            for (const url of images) {
+                await client.query(`INSERT INTO return_images (return_id, image_url) VALUES ($1, $2)`, [return_id, url]);
+            }
+        }
+
+        await client.query('COMMIT');
+        res.status(201).json({ message: "Return request submitted successfully.", return_id });
+    } catch (err) {
+        await client.query('ROLLBACK');
+        console.error("CREATE RETURN ERROR:", err.message);
+        res.status(500).json({ error: "Failed to submit return request." });
+    } finally {
+        client.release();
+    }
+});
+
+// USER: Get return status for a specific order
+app.get('/api/returns/order/:orderId', authenticateToken, async (req, res) => {
+    try {
+        const user_id = req.user.user_id;
+        const { orderId } = req.params;
+        const result = await pool.query(`
+            SELECT
+                rr.return_id, rr.reason, rr.description, rr.condition,
+                rr.status, rr.admin_note, rr.created_at, rr.resolved_at,
+                json_agg(DISTINCT jsonb_build_object('product_id', ri.product_id, 'quantity', ri.quantity, 'name', p.name)) AS items,
+                json_agg(DISTINCT img.image_url) FILTER (WHERE img.image_url IS NOT NULL) AS images
+            FROM return_requests rr
+            LEFT JOIN return_items ri ON ri.return_id = rr.return_id
+            LEFT JOIN products p ON p.product_id = ri.product_id
+            LEFT JOIN return_images img ON img.return_id = rr.return_id
+            WHERE rr.order_id = $1 AND rr.user_id = $2
+            GROUP BY rr.return_id
+        `, [orderId, user_id]);
+        if (result.rows.length === 0) return res.json(null);
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error("GET RETURN STATUS ERROR:", err.message);
+        res.status(500).json({ error: "Failed to fetch return status." });
+    }
+});
+
+// ADMIN: Get all return requests
+app.get('/api/admin/returns', authenticateToken, requireRole(['admin']), async (req, res) => {
+    try {
+        const result = await pool.query(`
+            SELECT
+                rr.return_id, rr.order_id, rr.reason, rr.description, rr.condition,
+                rr.status, rr.admin_note, rr.created_at, rr.resolved_at,
+                per.name AS customer_name, per.email AS customer_email,
+                json_agg(DISTINCT jsonb_build_object(
+                    'product_id', ri.product_id, 'quantity', ri.quantity, 'name', p.name, 'image', p.image_url
+                )) AS items,
+                json_agg(DISTINCT img.image_url) FILTER (WHERE img.image_url IS NOT NULL) AS images
+            FROM return_requests rr
+            JOIN person per ON per.person_id = rr.user_id
+            LEFT JOIN return_items ri ON ri.return_id = rr.return_id
+            LEFT JOIN products p ON p.product_id = ri.product_id
+            LEFT JOIN return_images img ON img.return_id = rr.return_id
+            GROUP BY rr.return_id, per.name, per.email
+            ORDER BY CASE rr.status WHEN 'pending' THEN 0 ELSE 1 END, rr.created_at DESC
+        `);
+        res.json(result.rows);
+    } catch (err) {
+        console.error("ADMIN GET RETURNS ERROR:", err.message);
+        res.status(500).json({ error: "Failed to fetch return requests." });
+    }
+});
+
+// ADMIN: Approve return
+app.patch('/api/admin/returns/:id/approve', authenticateToken, requireRole(['admin']), async (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = await pool.query(
+            `UPDATE return_requests SET status = 'approved', resolved_at = NOW() WHERE return_id = $1 RETURNING return_id, status`,
+            [id]
+        );
+        if (result.rows.length === 0) return res.status(404).json({ error: "Return request not found." });
+        res.json({ message: "Return approved successfully.", return: result.rows[0] });
+    } catch (err) {
+        console.error("ADMIN APPROVE RETURN ERROR:", err.message);
+        res.status(500).json({ error: "Failed to approve return." });
+    }
+});
+
+// ADMIN: Reject return
+app.patch('/api/admin/returns/:id/reject', authenticateToken, requireRole(['admin']), async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { note } = req.body;
+        const result = await pool.query(
+            `UPDATE return_requests SET status = 'rejected', admin_note = $1, resolved_at = NOW() WHERE return_id = $2 RETURNING return_id, status`,
+            [note || null, id]
+        );
+        if (result.rows.length === 0) return res.status(404).json({ error: "Return request not found." });
+        res.json({ message: "Return rejected.", return: result.rows[0] });
+    } catch (err) {
+        console.error("ADMIN REJECT RETURN ERROR:", err.message);
+        res.status(500).json({ error: "Failed to reject return." });
     }
 });
 

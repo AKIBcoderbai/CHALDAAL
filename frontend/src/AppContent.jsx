@@ -25,6 +25,8 @@ import OrderDetails from "./pages/OrderDetails";
 import AdminSignupTest from "./pages/AdminSignupTest";
 import ProductDetails from "./pages/ProductDetails";
 import AdDetailPage from "./pages/AdDetailPage";
+import AdminAdvertisements from "./pages/admin/AdminAdvertisements";
+import AdminReturns from "./pages/admin/AdminReturns";
 
 export default function AppContent() {
   const navigate = useNavigate();
@@ -368,6 +370,8 @@ export default function AppContent() {
           <Route path="products" element={<AdminProducts />} />
           <Route path="sellers" element={<AdminSellers />} />
           <Route path="sellers/:id" element={<SellerDetails />} />
+          <Route path="ads" element={<AdminAdvertisements />} />
+          <Route path="returns" element={<AdminReturns />} />
         </Route>
       </Routes>
 

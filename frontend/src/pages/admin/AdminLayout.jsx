@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { FaChartBar, FaEnvelope, FaBoxOpen, FaSignOutAlt, FaUsers } from "react-icons/fa";
+import { FaChartBar, FaEnvelope, FaBoxOpen, FaSignOutAlt, FaUsers, FaBullhorn, FaUndo } from "react-icons/fa";
 import "./AdminLayout.css";
 
 export default function AdminLayout({ user, onLogout }) {
@@ -62,6 +62,18 @@ export default function AdminLayout({ user, onLogout }) {
           >
            <FaUsers /> Sellers
           </Link>
+          <Link 
+            to="/admin/ads" 
+            className={location.pathname === "/admin/ads" ? "active": ""}
+          >
+           <FaBullhorn /> Advertisements
+          </Link>
+          <Link 
+            to="/admin/returns" 
+            className={location.pathname === "/admin/returns" ? "active": ""}
+          >
+           <FaUndo /> Returns
+          </Link>
 
           <button className="admin-nav-logout" onClick={onLogout}>
             <FaSignOutAlt /> Logout
@@ -75,7 +87,9 @@ export default function AdminLayout({ user, onLogout }) {
             {location.pathname.includes("analytics") ? "Platform Analytics" : 
              location.pathname.includes("messaging") ? "Seller Communications" :
              location.pathname.includes("sellers") ? "Seller Management" :
-             location.pathname.includes("products") ? "Product Moderation" : "Admin Dashboard"}
+             location.pathname.includes("products") ? "Product Moderation" :
+             location.pathname.includes("ads") ? "Advertisement Moderation" :
+             location.pathname.includes("returns") ? "Return Requests" : "Admin Dashboard"}
           </h3>
         </header>
         <div className="admin-content">

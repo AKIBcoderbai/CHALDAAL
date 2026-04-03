@@ -81,14 +81,14 @@ export default function AdDetailPage() {
 
   return (
     <div className="ad-page-wrapper" style={{ '--ad-gradient': ad.gradient }}>
-      {/* Gradient Hero Background */}
+      {/* Gradient Hero Background - subtle top accent only */}
       <div className="ad-hero-bg" style={{ background: ad.gradient }} />
 
-      {/* Floating header bar */}
+      {/* Clean header bar */}
       <header className="ad-topbar">
-        <div className="ad-topbar-logo">🛒 Chaldaal</div>
-        <span className="ad-sponsored-label">Sponsored · Advertisement</span>
-        <a href="/" className="ad-topbar-home" target="_self">Go to Store →</a>
+        <div className="ad-topbar-logo">Chal<span>daal</span></div>
+        <span className="ad-sponsored-label">Sponsored Advertisement</span>
+        <a href="/" className="ad-topbar-home" target="_self">Go to Store</a>
       </header>
 
       <main className="ad-main-content">

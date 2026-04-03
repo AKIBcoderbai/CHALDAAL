@@ -983,3 +983,52 @@ CREATE TABLE IF NOT EXISTS advertisements (
 CREATE INDEX IF NOT EXISTS idx_ads_seller ON advertisements(seller_id);
 CREATE INDEX IF NOT EXISTS idx_ads_product ON advertisements(product_id);
 CREATE INDEX IF NOT EXISTS idx_ads_active ON advertisements(is_active, expires_at);
+
+-- Add approval workflow to advertisements
+ALTER TABLE advertisements
+ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'pending'
+    CHECK (status IN ('pending', 'approved', 'rejected', 'cancelled'));
+
+ALTER TABLE advertisements
+ADD COLUMN IF NOT EXISTS admin_note TEXT;
+
+-- Ad display settings (singleton row)
+CREATE TABLE IF NOT EXISTS ad_settings (
+    id INT PRIMARY KEY DEFAULT 1,
+    max_display_limit INT NOT NULL DEFAULT 5
+);
+INSERT INTO ad_settings (id, max_display_limit) VALUES (1, 5) ON CONFLICT DO NOTHING;
+
+-- ==========================================
+-- PRODUCT RETURN SYSTEM
+-- ==========================================
+
+CREATE TABLE IF NOT EXISTS return_requests (
+    return_id SERIAL PRIMARY KEY,
+    order_id INT NOT NULL REFERENCES orders(order_id) ON DELETE CASCADE,
+    user_id INT NOT NULL REFERENCES "users"(user_id) ON DELETE CASCADE,
+    reason VARCHAR(100) NOT NULL,
+    description TEXT,
+    condition VARCHAR(50),
+    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
+    admin_note TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    resolved_at TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS return_items (
+    return_id INT NOT NULL REFERENCES return_requests(return_id) ON DELETE CASCADE,
+    product_id INT NOT NULL REFERENCES products(product_id),
+    quantity INT NOT NULL DEFAULT 1,
+    PRIMARY KEY (return_id, product_id)
+);
+
+CREATE TABLE IF NOT EXISTS return_images (
+    image_id SERIAL PRIMARY KEY,
+    return_id INT NOT NULL REFERENCES return_requests(return_id) ON DELETE CASCADE,
+    image_url VARCHAR(500) NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_return_order ON return_requests(order_id);
+CREATE INDEX IF NOT EXISTS idx_return_user ON return_requests(user_id);
+CREATE INDEX IF NOT EXISTS idx_return_status ON return_requests(status);

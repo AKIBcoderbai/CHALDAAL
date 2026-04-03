@@ -359,7 +359,7 @@ const SellerDashboard = ({ user, onLogout, onUpdateUser }) => {
                     Messages {adminMessages.length > 0 ? `(${adminMessages.length})` : ''}
                 </div>
                 <div style={styles.navItem(activeTab === 'advertise')} onClick={() => setActiveTab('advertise')}>
-                    📢 Advertise {myAds.filter(a => a.is_active).length > 0 ? `(${myAds.filter(a => a.is_active).length} active)` : ''}
+                    Advertise {myAds.filter(a => a.is_active).length > 0 ? `(${myAds.filter(a => a.is_active).length} active)` : ''}
                 </div>
                 <div style={styles.navItem(activeTab === 'settings')} onClick={() => setActiveTab('settings')}>
                     <FaUserEdit /> Profile Settings
@@ -472,7 +472,7 @@ const SellerDashboard = ({ user, onLogout, onUpdateUser }) => {
 
                         {/* === CREATE AD FORM === */}
                         <div style={{ background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)', borderRadius: '12px', padding: '28px', marginBottom: '32px', color: '#eee' }}>
-                            <h4 style={{ color: '#ffd645', marginBottom: '20px', fontSize: '16px' }}>✨ Create New Advertisement</h4>
+                            <h4 style={{ color: '#ffd645', marginBottom: '20px', fontSize: '16px', fontWeight: '700', letterSpacing: '-0.01em' }}>Create New Advertisement</h4>
                             <form onSubmit={handleCreateAd}>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
 
@@ -578,28 +578,39 @@ const SellerDashboard = ({ user, onLogout, onUpdateUser }) => {
                                     </div>
                                 </div>
 
+                                <p style={{ marginBottom: '20px', fontSize: '12px', color: '#888', lineHeight: '1.5' }}>
+                                        After submission, your ad will be reviewed by admin before appearing on the homepage banner.
+                                    </p>
                                 <button
                                     type="submit"
                                     disabled={adSubmitting}
-                                    style={{ marginTop: '20px', width: '100%', padding: '14px', background: adSubmitting ? '#999' : '#ffd645', color: '#1a1a1a', fontWeight: '800', fontSize: '15px', border: 'none', borderRadius: '8px', cursor: adSubmitting ? 'not-allowed' : 'pointer', transition: 'background 0.2s' }}
+                                    style={{ marginTop: '4px', width: '100%', padding: '14px', background: adSubmitting ? '#555' : '#ffd645', color: adSubmitting ? '#aaa' : '#1a1a1a', fontWeight: '700', fontSize: '14px', border: 'none', borderRadius: '8px', cursor: adSubmitting ? 'not-allowed' : 'pointer', transition: 'background 0.2s', letterSpacing: '-0.01em' }}
                                 >
-                                    {adSubmitting ? '⏳ Submitting...' : '🚀 Launch Advertisement'}
+                                    {adSubmitting ? 'Submitting...' : 'Submit Advertisement for Review'}
                                 </button>
                             </form>
                         </div>
 
                         {/* === MY ADS LIST === */}
-                        <h4 style={{ marginBottom: '16px', color: '#333' }}>Your Advertisements ({myAds.length})</h4>
+                        <h4 style={{ marginBottom: '16px', color: '#333', fontWeight: '700', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Your Submitted Advertisements ({myAds.length})</h4>
                         {myAds.length === 0 ? (
-                            <div style={{ padding: '40px', textAlign: 'center', background: '#f9f9f9', borderRadius: '10px', color: '#999' }}>
-                                <div style={{ fontSize: '40px', marginBottom: '12px' }}>📭</div>
-                                <p>You have no advertisements yet. Create one above!</p>
+                            <div style={{ padding: '40px', textAlign: 'center', background: '#f9f9f9', borderRadius: '10px', color: '#bbb' }}>
+                                <p>No advertisements submitted yet. Create one above to promote your products.</p>
                             </div>
                         ) : (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                 {myAds.map(ad => {
-                                    const expired = ad.expires_at && new Date(ad.expires_at) < new Date();
-                                    const expiresStr = ad.expires_at ? new Date(ad.expires_at).toLocaleDateString('en-BD') : 'No expiry';
+                                        const expired = ad.expires_at && new Date(ad.expires_at) < new Date();
+                                        const statusLabel = !ad.is_active ? 'Cancelled' : expired ? 'Expired' : ad.status === 'approved' ? 'Active' : ad.status === 'rejected' ? 'Rejected' : 'Pending Review';
+                                        const statusColors = {
+                                            'Active':        { bg: '#eafaf1', color: '#27ae60' },
+                                            'Pending Review':{ bg: '#fff8e1', color: '#b8860b' },
+                                            'Rejected':      { bg: '#fff0f0', color: '#e74c3c' },
+                                            'Expired':       { bg: '#fef9c3', color: '#f59e0b' },
+                                            'Cancelled':     { bg: '#f5f5f5', color: '#aaa'    },
+                                        };
+                                        const sc = statusColors[statusLabel] || { bg: '#f5f5f5', color: '#aaa' };
+                                        const expiresStr = ad.expires_at ? new Date(ad.expires_at).toLocaleDateString('en-BD') : 'No expiry';
                                     return (
                                         <div key={ad.ad_id} style={{ display: 'flex', alignItems: 'center', gap: '16px', background: 'white', border: '1px solid #eee', borderRadius: '10px', padding: '14px 18px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
                                             {/* Gradient swatch */}
@@ -613,9 +624,10 @@ const SellerDashboard = ({ user, onLogout, onUpdateUser }) => {
                                                 <div style={{ fontWeight: '700', fontSize: '15px', color: '#222', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{ad.title}</div>
                                                 <div style={{ fontSize: '12px', color: '#888', marginTop: '2px' }}>{ad.product_name} · ৳{ad.price}</div>
                                                 <div style={{ display: 'flex', gap: '8px', marginTop: '6px', flexWrap: 'wrap' }}>
-                                                    <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '12px', background: !ad.is_active ? '#fadbd8' : expired ? '#fef9c3' : '#eafaf1', color: !ad.is_active ? '#e74c3c' : expired ? '#f59e0b' : '#27ae60', fontWeight: '700' }}>
-                                                        {!ad.is_active ? 'Cancelled' : expired ? 'Expired' : '● Active'}
-                                                    </span>
+                                            <div className="ad-status-badge-text" style={{
+                                                fontSize: '11px', padding: '2px 8px', borderRadius: '12px',
+                                                background: sc.bg, color: sc.color, fontWeight: '700', border: `1px solid ${sc.color}33`
+                                            }}>{statusLabel}</div>
                                                     <span style={{ fontSize: '11px', color: '#aaa' }}>Budget: ৳{ad.budget}</span>
                                                     <span style={{ fontSize: '11px', color: '#aaa' }}>Expires: {expiresStr}</span>
                                                 </div>

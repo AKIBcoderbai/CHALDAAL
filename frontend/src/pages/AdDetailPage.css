@@ -1,8 +1,9 @@
 /* =============================================
-   AD DETAIL PAGE — Premium Styles
+   AD DETAIL PAGE — Professional Styles
+   Matches Chaldaal site aesthetic
    ============================================= */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 *,
 *::before,
@@ -14,106 +15,95 @@
 
 .ad-page-wrapper {
   min-height: 100vh;
-  font-family: 'Inter', system-ui, sans-serif;
-  background: #0f0f13;
-  color: #eee;
-  position: relative;
-  overflow-x: hidden;
-}
-
-/* ---- Blurred gradient background blob ---- */
-.ad-hero-bg {
-  position: fixed;
-  top: -30%;
-  left: -20%;
-  width: 140%;
-  height: 70%;
-  opacity: 0.18;
-  filter: blur(80px);
-  pointer-events: none;
-  z-index: 0;
-  border-radius: 50%;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: #f7f7f7;
+  color: #1a1a1a;
 }
 
 /* ---- TOP BAR ---- */
 .ad-topbar {
-  position: sticky;
-  top: 0;
-  z-index: 100;
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 14px 40px;
-  background: rgba(15, 15, 19, 0.82);
-  backdrop-filter: blur(16px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 14px 48px;
+  background: #fff;
+  border-bottom: 1px solid #e8e8e8;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
 }
 
 .ad-topbar-logo {
   font-size: 20px;
-  font-weight: 900;
-  color: #ffd645;
-  letter-spacing: -0.02em;
+  font-weight: 800;
+  color: #1a1a1a;
+  letter-spacing: -0.03em;
   margin-right: auto;
+}
+.ad-topbar-logo span {
+  color: #ffd645;
 }
 
 .ad-sponsored-label {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.4);
+  font-size: 11px;
+  color: #999;
   letter-spacing: 0.04em;
   font-weight: 500;
+  background: #f5f5f5;
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid #e8e8e8;
 }
 
 .ad-topbar-home {
   font-size: 13px;
-  font-weight: 600;
-  color: #ffd645;
+  font-weight: 700;
+  color: #1a1a1a;
   text-decoration: none;
-  padding: 7px 16px;
-  border: 1.5px solid #ffd645;
+  padding: 8px 20px;
+  background: #ffd645;
   border-radius: 8px;
-  transition: background 0.2s, color 0.2s;
+  transition: background 0.18s, transform 0.15s;
 }
 .ad-topbar-home:hover {
-  background: #ffd645;
-  color: #1a1a1a;
+  background: #f5cb00;
+  transform: translateY(-1px);
 }
 
-/* ---- MAIN CONTENT GRID ---- */
+/* ---- MAIN LAYOUT ---- */
 .ad-main-content {
-  position: relative;
-  z-index: 1;
   display: grid;
   grid-template-columns: 420px 1fr;
-  gap: 40px;
-  max-width: 1200px;
+  gap: 32px;
+  max-width: 1100px;
   margin: 0 auto;
-  padding: 48px 40px 80px;
+  padding: 40px 40px 80px;
 }
 
-/* ---- LEFT: IMAGE PANEL ---- */
+/* ---- LEFT IMAGE PANEL ---- */
 .ad-image-panel {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
 }
 
 .ad-image-frame {
   width: 100%;
-  aspect-ratio: 1 / 1;
-  border-radius: 24px;
+  aspect-ratio: 1;
+  border-radius: 16px;
   position: relative;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  box-shadow: 0 6px 30px rgba(0,0,0,0.1);
 }
 
 .ad-img-skeleton {
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.12) 50%, rgba(255,255,255,0.05) 75%);
+  background: linear-gradient(90deg, #f0f0f0 25%, #f8f8f8 50%, #f0f0f0 75%);
   background-size: 200% 100%;
   animation: adShimmer 1.4s infinite;
 }
@@ -126,9 +116,9 @@
   width: 100%;
   height: 100%;
   object-fit: contain;
-  padding: 20px;
+  padding: 28px;
   opacity: 0;
-  transition: opacity 0.4s ease;
+  transition: opacity 0.35s ease;
   position: relative;
   z-index: 1;
 }
@@ -139,15 +129,14 @@
 .ad-expired-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(0,0,0,0.65);
+  background: rgba(255,255,255,0.8);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 10;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 700;
-  color: #ff6b6b;
-  letter-spacing: 0.05em;
+  color: #e74c3c;
 }
 
 /* Seller chip */
@@ -155,157 +144,155 @@
   display: flex;
   align-items: center;
   gap: 14px;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 14px;
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 12px;
   padding: 14px 18px;
-  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
 
 .ad-seller-avatar {
-  width: 44px;
-  height: 44px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
   background: var(--ad-gradient, linear-gradient(135deg, #667eea, #764ba2));
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 800;
   color: white;
   flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
 
 .ad-seller-chip-name {
   font-weight: 700;
-  font-size: 15px;
-  color: #fff;
+  font-size: 14px;
+  color: #1a1a1a;
 }
 .ad-seller-chip-label {
   font-size: 11px;
   color: #27ae60;
   font-weight: 600;
-  margin-top: 2px;
+  margin-top: 1px;
 }
 
-/* ---- RIGHT: DETAILS PANEL ---- */
+/* ---- RIGHT DETAILS PANEL ---- */
 .ad-details-panel {
   display: flex;
   flex-direction: column;
-  gap: 22px;
+  gap: 20px;
 }
 
 /* Badges */
 .ad-badge-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
 }
 
 .ad-badge {
   font-size: 11px;
   font-weight: 700;
-  padding: 5px 12px;
+  padding: 4px 10px;
   border-radius: 20px;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.03em;
 }
 .ad-badge--sponsored {
-  background: rgba(255, 214, 69, 0.15);
-  color: #ffd645;
-  border: 1px solid rgba(255, 214, 69, 0.3);
+  background: #fff8db;
+  color: #b8860b;
+  border: 1px solid #ffd645;
 }
 .ad-badge--category {
-  background: rgba(102, 126, 234, 0.15);
-  color: #9ab0ff;
-  border: 1px solid rgba(102,126,234,0.3);
+  background: #f0f4ff;
+  color: #4a6cf7;
+  border: 1px solid #c7d4ff;
 }
 .ad-badge--expired {
-  background: rgba(255,107,107,0.15);
-  color: #ff6b6b;
-  border: 1px solid rgba(255,107,107,0.3);
+  background: #fff0f0;
+  color: #e74c3c;
+  border: 1px solid #fcc;
 }
 
 /* Main title */
 .ad-main-title {
-  font-size: 36px;
-  font-weight: 900;
-  line-height: 1.1;
-  color: #fff;
-  letter-spacing: -0.02em;
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1.15;
+  color: #1a1a1a;
+  letter-spacing: -0.025em;
 }
 
 /* Tagline */
 .ad-tagline {
-  font-size: 16px;
-  color: rgba(255,255,255,0.55);
+  font-size: 15px;
+  color: #666;
   font-style: italic;
-  font-weight: 500;
-  line-height: 1.5;
-  border-left: 3px solid rgba(255,255,255,0.15);
+  font-weight: 400;
+  line-height: 1.6;
   padding-left: 14px;
+  border-left: 3px solid #ffd645;
 }
 
 /* Product info card */
 .ad-product-info-card {
-  background: rgba(255,255,255,0.035);
-  border: 1px solid rgba(255,255,255,0.07);
-  border-radius: 16px;
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 14px;
   padding: 22px 24px;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  backdrop-filter: blur(8px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
 
 .ad-product-name {
-  font-size: 22px;
-  font-weight: 800;
-  color: #fff;
+  font-size: 20px;
+  font-weight: 700;
+  color: #1a1a1a;
 }
 
 .ad-product-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 4px;
+  gap: 6px;
 }
 
 .ad-meta-tag {
   font-size: 11px;
   font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 12px;
-  background: rgba(255,255,255,0.06);
-  color: rgba(255,255,255,0.6);
-  border: 1px solid rgba(255,255,255,0.08);
+  padding: 3px 9px;
+  border-radius: 10px;
+  background: #f5f5f5;
+  color: #666;
+  border: 1px solid #e8e8e8;
 }
 .ad-meta-tag--instock {
-  background: rgba(39,174,96,0.15);
-  color: #2ecc71;
-  border-color: rgba(39,174,96,0.25);
+  background: #f0faf3;
+  color: #27ae60;
+  border-color: #c8ebd5;
 }
 .ad-meta-tag--outstock {
-  background: rgba(255,107,107,0.12);
-  color: #ff6b6b;
-  border-color: rgba(255,107,107,0.2);
+  background: #fff0f0;
+  color: #e74c3c;
+  border-color: #fcc;
 }
 
 .ad-price-row {
   display: flex;
   align-items: baseline;
   gap: 10px;
-  margin-top: 6px;
+  margin-top: 4px;
 }
 .ad-price-label {
   font-size: 13px;
-  color: rgba(255,255,255,0.4);
+  color: #999;
   font-weight: 500;
 }
 .ad-price-value {
-  font-size: 32px;
-  font-weight: 900;
-  color: #ffd645;
+  font-size: 30px;
+  font-weight: 800;
+  color: #1a1a1a;
   letter-spacing: -0.02em;
 }
 
@@ -314,226 +301,212 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-top: 4px;
 }
 .ad-stars {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 1px;
 }
 .star {
-  font-size: 18px;
-  color: rgba(255,255,255,0.2);
+  font-size: 16px;
+  color: #ddd;
 }
 .star.filled {
   color: #ffd645;
 }
 .ad-rating-num {
-  font-size: 14px;
-  font-weight: 700;
-  color: rgba(255,255,255,0.6);
-  margin-left: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #888;
+  margin-left: 4px;
 }
 
 /* Description */
 .ad-description {
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.06);
-  border-radius: 16px;
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 14px;
   padding: 20px 24px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }
 .ad-description h3 {
-  font-size: 14px;
+  font-size: 11px;
   font-weight: 700;
-  color: rgba(255,255,255,0.5);
-  letter-spacing: 0.05em;
+  color: #bbb;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   margin-bottom: 10px;
 }
 .ad-description p {
-  font-size: 15px;
-  line-height: 1.7;
-  color: rgba(255,255,255,0.7);
+  font-size: 14px;
+  line-height: 1.75;
+  color: #555;
 }
 
 /* Seller info card */
 .ad-seller-info-card {
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.06);
-  border-radius: 16px;
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 14px;
   padding: 20px 24px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }
 .ad-seller-info-card h3 {
-  font-size: 14px;
+  font-size: 11px;
   font-weight: 700;
-  color: rgba(255,255,255,0.5);
-  letter-spacing: 0.05em;
+  color: #bbb;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   margin-bottom: 14px;
 }
 .ad-seller-rows {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 .ad-seller-row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 .ad-si-label {
-  font-size: 13px;
-  color: rgba(255,255,255,0.4);
-  min-width: 110px;
+  font-size: 12px;
+  color: #999;
+  min-width: 90px;
   font-weight: 500;
 }
 .ad-si-value {
   font-size: 14px;
-  color: rgba(255,255,255,0.85);
+  color: #333;
   font-weight: 600;
 }
 
 /* Validity */
 .ad-validity {
-  font-size: 13px;
-  color: rgba(255,255,255,0.4);
+  font-size: 12px;
+  color: #aaa;
   font-weight: 500;
 }
 .ad-validity strong {
-  color: rgba(255,255,255,0.65);
+  color: #666;
 }
 
 /* CTA Buttons */
 .ad-cta-group {
   display: flex;
-  gap: 12px;
+  gap: 10px;
   flex-wrap: wrap;
-  margin-top: 4px;
 }
 
 .ad-btn-primary {
   flex: 1;
-  min-width: 200px;
+  min-width: 180px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 16px 28px;
+  padding: 15px 28px;
   background: #ffd645;
   color: #1a1a1a;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 800;
-  border-radius: 12px;
+  border-radius: 10px;
   border: none;
   cursor: pointer;
   text-decoration: none;
   letter-spacing: -0.01em;
-  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
-  box-shadow: 0 8px 24px rgba(255, 214, 69, 0.35);
+  transition: background 0.18s, transform 0.15s, box-shadow 0.18s;
+  box-shadow: 0 4px 14px rgba(255, 214, 69, 0.4);
 }
 .ad-btn-primary:hover {
-  background: #ffe87a;
+  background: #f5cb00;
   transform: translateY(-2px);
-  box-shadow: 0 12px 32px rgba(255, 214, 69, 0.5);
+  box-shadow: 0 8px 20px rgba(255, 214, 69, 0.5);
 }
 .ad-btn-primary:active {
-  transform: scale(0.97);
+  transform: scale(0.98);
 }
 
 .ad-btn-secondary {
-  padding: 16px 24px;
-  background: rgba(255,255,255,0.06);
-  color: rgba(255,255,255,0.6);
+  padding: 15px 22px;
+  background: #f5f5f5;
+  color: #666;
   font-size: 14px;
   font-weight: 600;
-  border-radius: 12px;
-  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  border: 1px solid #e0e0e0;
   cursor: pointer;
-  transition: background 0.2s, color 0.2s;
+  transition: background 0.18s, color 0.18s;
 }
 .ad-btn-secondary:hover {
-  background: rgba(255,255,255,0.1);
-  color: rgba(255,255,255,0.9);
+  background: #eee;
+  color: #333;
 }
 
 /* Disclaimer */
 .ad-disclaimer {
   font-size: 11px;
-  color: rgba(255,255,255,0.25);
+  color: #bbb;
   line-height: 1.6;
-  margin-top: 4px;
 }
 
-/* ---- LOADING SCREEN ---- */
+/* ---- LOADING ---- */
 .ad-loading-screen {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 20px;
-  color: rgba(255,255,255,0.5);
-  font-size: 15px;
+  gap: 18px;
+  color: #999;
+  font-size: 14px;
+  background: #f7f7f7;
 }
 .ad-loading-spinner {
-  width: 48px;
-  height: 48px;
-  border: 3px solid rgba(255,255,255,0.1);
+  width: 40px;
+  height: 40px;
+  border: 3px solid #eee;
   border-top-color: #ffd645;
   border-radius: 50%;
-  animation: adSpin 0.8s linear infinite;
+  animation: adSpin 0.75s linear infinite;
 }
-@keyframes adSpin {
-  to { transform: rotate(360deg); }
-}
+@keyframes adSpin { to { transform: rotate(360deg); } }
 
-/* ---- ERROR SCREEN ---- */
+/* ---- ERROR ---- */
 .ad-error-screen {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 14px;
+  gap: 12px;
   text-align: center;
   padding: 40px;
+  background: #f7f7f7;
 }
-.ad-error-icon {
-  font-size: 64px;
-}
+.ad-error-icon { font-size: 56px; }
 .ad-error-screen h2 {
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 800;
-  color: #fff;
+  color: #1a1a1a;
 }
 .ad-error-screen p {
-  font-size: 16px;
-  color: rgba(255,255,255,0.5);
-  max-width: 400px;
+  font-size: 15px;
+  color: #888;
+  max-width: 380px;
   margin-bottom: 10px;
 }
 
 /* ---- RESPONSIVE ---- */
-@media (max-width: 900px) {
-  .ad-topbar {
-    padding: 12px 20px;
-  }
+@media (max-width: 860px) {
+  .ad-topbar { padding: 12px 20px; }
   .ad-main-content {
     grid-template-columns: 1fr;
     padding: 24px 20px 60px;
-    gap: 28px;
+    gap: 24px;
   }
-  .ad-image-frame {
-    max-width: 360px;
-    margin: 0 auto;
-  }
-  .ad-main-title {
-    font-size: 26px;
-  }
-  .ad-price-value {
-    font-size: 26px;
-  }
-  .ad-btn-primary {
-    min-width: unset;
-  }
+  .ad-image-frame { max-width: 320px; margin: 0 auto; }
+  .ad-main-title { font-size: 24px; }
+  .ad-price-value { font-size: 24px; }
+  .ad-btn-primary { min-width: unset; }
 }
