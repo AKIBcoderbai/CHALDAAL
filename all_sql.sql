@@ -1032,3 +1032,30 @@ CREATE TABLE IF NOT EXISTS return_images (
 CREATE INDEX IF NOT EXISTS idx_return_order ON return_requests(order_id);
 CREATE INDEX IF NOT EXISTS idx_return_user ON return_requests(user_id);
 CREATE INDEX IF NOT EXISTS idx_return_status ON return_requests(status);
+
+CREATE OR REPLACE FUNCTION sync_cart_totals()
+RETURNS trigger AS $$
+BEGIN
+    IF (TG_OP = 'DELETE') THEN
+        UPDATE cart
+        SET total_cost = (
+            SELECT COALESCE(SUM(quantity * price), 0)
+            FROM cart_items
+            WHERE cart_id = OLD.cart_id
+        )
+        WHERE cart_id = OLD.cart_id;
+        
+        RETURN OLD;
+    ELSE
+        UPDATE cart
+        SET total_cost = (
+            SELECT COALESCE(SUM(quantity * price), 0)
+            FROM cart_items
+            WHERE cart_id = NEW.cart_id
+        )
+        WHERE cart_id = NEW.cart_id;
+        
+        RETURN NEW;
+    END IF;
+END;
+$$ LANGUAGE plpgsql;

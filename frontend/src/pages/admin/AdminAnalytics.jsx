@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { FaUsers, FaStore, FaBox, FaMoneyBillWave, FaChartLine } from "react-icons/fa";
+import LoadingSpinner from "../../components/LoadingSpinner";
 import "./AdminAnalytics.css";
 
 export default function AdminAnalytics() {
@@ -25,8 +26,8 @@ export default function AdminAnalytics() {
     fetchAnalytics();
   }, []);
 
-  if (loading) return <div>Loading Analytics...</div>;
-  if (!data) return <div>Failed to load data.</div>;
+  if (loading) return <LoadingSpinner message="Loading Analytics..." />;
+  if (!data) return <LoadingSpinner message="Failed to load data..." />;
 
   return (
     <div className="analytics-container">

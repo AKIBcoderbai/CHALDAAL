@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaCheck, FaTimes, FaChevronDown, FaChevronUp, FaBoxOpen } from 'react-icons/fa';
+import LoadingSpinner from '../../components/LoadingSpinner';
 import './AdminReturns.css';
 
 const API = 'http://localhost:3000';
@@ -71,7 +72,7 @@ export default function AdminReturns() {
     const filtered = filter === 'all' ? returns : returns.filter(r => r.status === filter);
     const pendingCount = returns.filter(r => r.status === 'pending').length;
 
-    if (loading) return <div className="ret-loading">Loading return requests...</div>;
+    if (loading) return <LoadingSpinner message="Loading Return Requests..." />;
 
     return (
         <div className="admin-ret-page">

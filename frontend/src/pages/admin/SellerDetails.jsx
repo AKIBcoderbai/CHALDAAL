@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { FaArrowLeft, FaMoneyBillWave, FaBox, FaStar, FaStore, FaEnvelope } from "react-icons/fa";
+import LoadingSpinner from "../../components/LoadingSpinner";
 import "./SellerDetails.css";
 
 const API_BASE = "http://localhost:3000";
@@ -92,8 +93,8 @@ export default function SellerDetails() {
     }
   };
 
-  if (loading) return <div>Loading Seller Information...</div>;
-  if (!sellerInfo) return <div>Seller not found.</div>;
+  if (loading) return <LoadingSpinner message="Loading Seller Details..." />;
+  if (!sellerInfo) return <LoadingSpinner message="Seller not found..." />;
 
   return (
     <div className="seller-details-page">

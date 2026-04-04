@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaSearch, FaEye } from "react-icons/fa";
+import LoadingSpinner from "../../components/LoadingSpinner";
 import "./AdminSellers.css";
 
 const API_BASE = "http://localhost:3000";
@@ -43,7 +44,7 @@ export default function AdminSellers() {
     );
   }, [sellers, search]);
 
-  if (loading) return <div>Loading Sellers Data...</div>;
+  if (loading) return <LoadingSpinner message="Loading Sellers..." />;
 
   return (
     <div className="admin-sellers-page">

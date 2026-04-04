@@ -35,7 +35,14 @@ export default function useCart() {
         }
         if (response.ok) {
           const cartItems = await response.json();
-          setCart(cartItems);
+          const mappedCarts= cartItems.map(item=>(
+            {
+              ...item,
+              id:item.product_id || item.id
+            }
+          )
+          )
+          setCart(mappedCarts);
         } else {
           setCart([]);
         }

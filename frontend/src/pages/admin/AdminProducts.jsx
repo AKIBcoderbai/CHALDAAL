@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import LoadingSpinner from "../../components/LoadingSpinner";
 import "./AdminProducts.css";
 
 const API_BASE = "http://localhost:3000";
@@ -57,7 +58,36 @@ export default function AdminProducts() {
     }
   };
 
-  if (loading) return <div>Loading Products...</div>;
+  const reactivateProduct = async (productId) => {
+    const confirmed = window.confirm(
+      "Reactivate this product? It will become visible on the storefront again."
+    );
+    if (!confirmed) return;
+
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_BASE}/api/admin/products/${productId}/reactivate`, {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || "Failed to reactivate product.");
+        return;
+      }
+
+      setProducts((prev) =>
+        prev.map((p) => (p.product_id === productId ? { ...p, is_active: true } : p))
+      );
+      alert("Product reactivated successfully.");
+    } catch (err) {
+      console.error("Admin reactivation failed:", err);
+      alert("Server connection failed.");
+    }
+  };
+
+  if (loading) return <LoadingSpinner message="Loading Products..." />;
 
   return (
     <div className="admin-products">
@@ -94,13 +124,22 @@ export default function AdminProducts() {
                     </span>
                   </td>
                   <td>
-                    <button
-                      className="danger-btn"
-                      disabled={!p.is_active}
-                      onClick={() => deactivateProduct(p.product_id)}
-                    >
-                      {p.is_active ? "Deactivate" : "Disabled"}
-                    </button>
+                    {p.is_active ? (
+                      <button
+                        className="danger-btn"
+                        onClick={() => deactivateProduct(p.product_id)}
+                      >
+                        Deactivate
+                      </button>
+                    ) : (
+                      <button
+                        className="danger-btn"
+                        style={{ background: '#27ae60', borderColor: '#27ae60' }}
+                        onClick={() => reactivateProduct(p.product_id)}
+                      >
+                        Reactivate
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}

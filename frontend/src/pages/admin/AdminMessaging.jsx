@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import LoadingSpinner from "../../components/LoadingSpinner";
 import "./AdminMessaging.css";
 
 const API_BASE = "http://localhost:3000";
@@ -108,7 +109,7 @@ export default function AdminMessaging() {
     }
   };
 
-  if (loading) return <div>Loading Messaging Center...</div>;
+  if (loading) return <LoadingSpinner message="Loading Messaging Center..." />;
 
   return (
     <div className="admin-messaging">

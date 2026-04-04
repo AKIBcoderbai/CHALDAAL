@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FaArrowLeft, FaBox, FaMotorcycle, FaStar, FaUndo } from 'react-icons/fa';
+import LoadingSpinner from '../components/LoadingSpinner';
 import './OrderDetails.css';
 
 const RETURN_REASONS = [
@@ -144,8 +145,8 @@ export default function OrderDetails({ user }) {
     return true;
   };
 
-  if (loading) return <div className="od-container">Loading...</div>;
-  if (!order) return <div className="od-container">Not Found</div>;
+  if (loading) return <LoadingSpinner message="Loading Order Details..." />;
+  if (!order) return <LoadingSpinner message="Order not found..." />;
 
   const odTime = new Date(order.order_time).toLocaleString();
   const arrivalTime = order.estimated_arrival ? new Date(order.estimated_arrival).toLocaleString() : "TBD";

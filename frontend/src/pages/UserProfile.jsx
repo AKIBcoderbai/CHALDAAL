@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaUserEdit, FaBox, FaSignOutAlt, FaCamera } from "react-icons/fa";
+import { FaUserEdit, FaBox, FaSignOutAlt, FaCamera, FaHome } from "react-icons/fa";
+import LoadingSpinner from '../components/LoadingSpinner';
 import './UserProfile.css';
 
 export default function UserProfile({ user, onUpdateUser, onLogout }) {
@@ -10,6 +11,7 @@ export default function UserProfile({ user, onUpdateUser, onLogout }) {
   const [profileData, setProfileData] = useState(user || {});
   const [avatarUrl, setAvatarUrl] = useState(user?.image_url || "");
   const [isUploading, setIsUploading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Settings form state
   const [updateForm, setUpdateForm] = useState({
@@ -22,6 +24,7 @@ export default function UserProfile({ user, onUpdateUser, onLogout }) {
     const token = localStorage.getItem("token");
     if (!token) return;
     try {
+      setIsLoading(true);
       const response = await fetch("http://localhost:3000/api/profile/me", {
         headers: { "Authorization": `Bearer ${token}` }
       });
@@ -42,6 +45,8 @@ export default function UserProfile({ user, onUpdateUser, onLogout }) {
       }
     } catch (err) {
       console.error("Failed to load profile");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -127,6 +132,7 @@ export default function UserProfile({ user, onUpdateUser, onLogout }) {
   };
 
   if (!user) return <div className="no-access">Please log in to view your profile.</div>;
+  if (isLoading) return <LoadingSpinner message="Loading Profile..." />;
 
   return (
     <div className="profile-dashboard">
@@ -155,6 +161,12 @@ export default function UserProfile({ user, onUpdateUser, onLogout }) {
         </div>
 
         <nav className="sidebar-nav">
+          <button
+            onClick={() => navigate('/')}
+            style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+          >
+            <FaHome /> Home
+          </button>
           <button 
             className={activeTab === "orders" ? "active" : ""} 
             onClick={() => setActiveTab("orders")}

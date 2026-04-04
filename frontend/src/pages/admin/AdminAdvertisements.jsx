@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaCheck, FaTimes, FaBan, FaCog, FaFilter } from 'react-icons/fa';
+import LoadingSpinner from '../../components/LoadingSpinner';
 import './AdminAdvertisements.css';
 
 const API = 'http://localhost:3000';
@@ -95,7 +96,7 @@ export default function AdminAdvertisements() {
     const pendingCount = ads.filter(a => a.status === 'pending').length;
     const approvedCount = ads.filter(a => a.status === 'approved' && a.is_active).length;
 
-    if (loading) return <div className="admin-ads-loading">Loading advertisement data...</div>;
+    if (loading) return <LoadingSpinner message="Loading Advertisements..." />;
 
     return (
         <div className="admin-ads-page">

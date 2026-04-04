@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FaStar, FaArrowLeft } from 'react-icons/fa';
+import LoadingSpinner from '../components/LoadingSpinner';
 import './ProductDetails.css';
 
 const ProductDetails = ({ cart, onAddToCart, onUpdateQty, user }) => {
@@ -92,8 +93,8 @@ const ProductDetails = ({ cart, onAddToCart, onUpdateQty, user }) => {
     }
   };
 
-  if (loading) return <div className="pd-loading">Loading...</div>;
-  if (!product) return <div className="pd-loading">Not Found</div>;
+  if (loading) return <LoadingSpinner message="Loading Product..." />;
+  if (!product) return <LoadingSpinner message="Product not found..." />;
 
   const isLowStock = product.stock > 0 && product.stock < 10;
   const isOutOfStock = product.stock <= 0;

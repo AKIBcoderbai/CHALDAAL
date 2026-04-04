@@ -864,28 +864,28 @@ app.get('/api/admin/products', authenticateToken, requireRole(['admin']), async 
     }
 });
 
-// 13. ADMIN DEACTIVATE ANY PRODUCT
-app.patch('/api/admin/products/:id/deactivate', authenticateToken, requireRole(['admin']), async (req, res) => {
+const toggleProduct = async (req, res, status, actionWord) => {
     try {
         const { id } = req.params;
-        const result = await pool.query(
-            `UPDATE products SET is_active = FALSE WHERE product_id = $1 RETURNING product_id, name, is_active`,
-            [id]
-        );
+        await pool.query('CALL admin_toggle_product($1, $2)', [id, status]);
 
-        if (result.rows.length === 0) {
-            return res.status(404).json({ error: "Product not found." });
-        }
-
+        // Procedures don't return rows easily, so we fetch the update or assume success
         res.json({
-            message: "Product deactivated by admin successfully.",
-            product: result.rows[0]
+            message: `Product ${actionWord} by admin successfully.`,
+            product_id: id,
+            is_active: status
         });
     } catch (err) {
-        console.error("ADMIN DEACTIVATE ERROR:", err.message);
-        res.status(500).json({ error: "Failed to deactivate product." });
+        console.error(`ADMIN ${actionWord.toUpperCase()} ERROR:`, err.message);
+        res.status(500).json({ error: `Failed to ${actionWord} product.` });
     }
-});
+};
+
+app.patch('/api/admin/products/:id/deactivate', authenticateToken, requireRole(['admin']),
+    (req, res) => toggleProduct(req, res, false, 'deactivated'));
+
+app.patch('/api/admin/products/:id/reactivate', authenticateToken, requireRole(['admin']),
+    (req, res) => toggleProduct(req, res, true, 'reactivated'));
 
 // 14. ADMIN CONTACT SELLER
 app.post('/api/admin/seller-contact', authenticateToken, requireRole(['admin']), async (req, res) => {
@@ -942,9 +942,7 @@ app.get('/api/admin/seller-contact', authenticateToken, requireRole(['admin']), 
     }
 });
 
-// ==========================================
-// --- ADVERTISEMENT ROUTES ---
-// ==========================================
+
 
 // PUBLIC: Get all active, non-expired APPROVED ads with product + seller info (respects limit)
 app.get('/api/advertisements', async (req, res) => {
@@ -1588,9 +1586,23 @@ app.put('/api/cart/sync', authenticateToken, async (req, res) => {
         }
 
         // 2. Wipe the old cart slate clean
+        console.log(cartId)
         await client.query(`DELETE FROM cart_items WHERE cart_id = $1`, [cartId]);
+        const cartNow = await client.query(
+            `SELECT * from cart_items WHERE cart_id=$1`,
+            [cartId]
+        )
 
         // 3. Insert the perfectly accurate new items
+        console.log(req.user);
+        console.log(cartNow)
+        console.log(cart);
+        const bugCart = await client.query(
+            `SELECT cart_id from cart where
+            user_id=$1`,
+            [req.user.user_id]
+        )
+        console.log(bugCart.rows.cart_id)
         if (cart && cart.length > 0) {
             for (const item of cart) {
                 await client.query(
@@ -1662,22 +1674,19 @@ app.put('/api/profile/update', authenticateToken, async (req, res) => {
         const userId = req.user.user_id;
         const { name, phone, password } = req.body;
         
-        // Update name and phone
-        if (name || phone) {
-            await pool.query(
-                `UPDATE person SET name = COALESCE($1, name), phone = COALESCE($2, phone) WHERE person_id = $3`,
-                [name || null, phone || null, userId]
-            );
-        }
-
-        // Update password securely
+        let hashedPassword = null;
         if (password && password.trim() !== "") {
-            const hashedPassword = await bcrypt.hash(password, 10);
-            await pool.query(
-                `UPDATE person SET password = $1 WHERE person_id = $2`,
-                [hashedPassword, userId]
-            );
+            hashedPassword = await bcrypt.hash(password, 10);
         }
+        await pool.query(
+            `CALL update_profile($1, $2, $3, $4)`,
+            [
+                userId,
+                name || null,
+                phone || null,
+                hashedPassword
+            ]
+        );
 
         res.json({ message: "Profile updated successfully!" });
     } catch (err) {
@@ -1890,8 +1899,7 @@ app.post('/api/upload', authenticateToken, upload.single('image'), (req, res) =>
         if (!req.file) {
             return res.status(400).json({ error: "No file provided" });
         }
-        
-        // multer-storage-cloudinary (v1/v2 compatibility) stores URL in secure_url, url, or path
+
         const imageUrl = req.file.secure_url || req.file.url || req.file.path;
         res.json({ image_url: imageUrl });
     } catch (err) {

@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Auth.css';
 import './SellerDashboard.css';
-import { FaBox, FaChartLine, FaDollarSign, FaStar, FaSignOutAlt, FaEnvelopeOpenText, FaEdit, FaUserEdit, FaCamera } from 'react-icons/fa';
+import LoadingSpinner from '../components/LoadingSpinner';
+import { FaBox, FaChartLine, FaDollarSign, FaStar, FaSignOutAlt, FaEnvelopeOpenText, FaEdit, FaUserEdit, FaCamera, FaHome } from 'react-icons/fa';
 
 const SellerDashboard = ({ user, onLogout, onUpdateUser }) => {
     const navigate = useNavigate();
@@ -12,6 +13,7 @@ const SellerDashboard = ({ user, onLogout, onUpdateUser }) => {
     const [stats, setStats] = useState({ total_products: 0, total_sales: 0, total_profit: 0, rating: 0 });
     const [adminMessages, setAdminMessages] = useState([]);
     const [isUploading, setIsUploading] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
     // Profile Settings state
     const [avatarUrl, setAvatarUrl] = useState(user?.image_url || "");
@@ -79,6 +81,7 @@ const SellerDashboard = ({ user, onLogout, onUpdateUser }) => {
 
     const fetchData = async () => {
         try {
+            setIsLoading(true);
             const token = localStorage.getItem("token");
             if (!token) return navigate("/login");
 
@@ -103,6 +106,8 @@ const SellerDashboard = ({ user, onLogout, onUpdateUser }) => {
             if (adsRes.ok) setMyAds(await adsRes.json());
         } catch (error) {
             console.error("Error loading dashboard:", error);
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -306,6 +311,8 @@ const SellerDashboard = ({ user, onLogout, onUpdateUser }) => {
         }
     };
 
+    if (isLoading) return <LoadingSpinner message="Loading Seller Dashboard..." />;
+
     return (
         <div className="sd-container">
             {/* Header */}
@@ -314,9 +321,14 @@ const SellerDashboard = ({ user, onLogout, onUpdateUser }) => {
                     <h2>Welcome, {user?.full_name || user?.name}</h2>
                     <p>Seller Dashboard</p>
                 </div>
-                <button onClick={onLogout} className="sd-logout-btn">
-                    <FaSignOutAlt /> Logout
-                </button>
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                    <button onClick={() => navigate('/')} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', background: '#e8f4fd', color: '#0984e3', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '600', fontSize: '13px' }}>
+                        <FaHome /> Home
+                    </button>
+                    <button onClick={onLogout} className="sd-logout-btn">
+                        <FaSignOutAlt /> Logout
+                    </button>
+                </div>
             </div>
 
             {/* Stats Cards */}

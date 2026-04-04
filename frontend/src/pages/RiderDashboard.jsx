@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LocationPicker from '../components/LocationPicker';
-import { FaMotorcycle, FaCheckCircle, FaHistory, FaUserEdit, FaSignOutAlt, FaMapMarkerAlt, FaStar, FaCamera } from 'react-icons/fa';
+import LoadingSpinner from '../components/LoadingSpinner';
+import { FaMotorcycle, FaCheckCircle, FaHistory, FaUserEdit, FaSignOutAlt, FaMapMarkerAlt, FaStar, FaCamera, FaHome } from 'react-icons/fa';
 
 export default function RiderDashboard({ user, onLogout, onUpdateUser }) {
   const navigate = useNavigate();
@@ -14,6 +15,7 @@ export default function RiderDashboard({ user, onLogout, onUpdateUser }) {
   
   const [avatarUrl, setAvatarUrl] = useState(user?.image_url || "");
   const [isUploading, setIsUploading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [updateForm, setUpdateForm] = useState({ name: user?.name || "", phone: user?.phone || "", password: "" });
 
   // Location States
@@ -42,6 +44,7 @@ export default function RiderDashboard({ user, onLogout, onUpdateUser }) {
   const fetchDashboardData = async () => {
     const token = localStorage.getItem("token");
     try {
+      setIsLoading(true);
       const availRes = await fetch("http://localhost:3000/api/rider/orders/available", {
         headers: { "Authorization": `Bearer ${token}` }
       });
@@ -67,6 +70,8 @@ export default function RiderDashboard({ user, onLogout, onUpdateUser }) {
       }
     } catch (err) {
       console.error("Failed to fetch rider data");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -173,6 +178,8 @@ export default function RiderDashboard({ user, onLogout, onUpdateUser }) {
       jobCard: { padding: '20px', border: '1px solid #dfe6e9', borderRadius: '10px', background: '#f8f9fa' }
   };
 
+  if (isLoading) return <LoadingSpinner message="Loading Rider Dashboard..." />;
+
   return (
     <div style={styles.container}>
       <div style={styles.header}>
@@ -181,6 +188,9 @@ export default function RiderDashboard({ user, onLogout, onUpdateUser }) {
               <p style={{ color: '#636e72', margin: '5px 0 0 0' }}>Rider Dashboard Portal</p>
           </div>
           <div style={{ display: 'flex', gap: '10px' }}>
+              <button onClick={() => navigate('/')} style={{ padding: '8px 15px', background: '#e8f4fd', color: '#0984e3', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <FaHome /> Home
+              </button>
               <button onClick={() => setIsMapOpen(true)} style={{ padding: '8px 15px', background: '#0984e3', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '5px' }}>
                 <FaMapMarkerAlt /> {riderLocation === defaultloc ? "Set Location" : "Update Location"}
               </button>

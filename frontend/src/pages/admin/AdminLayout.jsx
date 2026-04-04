@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { FaChartBar, FaEnvelope, FaBoxOpen, FaSignOutAlt, FaUsers, FaBullhorn, FaUndo } from "react-icons/fa";
+import { FaChartBar, FaEnvelope, FaBoxOpen, FaSignOutAlt, FaUsers, FaBullhorn, FaUndo, FaHome } from "react-icons/fa";
 import "./AdminLayout.css";
 
 export default function AdminLayout({ user, onLogout }) {
@@ -74,6 +74,10 @@ export default function AdminLayout({ user, onLogout }) {
           >
            <FaUndo /> Returns
           </Link>
+
+          <button className="admin-nav-logout" onClick={() => navigate('/')} style={{ background: 'transparent', color: '#94a3b8', marginBottom: '4px' }}>
+            <FaHome /> Visit Store
+          </button>
 
           <button className="admin-nav-logout" onClick={onLogout}>
             <FaSignOutAlt /> Logout
