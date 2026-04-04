@@ -24,16 +24,21 @@ export default function AboutPage() {
 
       <h2>Built With</h2>
       <ul>
-        <li>⚛️ <strong>React</strong> (Frontend)</li>
-        <li>🟢 <strong>Node.js + Express</strong> (Backend)</li>
-        <li>🐘 <strong>PostgreSQL on Supabase</strong> (Database)</li>
-        <li>☁️ <strong>Cloudinary</strong> (Image Storage)</li>
+        <li> <strong>React</strong> (Frontend)</li>
+        <li> <strong>Node.js + Express</strong> (Backend)</li>
+        <li> <strong>PostgreSQL on Supabase</strong> (Database)</li>
+        <li> <strong>Cloudinary</strong> (Image Storage)</li>
       </ul>
 
       <h2>The Team</h2>
       <div className="highlight-box">
-        <strong>Shamsul Haque Sami & Muntasir</strong><br />
-        CSE216 Project — BRAC University, 2026
+        <strong>
+          <li>Made By :</li> 
+         <p>Shamsul Haque Sami & Muntasir Bin Rafique</p> 
+         <li>Supervisor :</li> 
+          Kowshic Roy Sir
+          <p>CSE, BUET</p>
+          </strong><br />
       </div>
     </StaticPage>
   );
