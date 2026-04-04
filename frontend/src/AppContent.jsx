@@ -27,6 +27,7 @@ import ProductDetails from "./pages/ProductDetails";
 import AdDetailPage from "./pages/AdDetailPage";
 import AdminAdvertisements from "./pages/admin/AdminAdvertisements";
 import AdminReturns from "./pages/admin/AdminReturns";
+import AdminProfile from "./pages/admin/AdminProfile";
 
 export default function AppContent() {
   const navigate = useNavigate();
@@ -37,33 +38,27 @@ export default function AppContent() {
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  
-
-  // --- Location State ---
   const [isMapOpen, setIsMapOpen] = useState(false);
   const [userAddress, setUserAddress] = useState("Dhaka");
 
-  // --- Real Data State ---
-  
   const [wishlistIds, setWishlistIds] = useState(() => {
     const raw = localStorage.getItem("chaldal_wishlist_ids");
     return raw ? JSON.parse(raw) : [];
   });
 
-
-  // --- Helper to get Real Address Name ---
+  // Reverse geocode a lat/lng to a full address string using Nominatim
   const fetchAddressName = async (lat, lng) => {
     try {
-      const response = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`);
-      const data = await response.json();
-      return data.locality ? `${data.locality}, ${data.city}` : (data.city || data.countryName);
-    } catch (error) {
-      return `Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`;
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=en`,
+        { headers: { 'User-Agent': 'ChaalDaalApp/1.0' } }
+      );
+      const data = await res.json();
+      return data.display_name || `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+    } catch {
+      return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
     }
   };
-
-  // --- 1. PERSIST LOGIN & LOGOUT LOGIC ---
-  // (Initialization handled synchronously in useState)
 
   const handleLogin = (userData) => {
     setUser(userData);
@@ -94,8 +89,6 @@ export default function AppContent() {
     
   }, [navigate]);
 
-  // fetching products and handle all product related logic in this custom hook
-
   const {
     isLoading, selectedCategory, inputValue, setInputValue,
     showSuggestions, setShowSuggestions, suggestions, setSearchTerm,
@@ -103,10 +96,6 @@ export default function AppContent() {
     maxProductPrice, sortBy, setSortBy, displayedProducts,
     handleInputChange, handleSearchKey, handleSearchKeyBtn, handleSelectCategory
   } = useProducts();
-
-  /// Cart logic in this custom hook to keep things organized and separate from product fetching logic
-  // this is how standard react developers would do it. Not gpt . It will stack everything in one file and make it a mess. Don't do that.
-  //  Always separate concerns and logic into custom hooks or components. It makes your code cleaner and more maintainable.
 
   const {
     cart, isCartOpen, setIsCartOpen, checkoutMeta, setCheckoutMeta,
@@ -158,7 +147,7 @@ export default function AppContent() {
       items: cart,
       total: totalWithDelivery,
       userId: user.id,
-      address_id: finalAddressId
+      address_id: finalAddressId,
     };
 
     try {
@@ -181,7 +170,6 @@ export default function AppContent() {
           },
         body: JSON.stringify(orderPayload),
       });
-
       const responseData = await response.json().catch(() => ({}));
 
       if (response.ok) {
@@ -223,8 +211,6 @@ export default function AppContent() {
 
   return (
     <div className="app-container">
-      {/* --- HEADER --- */}
-
       <Header
         isMenuOpen={isMenuOpen}
         setIsMenuOpen={setIsMenuOpen}
@@ -245,15 +231,13 @@ export default function AppContent() {
         setIsCartOpen={setIsCartOpen}
       />
 
-
-      {/* --- LOCATION PICKER MODAL --- */}
       <LocationPicker
         isOpen={isMapOpen}
         onClose={() => setIsMapOpen(false)}
         onSelectLocation={async (loc) => {
           setUserAddress("Locating...");
-          const addressName = await fetchAddressName(loc.lat, loc.lng);
-          setUserAddress(addressName);
+          const address = await fetchAddressName(loc.lat, loc.lng);
+          setUserAddress(address);
         }}
       />
 
@@ -263,10 +247,7 @@ export default function AppContent() {
 
 
         <Route path="/signup" element={<Signup onLogin={handleLogin} defaultAddress={userAddress} />} />
-        {/* Hidden test route for creating admin accounts (requires secret) */}
         <Route path="/_admin-signup-test" element={<AdminSignupTest />} />
-
-        {/* HOME ROUTE */}
         <Route path="/product/:id"
           element={
             <ProductDetails
@@ -277,8 +258,6 @@ export default function AppContent() {
             />
           }
         />
-
-        {/* AD DETAIL PAGE - opens in new tab */}
         <Route path="/ad/:id" element={<AdDetailPage />} />
         <Route
           path="/"
@@ -344,25 +323,14 @@ export default function AppContent() {
           }
         />
 
-        {/* SELLER ROUTES */}
-        <Route
-          path="/seller-login"
-          element={<SellerLogin onLogin={handleLogin} />}
-        />
+        {/* Seller routes */}
+        <Route path="/seller-login" element={<SellerLogin onLogin={handleLogin} />} />
+        <Route path="/seller-dashboard" element={<SellerDashboard user={user} onLogout={handleLogout} onUpdateUser={handleUpdateUser} />} />
 
+        {/* Rider routes */}
+        <Route path="/rider-dashboard" element={<RiderDashboard user={user} onLogout={handleLogout} onUpdateUser={handleUpdateUser} />} />
 
-        <Route
-          path="/seller-dashboard"
-          element={<SellerDashboard user={user} onLogout={handleLogout} onUpdateUser={handleUpdateUser} />}
-        />
-
-        {/* RIDER ROUTES */}
-        <Route
-          path="/rider-dashboard"
-          element={<RiderDashboard user={user} onLogout={handleLogout} onUpdateUser={handleUpdateUser} />}
-        />
-
-        {/* ADMIN ROUTES */}
+        {/* Admin routes */}
         <Route path="/admin-dashboard" element={<Navigate to="/admin" replace />} />
         
         <Route path="/admin" element={<AdminLayout user={user} onLogout={handleLogout} />}>
@@ -374,6 +342,7 @@ export default function AppContent() {
           <Route path="sellers/:id" element={<SellerDetails />} />
           <Route path="ads" element={<AdminAdvertisements />} />
           <Route path="returns" element={<AdminReturns />} />
+          <Route path="profile" element={<AdminProfile user={user} onUpdateUser={handleUpdateUser} />} />
         </Route>
       </Routes>
 

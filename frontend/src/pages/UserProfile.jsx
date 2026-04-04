@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaUserEdit, FaBox, FaSignOutAlt, FaCamera, FaHome } from "react-icons/fa";
 import LoadingSpinner from '../components/LoadingSpinner';
+import UploadOverlay from '../components/UploadOverlay';
+import PasswordInput from '../components/PasswordInput';
 import './UserProfile.css';
 
 export default function UserProfile({ user, onUpdateUser, onLogout }) {
@@ -19,6 +21,7 @@ export default function UserProfile({ user, onUpdateUser, onLogout }) {
     phone: user?.phone || "",
     password: ""
   });
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   const fetchProfileInfo = async () => {
     const token = localStorage.getItem("token");
@@ -98,6 +101,14 @@ export default function UserProfile({ user, onUpdateUser, onLogout }) {
 
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
+    if (updateForm.password && updateForm.password.length < 8) {
+      alert('Password must be at least 8 characters.');
+      return;
+    }
+    if (updateForm.password && updateForm.password !== confirmPassword) {
+      alert('Passwords do not match.');
+      return;
+    }
     const token = localStorage.getItem("token");
     try {
       const res = await fetch("http://localhost:3000/api/profile/update", {
@@ -114,7 +125,8 @@ export default function UserProfile({ user, onUpdateUser, onLogout }) {
       });
       if (res.ok) {
         alert("Profile info updated successfully!");
-        setUpdateForm({ ...updateForm, password: "" }); // clear password field
+        setUpdateForm({ ...updateForm, password: "" });
+        setConfirmPassword("");
         if (onUpdateUser) {
           onUpdateUser({ 
             name: updateForm.name, 
@@ -136,6 +148,7 @@ export default function UserProfile({ user, onUpdateUser, onLogout }) {
 
   return (
     <div className="profile-dashboard">
+      <UploadOverlay isUploading={isUploading} />
       <div className="profile-sidebar">
         <div className="sidebar-header">
           <div className="avatar-wrapper">
@@ -260,12 +273,16 @@ export default function UserProfile({ user, onUpdateUser, onLogout }) {
 
               <div className="form-group divider-group">
                 <h3>Security</h3>
-                <label>New Password (leave blank to keep current)</label>
-                <input 
-                  type="password" 
-                  placeholder="••••••••"
+                <PasswordInput
+                  label="New Password"
                   value={updateForm.password}
-                  onChange={(e) => setUpdateForm({...updateForm, password: e.target.value})}
+                  onChange={e => setUpdateForm({...updateForm, password: e.target.value})}
+                  confirm
+                  confirmValue={confirmPassword}
+                  onConfirmChange={e => setConfirmPassword(e.target.value)}
+                  optional
+                  minLength={8}
+                  placeholder="Leave blank to keep current"
                 />
               </div>
 

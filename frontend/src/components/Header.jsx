@@ -100,7 +100,7 @@ function Header({
                             ) : user.role === 'admin' ? (
                                 <div
                                     className="user-profile"
-                                    onClick={() => navigate("/admin")}
+                                    onClick={() => navigate("/admin/profile")}
                                     style={{ cursor: "pointer" }}
                                 >
                                     <FaUser /> <span>{user.full_name || user.name}</span>

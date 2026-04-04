@@ -1059,3 +1059,59 @@ BEGIN
     END IF;
 END;
 $$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE PROCEDURE get_seller_stats(
+    sellerId IN int,
+    totalProfit OUT numeric,
+    totalSales OUT int,
+    sellerRating OUT numeric
+)
+AS $$
+BEGIN
+  SELECT 
+      COALESCE(SUM(od.price * od.quantity), 0),
+      COALESCE(SUM(od.quantity), 0)
+  INTO 
+      totalProfit, totalSales
+  FROM order_details od
+  JOIN products p ON p.product_id = od.product_id
+  WHERE p.seller_id = sellerId;
+  SELECT 
+      COALESCE(AVG(NULLIF(p.rating, 0)), 0)
+  INTO 
+      sellerRating
+  FROM products p
+  WHERE p.seller_id = sellerId;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE PROCEDURE update_profile(
+    v_person_id IN INT,
+    v_name IN VARCHAR,
+    v_phone IN VARCHAR,
+    v_password IN VARCHAR DEFAULT NULL
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    UPDATE person 
+    SET 
+        name = COALESCE(v_name, name),
+        phone = COALESCE(v_phone, phone),
+        password = COALESCE(v_password, password)
+    WHERE person_id = v_person_id;
+END;
+$$;
+
+create or replace procedure admin_toggle_product(
+    v_product_id IN INT,
+    v_status IN BOOLEAN
+)
+
+as $$
+begin
+    update products 
+    set is_active = v_status 
+    where product_id = v_product_id;
+end;
+$$ language plpgsql;

@@ -1,0 +1,236 @@
+.ap-page {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.ap-hero {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  background: linear-gradient(135deg, #2c3e50 0%, #3d5166 100%);
+  border-radius: 16px;
+  padding: 36px 40px;
+  margin-bottom: 30px;
+  color: white;
+  box-shadow: 0 8px 30px rgba(44, 62, 80, 0.3);
+}
+
+.ap-avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.ap-avatar {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid rgba(255,255,255,0.25);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+
+.ap-avatar-edit {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  background: #3498db;
+  color: white;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  transition: background 0.2s, transform 0.2s;
+}
+
+.ap-avatar-edit:hover {
+  background: #2980b9;
+  transform: scale(1.1);
+}
+
+.ap-hero-info {
+  flex: 1;
+}
+
+.ap-role-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(52, 152, 219, 0.25);
+  color: #74b9ff;
+  padding: 4px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  margin-bottom: 10px;
+  border: 1px solid rgba(116, 185, 255, 0.3);
+}
+
+.ap-hero-name {
+  margin: 0 0 8px 0;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.ap-hero-email {
+  margin: 0;
+  color: rgba(255,255,255,0.65);
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.ap-grid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 24px;
+}
+
+@media (max-width: 768px) {
+  .ap-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ap-hero {
+    flex-direction: column;
+    text-align: center;
+    padding: 28px 24px;
+  }
+}
+
+.ap-card {
+  margin-bottom: 0 !important;
+}
+
+.ap-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.ap-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ap-field label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #555;
+  display: flex;
+  align-items: center;
+}
+
+.ap-input {
+  padding: 10px 14px;
+  border: 1.5px solid #e0e4ea;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #2c3e50;
+  transition: border 0.2s, box-shadow 0.2s;
+  background: #fafbfc;
+  outline: none;
+}
+
+.ap-input:focus {
+  border-color: #3498db;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.12);
+  background: white;
+}
+
+.ap-disabled {
+  background: #f0f2f5;
+  color: #999;
+  cursor: not-allowed;
+}
+
+.ap-field small {
+  font-size: 12px;
+  color: #aaa;
+}
+
+.ap-divider {
+  font-size: 13px;
+  font-weight: 700;
+  color: #2c3e50;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 0 4px;
+  border-top: 1px solid #eee;
+}
+
+.ap-save-btn {
+  margin-top: 8px;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: opacity 0.2s, transform 0.1s;
+}
+
+.ap-save-btn:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.ap-save-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.ap-info-card {
+  height: fit-content;
+}
+
+.ap-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #f4f5f7;
+  gap: 10px;
+}
+
+.ap-info-row:last-child {
+  border-bottom: none;
+}
+
+.ap-info-label {
+  font-size: 13px;
+  color: #888;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.ap-info-value {
+  font-size: 13px;
+  color: #2c3e50;
+  font-weight: 600;
+  text-align: right;
+  word-break: break-all;
+}
+
+.ap-role-tag {
+  background: #eaf4fb;
+  color: #2980b9;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+}

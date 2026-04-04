@@ -1322,7 +1322,7 @@ app.patch('/api/admin/returns/:id/reject', authenticateToken, requireRole(['admi
 // Start Server
 app.listen(PORT, async () => {
     console.log(`Server is running on port ${PORT}`);
-    await ensureAdminTables();
+    //await ensureAdminTables();
 });
 
 

@@ -2189,3 +2189,84 @@ body[data-theme='dark'] .marquee-track img:hover {
 .cart-sidebar {
   z-index: 1600;
 }
+
+/* =============================================================
+   DARK MODE ISOLATION — White-background dashboard / auth pages
+   Strategy: locally redefine CSS custom properties so ALL
+   descendants using var(--text-color) / var(--surface-color) etc.
+   automatically resolve to neutral light values. No per-element
+   overrides needed — the cascade handles it all.
+   ============================================================= */
+
+body[data-theme='dark'] .admin-main,
+body[data-theme='dark'] .admin-content,
+body[data-theme='dark'] .admin-card,
+body[data-theme='dark'] .sd-container,
+body[data-theme='dark'] .profile-dashboard,
+body[data-theme='dark'] .ap-page,
+body[data-theme='dark'] .od-container,
+body[data-theme='dark'] .product-details-container,
+body[data-theme='dark'] .auth-card,
+body[data-theme='dark'] .ls-card,
+body[data-theme='dark'] .uo-card {
+  /* Override all CSS vars back to light-mode neutral */
+  --text-color:     #1e293b;
+  --text-secondary: #475569;
+  --surface-color:  #ffffff;
+  --surface-muted:  #f8fafc;
+  --border-color:   #e2e8f0;
+  /* Force the root element itself */
+  color: #1e293b;
+}
+
+/* Sidebar stays dark — re-apply its own dark overrides */
+body[data-theme='dark'] .admin-sidebar {
+  --text-color: #ecf0f1;
+  color: #ecf0f1;
+}
+
+/* ALL inputs, selects & textareas in dark mode get neutral look
+   (covers Rider dashboard which uses inline styles, not classes) */
+body[data-theme='dark'] input:not([type='file']):not([type='checkbox']):not([type='radio']),
+body[data-theme='dark'] textarea,
+body[data-theme='dark'] select {
+  color: #1e293b !important;
+  background: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+}
+
+body[data-theme='dark'] input:focus,
+body[data-theme='dark'] textarea:focus,
+body[data-theme='dark'] select:focus {
+  background: #ffffff !important;
+  border-color: #6366f1 !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12) !important;
+  color: #1e293b !important;
+}
+
+/* Exception: keep the main search bar on the header dark-themed */
+body[data-theme='dark'] .search-input,
+body[data-theme='dark'] .search-input:focus {
+  background: var(--search-bg) !important;
+  color: var(--text-color, #fff4cc) !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Badge/pill overrides inside dashboard white cards */
+body[data-theme='dark'] .admin-card .badge-active {
+  background: #dcfce7;
+  color: #166534;
+}
+body[data-theme='dark'] .admin-card .badge-inactive {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* UploadOverlay and LoadingSpinner text */
+body[data-theme='dark'] .uo-title,
+body[data-theme='dark'] .uo-sub,
+body[data-theme='dark'] .ls-message {
+  color: #1e293b !important;
+}
+

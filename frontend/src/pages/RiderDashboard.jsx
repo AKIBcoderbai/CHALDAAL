@@ -1,11 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTheme } from '../context/ThemeContext';
 import LocationPicker from '../components/LocationPicker';
 import LoadingSpinner from '../components/LoadingSpinner';
+import UploadOverlay from '../components/UploadOverlay';
+import PasswordInput from '../components/PasswordInput';
 import { FaMotorcycle, FaCheckCircle, FaHistory, FaUserEdit, FaSignOutAlt, FaMapMarkerAlt, FaStar, FaCamera, FaHome } from 'react-icons/fa';
 
 export default function RiderDashboard({ user, onLogout, onUpdateUser }) {
   const navigate = useNavigate();
+  const { theme } = useTheme();
+  const dark = theme === 'dark';
   
   const [activeTab, setActiveTab] = useState('available');
   
@@ -17,6 +22,7 @@ export default function RiderDashboard({ user, onLogout, onUpdateUser }) {
   const [isUploading, setIsUploading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [updateForm, setUpdateForm] = useState({ name: user?.name || "", phone: user?.phone || "", password: "" });
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   // Location States
   const [isMapOpen, setIsMapOpen] = useState(false);
@@ -25,11 +31,14 @@ export default function RiderDashboard({ user, onLogout, onUpdateUser }) {
   
   const fetchAddressName = async (lat, lng) => {
     try {
-      const response = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`);
-      const data = await response.json();
-      return data.locality ? `${data.locality}, ${data.city}` : (data.city || data.countryName);
-    } catch (error) {
-      return `Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`;
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=en`,
+        { headers: { 'User-Agent': 'ChaalDaalApp/1.0' } }
+      );
+      const data = await res.json();
+      return data.display_name || `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+    } catch {
+      return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
     }
   };
 
@@ -116,6 +125,14 @@ export default function RiderDashboard({ user, onLogout, onUpdateUser }) {
 
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
+    if (updateForm.password && updateForm.password.length < 8) {
+        alert('Password must be at least 8 characters.');
+        return;
+    }
+    if (updateForm.password && updateForm.password !== confirmPassword) {
+        alert('Passwords do not match.');
+        return;
+    }
     const token = localStorage.getItem("token");
     try {
         const res = await fetch("http://localhost:3000/api/profile/update", {
@@ -127,7 +144,8 @@ export default function RiderDashboard({ user, onLogout, onUpdateUser }) {
         if (res.ok) {
             if (onUpdateUser) onUpdateUser({ name: updateForm.name, phone: updateForm.phone });
             alert("Profile details updated successfully!");
-            setUpdateForm(prev => ({ ...prev, password: "" })); 
+            setUpdateForm(prev => ({ ...prev, password: "" }));
+            setConfirmPassword("");
         } else {
             alert("Failed to update profile details.");
         }
@@ -169,23 +187,51 @@ export default function RiderDashboard({ user, onLogout, onUpdateUser }) {
   };
 
   const styles = {
-      container: { padding: '20px', background: '#f4f6f8', minHeight: '100vh', fontFamily: 'sans-serif' },
-      header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' },
-      card: { background: 'white', padding: '20px', borderRadius: '10px', boxShadow: '0 2px 10px rgba(0,0,0,0.05)' },
-      nav: { display: 'flex', gap: '15px', marginBottom: '20px', borderBottom: '1px solid #ddd', paddingBottom: '10px', overflowX: 'auto' },
-      navItem: (isActive) => ({ padding: '10px 20px', cursor: 'pointer', borderRadius: '5px', background: isActive ? '#00cec9' : 'transparent', color: isActive ? 'white' : '#555', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap' }),
-      grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' },
-      jobCard: { padding: '20px', border: '1px solid #dfe6e9', borderRadius: '10px', background: '#f8f9fa' }
+    container: {
+      padding: '20px',
+      background: dark ? '#0f1923' : '#f4f6f8',
+      minHeight: '100vh',
+      fontFamily: 'sans-serif',
+      color: dark ? '#e2e8f0' : '#2d3436'
+    },
+    header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' },
+    card: {
+      background: dark ? '#1e293b' : 'white',
+      padding: '20px',
+      borderRadius: '10px',
+      boxShadow: dark ? '0 2px 10px rgba(0,0,0,0.4)' : '0 2px 10px rgba(0,0,0,0.05)',
+      color: dark ? '#e2e8f0' : '#2d3436'
+    },
+    nav: {
+      display: 'flex', gap: '15px', marginBottom: '20px',
+      borderBottom: `1px solid ${dark ? '#334155' : '#ddd'}`,
+      paddingBottom: '10px', overflowX: 'auto'
+    },
+    navItem: (isActive) => ({
+      padding: '10px 20px', cursor: 'pointer', borderRadius: '5px',
+      background: isActive ? '#00cec9' : (dark ? '#1e293b' : 'transparent'),
+      color: isActive ? 'white' : (dark ? '#94a3b8' : '#555'),
+      fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap'
+    }),
+    grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' },
+    jobCard: {
+      padding: '20px',
+      border: `1px solid ${dark ? '#334155' : '#dfe6e9'}`,
+      borderRadius: '10px',
+      background: dark ? '#1e293b' : '#f8f9fa',
+      color: dark ? '#e2e8f0' : '#2d3436'
+    }
   };
 
   if (isLoading) return <LoadingSpinner message="Loading Rider Dashboard..." />;
 
   return (
     <div style={styles.container}>
+      <UploadOverlay isUploading={isUploading} />
       <div style={styles.header}>
           <div>
-              <h2 style={{ margin: 0, color: '#2d3436' }}>👋 Welcome, {user?.full_name || user?.name}</h2>
-              <p style={{ color: '#636e72', margin: '5px 0 0 0' }}>Rider Dashboard Portal</p>
+              <h2 style={{ margin: 0, color: dark ? '#e2e8f0' : '#2d3436' }}>👋 Welcome, {user?.full_name || user?.name}</h2>
+              <p style={{ color: dark ? '#94a3b8' : '#636e72', margin: '5px 0 0 0' }}>Rider Dashboard Portal</p>
           </div>
           <div style={{ display: 'flex', gap: '10px' }}>
               <button onClick={() => navigate('/')} style={{ padding: '8px 15px', background: '#e8f4fd', color: '#0984e3', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '5px' }}>
@@ -231,8 +277,8 @@ export default function RiderDashboard({ user, onLogout, onUpdateUser }) {
         {/* AVAILABLE JOBS */}
         {activeTab === 'available' && (
           <div>
-            <h3 style={{ marginTop: 0 }}>Jobs near you</h3>
-            <p style={{ color: '#636e72', fontSize: '14px', marginBottom: '20px' }}>Current location tracking: {riderLocation}</p>
+            <h3 style={{ marginTop: 0, color: dark ? '#e2e8f0' : '#2d3436' }}>Jobs near you</h3>
+            <p style={{ color: dark ? '#94a3b8' : '#636e72', fontSize: '14px', marginBottom: '20px' }}>Current location tracking: {riderLocation}</p>
             {availableOrders.length === 0 ? <p className="muted">No deliveries actively looking for riders right now.</p> : (
               <div style={styles.grid}>
                 {availableOrders.map(order => (
@@ -241,8 +287,8 @@ export default function RiderDashboard({ user, onLogout, onUpdateUser }) {
                       <strong style={{ fontSize: '18px' }}>Order #{order.order_id}</strong>
                       <strong style={{ fontSize: '16px', color: '#0984e3' }}>৳{order.delivery_fee.toFixed(2)}</strong>
                     </div>
-                    <p style={{ margin: '5px 0', color: '#2d3436' }}>📍 {order.street}, {order.city}</p>
-                    <p style={{ margin: '5px 0', color: '#636e72' }}>👤 {order.customer_name} ({order.customer_phone})</p>
+                    <p style={{ margin: '5px 0', color: dark ? '#94a3b8' : '#2d3436' }}>📍 {order.street}, {order.city}</p>
+                    <p style={{ margin: '5px 0', color: dark ? '#64748b' : '#636e72' }}>👤 {order.customer_name} ({order.customer_phone})</p>
                     <button 
                       onClick={() => handleAcceptOrder(order.order_id)}
                       style={{ width: '100%', padding: '10px', background: '#0984e3', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', marginTop: '15px' }}
@@ -263,10 +309,10 @@ export default function RiderDashboard({ user, onLogout, onUpdateUser }) {
             {myJobs.length === 0 ? <p className="muted">You have no active deliveries right now. Check the "Available Jobs" tab.</p> : (
               <div style={styles.grid}>
                 {myJobs.map(job => (
-                  <div key={job.order_id} style={{ ...styles.jobCard, borderLeft: '4px solid #00cec9', background: '#e0fbfb' }}>
-                    <strong style={{ fontSize: '18px' }}>Order #{job.order_id}</strong>
-                    <p style={{ margin: '10px 0 5px 0', fontWeight: 'bold' }}>📍 {job.street}</p>
-                    <p style={{ margin: '5px 0 15px 0' }}>📞 {job.customer_name} - {job.customer_phone}</p>
+                  <div key={job.order_id} style={{ ...styles.jobCard, borderLeft: '4px solid #00cec9', background: dark ? '#164e63' : '#e0fbfb' }}>
+                    <strong style={{ fontSize: '18px', color: dark ? '#e2e8f0' : '#2d3436' }}>Order #{job.order_id}</strong>
+                    <p style={{ margin: '10px 0 5px 0', fontWeight: 'bold', color: dark ? '#e2e8f0' : '#2d3436' }}>📍 {job.street}</p>
+                    <p style={{ margin: '5px 0 15px 0', color: dark ? '#94a3b8' : '#636e72' }}>📞 {job.customer_name} - {job.customer_phone}</p>
                     <button 
                       onClick={() => handleDeliverOrder(job.order_id)}
                       style={{ width: '100%', padding: '10px', background: '#00b894', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
@@ -283,7 +329,7 @@ export default function RiderDashboard({ user, onLogout, onUpdateUser }) {
         {/* HISTORY & RATING */}
         {activeTab === 'history' && (
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '30px', padding: '20px', background: '#f1f2f6', borderRadius: '10px', display: 'inline-flex' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '30px', padding: '20px', background: dark ? '#1e293b' : '#f1f2f6', borderRadius: '10px', display: 'inline-flex' }}>
                <div style={{ background: '#f1c40f', color: '#fff', padding: '15px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                    <FaStar size={30} />
                </div>
@@ -301,14 +347,14 @@ export default function RiderDashboard({ user, onLogout, onUpdateUser }) {
             {history.deliveries.length === 0 ? <p className="muted">You have no completed deliveries on record.</p> : (
               <div style={styles.grid}>
                 {history.deliveries.map(d => (
-                  <div key={d.order_id} style={{ ...styles.jobCard, background: '#fff', border: '1px solid #eee' }}>
+                  <div key={d.order_id} style={{ ...styles.jobCard, background: dark ? '#1e293b' : '#fff', border: `1px solid ${dark ? '#334155' : '#eee'}` }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
                       <strong>Order #{d.order_id}</strong>
                       <span style={{ fontSize: '13px', color: '#B53471', background: '#f8c291', padding: '3px 8px', borderRadius: '12px', fontWeight: 'bold' }}>Delivered</span>
                     </div>
-                    <p style={{ margin: '5px 0', fontSize: '14px', color: '#636e72' }}>{new Date(d.arrival_time || d.order_time).toLocaleString()}</p>
-                    <p style={{ margin: '10px 0 0 0', fontSize: '14px' }}>Customer: {d.customer_name}</p>
-                    <p style={{ margin: '5px 0 0 0', fontSize: '14px' }}>Address: {d.street}, {d.city}</p>
+                    <p style={{ margin: '5px 0', fontSize: '14px', color: dark ? '#94a3b8' : '#636e72' }}>{new Date(d.arrival_time || d.order_time).toLocaleString()}</p>
+                    <p style={{ margin: '10px 0 0 0', fontSize: '14px', color: dark ? '#cbd5e1' : '#2d3436' }}>Customer: {d.customer_name}</p>
+                    <p style={{ margin: '5px 0 0 0', fontSize: '14px', color: dark ? '#cbd5e1' : '#2d3436' }}>Address: {d.street}, {d.city}</p>
                   </div>
                 ))}
               </div>
@@ -338,7 +384,7 @@ export default function RiderDashboard({ user, onLogout, onUpdateUser }) {
                   <div>
                       <h4>Delivery Profile Image</h4>
                       <p style={{ color: '#666', fontSize: '13px', margin: '5px 0' }}>Customers see this when tracking orders.</p>
-                      {isUploading && <span style={{ color: '#0984e3', fontSize: '14px', fontWeight: 'bold' }}>Uploading...</span>}
+
                   </div>
               </div>
 
@@ -352,8 +398,18 @@ export default function RiderDashboard({ user, onLogout, onUpdateUser }) {
                       <input type="text" value={updateForm.phone} onChange={e => setUpdateForm({...updateForm, phone: e.target.value})} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ccc' }} />
                   </div>
                   <div>
-                      <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '14px' }}>New Password (Optional)</label>
-                      <input type="password" placeholder="Leave blank to maintain current" value={updateForm.password} onChange={e => setUpdateForm({...updateForm, password: e.target.value})} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ccc' }} />
+                      <PasswordInput
+                          label="New Password (Optional)"
+                          value={updateForm.password}
+                          onChange={e => setUpdateForm({...updateForm, password: e.target.value})}
+                          confirm
+                          confirmValue={confirmPassword}
+                          onConfirmChange={e => setConfirmPassword(e.target.value)}
+                          optional
+                          minLength={8}
+                          placeholder="Leave blank to maintain current"
+                          inputStyle={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ccc' }}
+                      />
                   </div>
                   <button type="submit" style={{ background: '#00cec9', color: 'white', padding: '12px 20px', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', marginTop: '10px' }}>
                       Secure Profile Changes

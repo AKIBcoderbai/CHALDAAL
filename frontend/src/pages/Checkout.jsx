@@ -92,11 +92,7 @@ const Checkout = ({ user,cart, placeOrder, shippingAddress, checkoutMeta, isPlac
     localStorage.setItem("chaldal_payment_method", formData.paymentMethod);
     setSavedAddresses(merged);
 
-    // const generatedOrderId = typeof crypto !== "undefined" && crypto.randomUUID
-    //   ? crypto.randomUUID()
-    //   : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-    //try new thing
-    const generatedOrderId=idempotencyKeyRef.current;
+    const generatedOrderId = idempotencyKeyRef.current;
 
     setIsSubmitting(true);
     try {

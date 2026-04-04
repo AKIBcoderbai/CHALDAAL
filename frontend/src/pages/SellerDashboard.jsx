@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import './Auth.css';
 import './SellerDashboard.css';
 import LoadingSpinner from '../components/LoadingSpinner';
+import UploadOverlay from '../components/UploadOverlay';
+import PasswordInput from '../components/PasswordInput';
 import { FaBox, FaChartLine, FaDollarSign, FaStar, FaSignOutAlt, FaEnvelopeOpenText, FaEdit, FaUserEdit, FaCamera, FaHome } from 'react-icons/fa';
 
 const SellerDashboard = ({ user, onLogout, onUpdateUser }) => {
@@ -22,6 +24,7 @@ const SellerDashboard = ({ user, onLogout, onUpdateUser }) => {
         phone: user?.phone || "",
         password: ""
     });
+    const [confirmPassword, setConfirmPassword] = useState("");
 
     const [formData, setFormData] = useState({
         name: '', price: '', original_price: '', stock_quantity: 10,
@@ -187,6 +190,14 @@ const SellerDashboard = ({ user, onLogout, onUpdateUser }) => {
 
     const handleUpdateProfile = async (e) => {
         e.preventDefault();
+        if (updateForm.password && updateForm.password.length < 8) {
+            alert('Password must be at least 8 characters.');
+            return;
+        }
+        if (updateForm.password && updateForm.password !== confirmPassword) {
+            alert('Passwords do not match.');
+            return;
+        }
         const token = localStorage.getItem("token");
         try {
             const res = await fetch("http://localhost:3000/api/profile/update", {
@@ -201,7 +212,8 @@ const SellerDashboard = ({ user, onLogout, onUpdateUser }) => {
                     onUpdateUser({ name: data.user.name, phone: updateForm.phone });
                 }
                 alert("Profile updated successfully!");
-                setUpdateForm(prev => ({ ...prev, password: "" })); 
+                setUpdateForm(prev => ({ ...prev, password: "" }));
+                setConfirmPassword("");
             } else {
                 alert("Failed to update profile.");
             }
@@ -315,6 +327,7 @@ const SellerDashboard = ({ user, onLogout, onUpdateUser }) => {
 
     return (
         <div className="sd-container">
+            <UploadOverlay isUploading={isUploading} />
             {/* Header */}
             <div className="sd-header">
                 <div>
@@ -435,7 +448,7 @@ const SellerDashboard = ({ user, onLogout, onUpdateUser }) => {
                             <div className="form-group">
                                 <label>Product Image</label>
                                 <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, false)} style={{ padding: '10px 0' }} />
-                                {isUploading && <span style={{ color: '#0984e3', fontSize: '14px' }}>⏳ Uploading...</span>}
+
                             </div>
                             {formData.image_url && (
                                 <div style={{ margin: '15px 0' }}>
@@ -675,7 +688,7 @@ const SellerDashboard = ({ user, onLogout, onUpdateUser }) => {
                             <div>
                                 <h4>Profile Image</h4>
                                 <p style={{ color: '#666', fontSize: '13px' }}>Upload a new image. Max size 2MB.</p>
-                                {isUploading && <span style={{ color: '#3498db', fontSize: '14px', fontWeight: 'bold' }}>Uploading...</span>}
+
                             </div>
                         </div>
 
@@ -689,8 +702,17 @@ const SellerDashboard = ({ user, onLogout, onUpdateUser }) => {
                                 <input type="text" value={updateForm.phone} onChange={e => setUpdateForm({...updateForm, phone: e.target.value})} />
                             </div>
                             <div className="form-group">
-                                <label>New Password (Optional)</label>
-                                <input type="password" placeholder="Leave blank to keep current password" value={updateForm.password} onChange={e => setUpdateForm({...updateForm, password: e.target.value})} />
+                                <PasswordInput
+                                    label="New Password"
+                                    value={updateForm.password}
+                                    onChange={e => setUpdateForm({...updateForm, password: e.target.value})}
+                                    confirm
+                                    confirmValue={confirmPassword}
+                                    onConfirmChange={e => setConfirmPassword(e.target.value)}
+                                    optional
+                                    minLength={8}
+                                    placeholder="Leave blank to keep current password"
+                                />
                             </div>
                             <button type="submit" style={{ background: '#2ecc71', color: 'white', padding: '12px 20px', border: 'none', borderRadius: '5px', cursor: 'pointer', width: '100%' }}>
                                 Save Changes
@@ -723,7 +745,7 @@ const SellerDashboard = ({ user, onLogout, onUpdateUser }) => {
                                 <div className="form-group">
                                     <label>Update Image</label>
                                     <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, true)} />
-                                    {isUploading && <p style={{color: '#0984e3'}}>Uploading...</p>}
+    
                                     {editForm.image_url && <img src={editForm.image_url} alt="preview" style={{ height: '60px', marginTop: '10px', borderRadius: '4px' }} />}
                                 </div>
                                 

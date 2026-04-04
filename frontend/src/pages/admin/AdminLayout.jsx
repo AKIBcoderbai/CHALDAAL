@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { FaChartBar, FaEnvelope, FaBoxOpen, FaSignOutAlt, FaUsers, FaBullhorn, FaUndo, FaHome } from "react-icons/fa";
+import { FaChartBar, FaEnvelope, FaBoxOpen, FaSignOutAlt, FaUsers, FaBullhorn, FaUndo, FaHome, FaUserCircle } from "react-icons/fa";
 import "./AdminLayout.css";
 
 export default function AdminLayout({ user, onLogout }) {
@@ -74,6 +74,12 @@ export default function AdminLayout({ user, onLogout }) {
           >
            <FaUndo /> Returns
           </Link>
+          <Link
+            to="/admin/profile"
+            className={location.pathname === "/admin/profile" ? "active" : ""}
+          >
+           <FaUserCircle /> My Profile
+          </Link>
 
           <button className="admin-nav-logout" onClick={() => navigate('/')} style={{ background: 'transparent', color: '#94a3b8', marginBottom: '4px' }}>
             <FaHome /> Visit Store
@@ -93,7 +99,8 @@ export default function AdminLayout({ user, onLogout }) {
              location.pathname.includes("sellers") ? "Seller Management" :
              location.pathname.includes("products") ? "Product Moderation" :
              location.pathname.includes("ads") ? "Advertisement Moderation" :
-             location.pathname.includes("returns") ? "Return Requests" : "Admin Dashboard"}
+             location.pathname.includes("returns") ? "Return Requests" :
+             location.pathname.includes("profile") ? "My Profile" : "Admin Dashboard"}
           </h3>
         </header>
         <div className="admin-content">

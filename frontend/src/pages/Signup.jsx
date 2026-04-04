@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import PasswordInput from '../components/PasswordInput';
 import './Auth.css';
 
 const Signup = ({ onLogin, defaultAddress }) => {
@@ -11,6 +12,7 @@ const Signup = ({ onLogin, defaultAddress }) => {
     password: '',
     role:'user'
   });
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
 
   const handleChange = (e) => {
@@ -21,6 +23,15 @@ const Signup = ({ onLogin, defaultAddress }) => {
     e.preventDefault();
     setError('');
 
+    if (formData.password.length < 8) {
+      setError('Password must be at least 8 characters.');
+      return;
+    }
+    if (formData.password !== confirmPassword) {
+      setError('Passwords do not match.');
+      return;
+    }
+
     const phoneRegex = /^01[3-9]\d{8}$/;
     if (formData.phone && !phoneRegex.test(formData.phone)) {
       setError("Please enter a valid Bangladeshi phone number.");
@@ -28,7 +39,6 @@ const Signup = ({ onLogin, defaultAddress }) => {
     }
 
     try {
-      
       const payload = { 
         ...formData, 
         address: defaultAddress !== "Locating..." ? defaultAddress : "Dhaka" 
@@ -96,21 +106,29 @@ const Signup = ({ onLogin, defaultAddress }) => {
           </div>
 
           <div className="form-group">
-          <label>Account Type</label>
-          <select 
-            name="role" 
-            value={formData.role} 
-            onChange={handleChange}
-            style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #ccc', marginBottom: '15px' }}
-          >
-            <option value="user">Customer (Buy Groceries)</option>
-            <option value="rider">Rider (Deliver Orders)</option>
-          </select>
-        </div>
+            <label>Account Type</label>
+            <select 
+              name="role" 
+              value={formData.role} 
+              onChange={handleChange}
+              style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #ccc', marginBottom: '15px' }}
+            >
+              <option value="user">Customer (Buy Groceries)</option>
+              <option value="rider">Rider (Deliver Orders)</option>
+            </select>
+          </div>
           
           <div className="form-group">
-            <label>Password</label>
-            <input type="password" name="password" required placeholder="******" onChange={handleChange} />
+            <PasswordInput
+              label="Password"
+              value={formData.password}
+              onChange={e => setFormData({ ...formData, password: e.target.value })}
+              confirm
+              confirmValue={confirmPassword}
+              onConfirmChange={e => setConfirmPassword(e.target.value)}
+              required
+              minLength={8}
+            />
           </div>
 
           <button type="submit" className="auth-btn">Create Account</button>
