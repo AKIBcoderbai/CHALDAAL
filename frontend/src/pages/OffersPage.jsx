@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 
 export default function OffersPage({ user }) {
   const navigate = useNavigate();
+  const isCustomer = user?.role === 'user';
+
   return (
     <StaticPage title="Special Offers & Coupons" breadcrumb="Offers">
       <p>
@@ -32,13 +34,18 @@ export default function OffersPage({ user }) {
         💡 You earn <strong>1 point for every ৳100 spent</strong>. Points accumulate automatically and unlock coupons instantly!
       </div>
 
-      {user ? (
+      {/* Customer-only CTA — admins/sellers/riders see a notice instead */}
+      {isCustomer ? (
         <button
           style={{ marginTop: '20px', background: '#ffd645', border: 'none', padding: '12px 24px', borderRadius: '8px', fontWeight: '700', cursor: 'pointer' }}
           onClick={() => navigate('/profile')}
         >
           View My Rewards →
         </button>
+      ) : user ? (
+        <div style={{ marginTop: '24px', padding: '16px 20px', background: '#fff3cd', border: '1px solid #ffc107', borderRadius: '10px', color: '#856404', fontWeight: '600' }}>
+          🚫 Special offers and loyalty rewards are only available for <strong>customer accounts</strong>. Admin, seller, and rider accounts do not earn loyalty points.
+        </div>
       ) : (
         <button
           style={{ marginTop: '20px', background: '#ffd645', border: 'none', padding: '12px 24px', borderRadius: '8px', fontWeight: '700', cursor: 'pointer' }}

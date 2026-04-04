@@ -27,6 +27,7 @@ import ProductDetails from "./pages/ProductDetails";
 import AdDetailPage from "./pages/AdDetailPage";
 import AdminAdvertisements from "./pages/admin/AdminAdvertisements";
 import AdminReturns from "./pages/admin/AdminReturns";
+import AdminProfile from "./pages/admin/AdminProfile";
 import AboutPage from "./pages/AboutPage";
 import ContactPage from "./pages/ContactPage";
 import ShippingPage from "./pages/ShippingPage";
@@ -34,6 +35,7 @@ import ReturnsPage from "./pages/ReturnsPage";
 import PrivacyPage from "./pages/PrivacyPage";
 import AffiliatePage from "./pages/AffiliatePage";
 import OffersPage from "./pages/OffersPage";
+import RequireRole from "./components/RequireRole";
 
 export default function AppContent() {
   const navigate = useNavigate();
@@ -310,46 +312,72 @@ export default function AppContent() {
         <Route
           path="/checkout"
           element={
-            <Checkout
-              user={user}
-              cart={cart}
-              placeOrder={handlePlaceOrder}
-              shippingAddress={userAddress}
-              checkoutMeta={checkoutMeta}
-              isPlacingOrder={isPlacingOrder}
-            />
+            <RequireRole user={user} allowedRoles={['user']}>
+              <Checkout
+                user={user}
+                cart={cart}
+                placeOrder={handlePlaceOrder}
+                shippingAddress={userAddress}
+                checkoutMeta={checkoutMeta}
+                isPlacingOrder={isPlacingOrder}
+              />
+            </RequireRole>
           }
         />
 
         <Route
           path="/profile"
           element={
-            <UserProfile
-              user={user}
-              onUpdateUser={handleUpdateUser}
-              onLogout={handleLogout}
-            />
+            <RequireRole user={user} allowedRoles={['user']}>
+              <UserProfile
+                user={user}
+                onUpdateUser={handleUpdateUser}
+                onLogout={handleLogout}
+              />
+            </RequireRole>
           }
         />
 
         <Route
           path="/order/:id"
           element={
-            <OrderDetails user={user} />
+            <RequireRole user={user} allowedRoles={['user']}>
+              <OrderDetails user={user} />
+            </RequireRole>
           }
         />
 
         {/* Seller routes */}
         <Route path="/seller-login" element={<SellerLogin onLogin={handleLogin} />} />
-        <Route path="/seller-dashboard" element={<SellerDashboard user={user} onLogout={handleLogout} onUpdateUser={handleUpdateUser} />} />
+        <Route
+          path="/seller-dashboard"
+          element={
+            <RequireRole user={user} allowedRoles={['seller']}>
+              <SellerDashboard user={user} onLogout={handleLogout} onUpdateUser={handleUpdateUser} />
+            </RequireRole>
+          }
+        />
 
         {/* Rider routes */}
-        <Route path="/rider-dashboard" element={<RiderDashboard user={user} onLogout={handleLogout} onUpdateUser={handleUpdateUser} />} />
+        <Route
+          path="/rider-dashboard"
+          element={
+            <RequireRole user={user} allowedRoles={['rider']}>
+              <RiderDashboard user={user} onLogout={handleLogout} onUpdateUser={handleUpdateUser} />
+            </RequireRole>
+          }
+        />
 
         {/* Admin routes */}
         <Route path="/admin-dashboard" element={<Navigate to="/admin" replace />} />
-        
-        <Route path="/admin" element={<AdminLayout user={user} onLogout={handleLogout} />}>
+        <Route
+          path="/admin"
+          element={
+            <RequireRole user={user} allowedRoles={['admin']}>
+              <AdminLayout user={user} onLogout={handleLogout} />
+            </RequireRole>
+          }
+        >
           <Route index element={<Navigate to="analytics" replace />} />
           <Route path="analytics" element={<AdminAnalytics />} />
           <Route path="messaging" element={<AdminMessaging />} />
