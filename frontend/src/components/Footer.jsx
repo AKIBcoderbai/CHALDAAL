@@ -12,10 +12,10 @@ function Footer({ user, handleLogout }) {
           <h2 className="footer-logo">Chaldal<span>Clone</span></h2>
           <p>Your one-stop destination for daily essentials, fresh groceries, and electronics. Fast delivery, trusted service.</p>
           <div className="social-links">
-            <a href="#"><FaFacebook /></a>
-            <a href="#"><FaTwitter /></a>
-            <a href="#"><FaInstagram /></a>
-            <a href="#"><FaLinkedin /></a>
+            <a href="https://www.facebook.com/chaldalcom/"><FaFacebook /></a>
+            <a href="https://x.com/chaldal"><FaTwitter /></a>
+            <a href="https://www.instagram.com/chaldal_bd/"><FaInstagram /></a>
+            <a href="https://www.linkedin.com/company/chaldalcom"><FaLinkedin /></a>
           </div>
         </div>
 
@@ -25,7 +25,7 @@ function Footer({ user, handleLogout }) {
             <li><Link to="/">Home</Link></li>
             <li><Link to="/about">About Us</Link></li>
             <li><Link to="/offers">Special Offers</Link></li>
-            <li><Link to="/faq">FAQs</Link></li>
+            <li><Link to="/">FAQs</Link></li>
           </ul>
         </div>
 
@@ -43,7 +43,7 @@ function Footer({ user, handleLogout }) {
           <h3>Partner With Us</h3>
           <ul>
             {!user && <li><Link to="/seller-login">Become a Seller</Link></li>}
-            <li><Link to="/rider-jobs">Delivery Rider Jobs</Link></li>
+            <li><Link to="/signup">Delivery Rider Jobs</Link></li>
             <li><Link to="/affiliate">Affiliate Program</Link></li>
           </ul>
         </div>
@@ -51,7 +51,7 @@ function Footer({ user, handleLogout }) {
       </div>
       
       <div className="footer-bottom">
-        <p>&copy; {new Date().getFullYear()} Chaldal Clone Project. Developed by BUET CSE.</p>
+        <p>&copy; {new Date().getFullYear()} Chaldal Clone Project. Developed by SAMI & MUNTASIR</p>
         <div className="payment-methods">
           {/* You can add tiny payment icons here */}
           <span>bKash</span> | <span>Nagad</span> | <span>Visa</span>

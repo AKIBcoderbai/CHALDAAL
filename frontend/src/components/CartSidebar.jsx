@@ -1,42 +1,62 @@
 import React, { useMemo, useState } from 'react';
 import './CartSidebar.css';
 
+const API = 'http://localhost:3000';
+
 const CartSidebar = ({ isOpen, onClose, cartItems, onUpdateQty, onCheckout }) => {
-  const [couponInput, setCouponInput] = useState("");
-  const [appliedCoupon, setAppliedCoupon] = useState(() => localStorage.getItem("chaldal_coupon") || "");
-  const [couponError, setCouponError] = useState("");
+  const [couponInput, setCouponInput] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('chaldal_coupon_data')) || null; } catch { return null; }
+  });
+  const [couponError, setCouponError] = useState('');
+  const [couponLoading, setCouponLoading] = useState(false);
 
   const subtotal = cartItems.reduce((acc, item) => acc + (item.price * item.qty), 0);
   const deliveryCharge = subtotal > 0 ? 60 : 0;
-  const couponDiscount = useMemo(() => {
-    if (appliedCoupon === "SAVE10") return Math.min(Math.round(subtotal * 0.1), 150);
-    if (appliedCoupon === "FREESHIP") return deliveryCharge;
-    return 0;
-  }, [appliedCoupon, subtotal, deliveryCharge]);
+  const couponDiscount = appliedCoupon?.discount_amount || 0;
   const taxableAmount = Math.max(subtotal - couponDiscount, 0);
   const vat = Math.round(taxableAmount * 0.03);
   const total = taxableAmount + deliveryCharge + vat;
 
-  const applyCoupon = () => {
-    const code = couponInput.trim().toUpperCase();
-    if (!code) {
-      setCouponError("Enter a coupon code.");
+  const applyCoupon = async () => {
+    const code = couponInput.trim();
+    if (!code) { setCouponError('Enter a coupon code.'); return; }
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setCouponError('Please log in to apply a coupon.');
       return;
     }
-    if (code !== "SAVE10" && code !== "FREESHIP") {
-      setCouponError("Invalid code. Try SAVE10 or FREESHIP.");
-      return;
+
+    setCouponLoading(true);
+    setCouponError('');
+    try {
+      const res = await fetch(`${API}/api/coupons/validate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ code, subtotal })
+      });
+      const data = await res.json();
+      if (res.ok && data.valid) {
+        setAppliedCoupon(data);
+        localStorage.setItem('chaldal_coupon_data', JSON.stringify(data));
+        setCouponError('');
+      } else {
+        setCouponError(data.error || 'Invalid coupon.');
+      }
+    } catch {
+      setCouponError('Failed to validate coupon. Check connection.');
+    } finally {
+      setCouponLoading(false);
     }
-    setAppliedCoupon(code);
-    localStorage.setItem("chaldal_coupon", code);
-    setCouponError("");
   };
 
   const clearCoupon = () => {
-    setAppliedCoupon("");
-    localStorage.removeItem("chaldal_coupon");
+    setAppliedCoupon(null);
+    setCouponInput('');
+    setCouponError('');
+    localStorage.removeItem('chaldal_coupon_data');
   };
-
 
   return (
     <div className={`cart-sidebar ${isOpen ? 'open' : ''}`}>
@@ -67,28 +87,33 @@ const CartSidebar = ({ isOpen, onClose, cartItems, onUpdateQty, onCheckout }) =>
       </div>
 
       <div className="cart-footer">
+        {/* Coupon Row */}
         <div className="coupon-row">
           <input
             type="text"
             value={couponInput}
             onChange={(e) => setCouponInput(e.target.value)}
-            placeholder="Coupon code"
+            onKeyDown={(e) => e.key === 'Enter' && applyCoupon()}
+            placeholder="Coupon code (check Rewards tab)"
+            disabled={!!appliedCoupon || couponLoading}
           />
-          <button type="button" onClick={applyCoupon}>Apply</button>
+          <button type="button" onClick={applyCoupon} disabled={!!appliedCoupon || couponLoading}>
+            {couponLoading ? '...' : 'Apply'}
+          </button>
         </div>
         {couponError && <p className="coupon-error">{couponError}</p>}
         {appliedCoupon && (
-          <p className="coupon-applied">
-            {appliedCoupon} applied
-            <button type="button" onClick={clearCoupon}>Remove</button>
-          </p>
+          <div className="coupon-applied-banner">
+            <span>🎟 <strong>{appliedCoupon.code}</strong> — {appliedCoupon.message}</span>
+            <button type="button" onClick={clearCoupon} className="remove-coupon-btn">✕ Remove</button>
+          </div>
         )}
 
         <div className="bill-row"><span>Subtotal</span><span>৳ {subtotal}</span></div>
         <div className="bill-row"><span>Delivery</span><span>৳ {deliveryCharge}</span></div>
         <div className="bill-row"><span>VAT (3%)</span><span>৳ {vat}</span></div>
         {couponDiscount > 0 && (
-          <div className="bill-row discount"><span>Discount</span><span>- ৳ {couponDiscount}</span></div>
+          <div className="bill-row discount"><span>Coupon Discount</span><span>- ৳ {couponDiscount}</span></div>
         )}
         <div className="total-row">
           <span>Payable:</span>
@@ -98,7 +123,7 @@ const CartSidebar = ({ isOpen, onClose, cartItems, onUpdateQty, onCheckout }) =>
           className="checkout-btn"
           onClick={() =>
             onCheckout({
-              couponCode: appliedCoupon,
+              couponCode: appliedCoupon?.code || '',
               discount: couponDiscount,
               deliveryCharge,
               tax: vat,

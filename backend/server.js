@@ -1551,6 +1551,169 @@ app.put('/api/cart/sync', authenticateToken, async (req, res) => {
 
 //user profile logic now
 
+// ============================================================
+// COUPON / LOYALTY ROUTES
+// ============================================================
+
+// GET /api/users/my-coupons  — returns loyalty points, tier, and all coupons (unlocked + locked)
+app.get('/api/users/my-coupons', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.user_id;
+
+        // Retroactively award unlocked coupons (if user got points before the coupon system was added)
+        await pool.query(`CALL assign_tier_coupons($1)`, [userId]);
+
+        // Get user's loyalty points
+        const userResult = await pool.query(
+            `SELECT loyalty_points FROM "users" WHERE user_id = $1`,
+            [userId]
+        );
+        if (userResult.rows.length === 0) return res.status(404).json({ error: 'User not found' });
+        const loyalty_points = userResult.rows[0].loyalty_points;
+
+        // Get all tiers and coupons, with user's unlock/used status
+        const tiersResult = await pool.query(`
+            SELECT
+                lt.tier_id, lt.tier_name, lt.min_points, lt.color, lt.icon,
+                c.coupon_id, c.code, c.discount_type, c.discount_value,
+                c.min_order_amount, c.max_discount, c.description,
+                uc.used,
+                uc.assigned_at,
+                (lt.min_points <= $1) AS unlocked
+            FROM loyalty_tiers lt
+            JOIN coupons c ON c.tier_id = lt.tier_id
+            LEFT JOIN user_coupons uc ON uc.coupon_id = c.coupon_id AND uc.user_id = $2
+            WHERE c.is_active = TRUE
+            ORDER BY lt.min_points ASC
+        `, [loyalty_points, userId]);
+
+        // Determine current tier (highest tier user qualifies for)
+        const tiersQuery = await pool.query(
+            `SELECT tier_id, tier_name, min_points, color, icon FROM loyalty_tiers
+             WHERE min_points <= $1 ORDER BY min_points DESC LIMIT 1`,
+            [loyalty_points]
+        );
+        const currentTier = tiersQuery.rows[0] || { tier_name: 'Bronze', min_points: 0, color: '#cd7f32', icon: '🥉' };
+
+        // Next tier info
+        const nextTierQuery = await pool.query(
+            `SELECT tier_name, min_points, color, icon FROM loyalty_tiers
+             WHERE min_points > $1 ORDER BY min_points ASC LIMIT 1`,
+            [loyalty_points]
+        );
+        const nextTier = nextTierQuery.rows[0] || null;
+
+        res.json({
+            loyalty_points,
+            current_tier: currentTier,
+            next_tier: nextTier,
+            coupons: tiersResult.rows
+        });
+    } catch (err) {
+        console.error('MY-COUPONS ERROR:', err.message);
+        res.status(500).json({ error: 'Failed to fetch coupons' });
+    }
+});
+
+// POST /api/coupons/validate  — validates a coupon code for the current user
+app.post('/api/coupons/validate', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.user_id;
+        const { code, subtotal } = req.body;
+        if (!code) return res.status(400).json({ error: 'Coupon code is required.' });
+
+        // Retroactively award unlocked coupons
+        await pool.query(`CALL assign_tier_coupons($1)`, [userId]);
+
+        // Find coupon
+        const couponResult = await pool.query(
+            `SELECT c.*, uc.used, uc.user_id as owner_id
+             FROM coupons c
+             LEFT JOIN user_coupons uc ON uc.coupon_id = c.coupon_id AND uc.user_id = $1
+             WHERE UPPER(c.code) = UPPER($2) AND c.is_active = TRUE`,
+            [userId, code]
+        );
+
+        if (couponResult.rows.length === 0) {
+            return res.status(400).json({ valid: false, error: 'Invalid coupon code.' });
+        }
+
+        const coupon = couponResult.rows[0];
+
+        // Check ownership (must be in user_coupons)
+        if (coupon.owner_id === null) {
+            return res.status(400).json({ valid: false, error: 'You have not unlocked this coupon yet.' });
+        }
+
+        // Check if already used
+        if (coupon.used) {
+            return res.status(400).json({ valid: false, error: 'This coupon has already been used.' });
+        }
+
+        // Check minimum order amount
+        const orderSubtotal = parseFloat(subtotal) || 0;
+        if (orderSubtotal < parseFloat(coupon.min_order_amount)) {
+            return res.status(400).json({
+                valid: false,
+                error: `Minimum order amount is ৳${coupon.min_order_amount} for this coupon.`
+            });
+        }
+
+        // Calculate discount
+        let discount = 0;
+        if (coupon.discount_type === 'percent') {
+            discount = Math.round(orderSubtotal * (parseFloat(coupon.discount_value) / 100));
+            if (coupon.max_discount) {
+                discount = Math.min(discount, parseFloat(coupon.max_discount));
+            }
+        } else {
+            discount = parseFloat(coupon.discount_value);
+        }
+
+        res.json({
+            valid: true,
+            coupon_id: coupon.coupon_id,
+            code: coupon.code,
+            discount_amount: discount,
+            description: coupon.description,
+            message: `Coupon applied! You save ৳${discount}.`
+        });
+    } catch (err) {
+        console.error('COUPON VALIDATE ERROR:', err.message);
+        res.status(500).json({ error: 'Failed to validate coupon.' });
+    }
+});
+
+// Mark a coupon as used (called after successful order placement)
+// This is called internally — triggered from the place_order flow if a coupon code is included
+app.post('/api/coupons/use', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.user_id;
+        const { code } = req.body;
+        if (!code) return res.status(400).json({ error: 'Code required' });
+
+        const result = await pool.query(
+            `UPDATE user_coupons uc
+             SET used = TRUE
+             FROM coupons c
+             WHERE uc.coupon_id = c.coupon_id
+               AND uc.user_id = $1
+               AND UPPER(c.code) = UPPER($2)
+               AND uc.used = FALSE
+             RETURNING uc.coupon_id`,
+            [userId, code]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(400).json({ error: 'Coupon not found or already used.' });
+        }
+        res.json({ message: 'Coupon marked as used.' });
+    } catch (err) {
+        console.error('COUPON USE ERROR:', err.message);
+        res.status(500).json({ error: 'Failed to mark coupon as used.' });
+    }
+});
+
 app.get('/api/profile/me',authenticateToken, async (req, res) => {
     try {
         const userId=req.user.user_id;

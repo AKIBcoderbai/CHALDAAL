@@ -1,0 +1,188 @@
+.static-page-wrapper {
+  min-height: 80vh;
+  background: var(--bg-color);
+  padding: 40px 20px 80px;
+  position: relative;
+  overflow: hidden;
+}
+
+.static-page-wrapper::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle at 50% 50%, rgba(255, 214, 69, 0.1), transparent 60%);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.static-page-container {
+  max-width: 860px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 20px;
+  padding: 40px 48px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.06);
+}
+
+.static-back-btn {
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  padding: 6px 14px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 13px;
+  margin-bottom: 14px;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(8px);
+}
+.static-back-btn:hover { background: rgba(0,0,0,0.05); color: var(--text-color); box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+
+.static-breadcrumb {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.static-breadcrumb a {
+  color: #0984e3;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.static-breadcrumb a:hover {
+  text-decoration: underline;
+  color: #074a80;
+}
+
+.static-page-title {
+  font-size: 38px;
+  font-weight: 800;
+  color: var(--text-color);
+  margin: 0 0 32px;
+  padding-bottom: 16px;
+  position: relative;
+}
+
+.static-page-title::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 60px;
+  height: 4px;
+  background: #ffd645;
+  border-radius: 2px;
+}
+
+.static-page-body {
+  color: var(--text-secondary);
+  line-height: 1.8;
+  font-size: 16px;
+}
+
+.static-page-body h2 {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-color);
+  margin: 36px 0 16px;
+}
+
+.static-page-body h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-color);
+  margin: 24px 0 10px;
+}
+
+.static-page-body p { margin-bottom: 16px; }
+.static-page-body ul { padding-left: 20px; margin-bottom: 16px; }
+.static-page-body ul li { margin-bottom: 8px; }
+
+.static-page-body .highlight-box {
+  background: rgba(255, 251, 235, 0.8);
+  border: 1px solid rgba(252, 211, 77, 0.6);
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin: 24px 0;
+  color: #78350f;
+  box-shadow: 0 4px 15px rgba(252, 211, 77, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+.contact-form {
+  margin-top: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 480px;
+}
+
+.contact-form input,
+.contact-form textarea {
+  border: 1px solid rgba(0,0,0,0.1);
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-size: 15px;
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--text-color);
+  font-family: inherit;
+  outline: none;
+  transition: all 0.3s ease;
+  resize: vertical;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.contact-form input:focus,
+.contact-form textarea:focus {
+  border-color: #ffd645;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(255, 214, 69, 0.2);
+}
+
+.contact-form button {
+  background: linear-gradient(135deg, #ffd645, #ffb300);
+  color: #1e2430;
+  border: none;
+  border-radius: 12px;
+  padding: 14px 28px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  align-self: flex-start;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(255, 179, 0, 0.3);
+}
+.contact-form button:hover { 
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 179, 0, 0.4);
+}
+
+.coming-soon-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #6b46c1 0%, #d53f8c 100%);
+  color: #fff;
+  padding: 8px 20px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 15px rgba(213, 63, 140, 0.4);
+}
+
+@media (max-width: 600px) {
+  .static-page-container { padding: 30px 24px; }
+  .static-page-title { font-size: 28px; }
+}

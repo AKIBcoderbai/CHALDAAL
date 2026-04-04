@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaUserEdit, FaBox, FaSignOutAlt, FaCamera, FaHome } from "react-icons/fa";
+import { FaUserEdit, FaBox, FaSignOutAlt, FaCamera, FaHome, FaGift, FaCopy, FaCheck, FaLock } from "react-icons/fa";
 import LoadingSpinner from '../components/LoadingSpinner';
 import UploadOverlay from '../components/UploadOverlay';
 import PasswordInput from '../components/PasswordInput';
@@ -14,6 +14,9 @@ export default function UserProfile({ user, onUpdateUser, onLogout }) {
   const [avatarUrl, setAvatarUrl] = useState(user?.image_url || "");
   const [isUploading, setIsUploading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [rewardsData, setRewardsData] = useState(null);
+  const [rewardsLoading, setRewardsLoading] = useState(false);
+  const [copiedCode, setCopiedCode] = useState(null);
 
   // Settings form state
   const [updateForm, setUpdateForm] = useState({
@@ -56,6 +59,28 @@ export default function UserProfile({ user, onUpdateUser, onLogout }) {
   useEffect(() => {
     if (user) fetchProfileInfo();
   }, [user]);
+
+  const fetchRewards = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    setRewardsLoading(true);
+    try {
+      const res = await fetch("http://localhost:3000/api/users/my-coupons", {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (res.ok) setRewardsData(await res.json());
+    } catch { /* silent */ } finally { setRewardsLoading(false); }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'rewards') fetchRewards();
+  }, [activeTab]);
+
+  const copyCode = (code) => {
+    navigator.clipboard.writeText(code).catch(() => {});
+    setCopiedCode(code);
+    setTimeout(() => setCopiedCode(null), 2000);
+  };
 
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
@@ -192,6 +217,12 @@ export default function UserProfile({ user, onUpdateUser, onLogout }) {
           >
             <FaUserEdit /> Settings
           </button>
+          <button
+            className={activeTab === "rewards" ? "active" : ""}
+            onClick={() => setActiveTab("rewards")}
+          >
+            <FaGift /> Rewards
+          </button>
           <button className="logout-btn" onClick={onLogout}>
             <FaSignOutAlt /> Logout
           </button>
@@ -237,6 +268,98 @@ export default function UserProfile({ user, onUpdateUser, onLogout }) {
                   </div>
                 ))}
               </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === "rewards" && (
+          <div className="tab-pane">
+            <h2>Rewards & Coupons</h2>
+            {rewardsLoading ? (
+              <p style={{ color: '#888' }}>Loading your rewards...</p>
+            ) : !rewardsData ? (
+              <div className="empty-state">Could not load rewards. Please try again.</div>
+            ) : (
+              <>
+                {/* Tier Badge + Points */}
+                <div className="rewards-tier-card" style={{ borderColor: rewardsData.current_tier.color }}>
+                  <div className="tier-icon-big">{rewardsData.current_tier.icon}</div>
+                  <div className="tier-info">
+                    <span className="tier-label" style={{ color: rewardsData.current_tier.color }}>
+                      {rewardsData.current_tier.tier_name} Member
+                    </span>
+                    <div className="points-display">
+                      <span className="points-num">{rewardsData.loyalty_points}</span>
+                      <span className="points-label">Loyalty Points</span>
+                    </div>
+                    {rewardsData.next_tier ? (
+                      <div className="tier-progress-wrap">
+                        <div className="tier-progress-bar">
+                          <div
+                            className="tier-progress-fill"
+                            style={{
+                              width: `${Math.min(100, Math.round((rewardsData.loyalty_points / rewardsData.next_tier.min_points) * 100))}%`,
+                              background: rewardsData.next_tier.color
+                            }}
+                          />
+                        </div>
+                        <p className="tier-progress-label">
+                          {rewardsData.next_tier.min_points - rewardsData.loyalty_points} points to <strong>{rewardsData.next_tier.icon} {rewardsData.next_tier.tier_name}</strong>
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="tier-progress-label" style={{ color: '#ffd700', fontWeight: 700 }}>✨ Maximum tier reached!</p>
+                    )}
+                  </div>
+                </div>
+
+                <p className="rewards-info-note">💡 You earn <strong>1 point per ৳100 spent</strong>. Points unlock better coupons automatically!</p>
+
+                {/* Coupons Grid */}
+                <div className="coupons-grid">
+                  {rewardsData.coupons.map(c => {
+                    const isUnlocked = c.unlocked;
+                    const isUsed = c.used === true;
+                    return (
+                      <div
+                        key={c.coupon_id}
+                        className={`coupon-card ${isUnlocked ? 'unlocked' : 'locked'} ${isUsed ? 'used' : ''}`}
+                        style={{ borderLeft: `4px solid ${c.color}` }}
+                      >
+                        <div className="coupon-top">
+                          <span className="coupon-tier-badge" style={{ background: c.color }}>
+                            {c.icon} {c.tier_name}
+                          </span>
+                          {!isUnlocked && <span className="coupon-lock-badge"><FaLock /> Locked</span>}
+                          {isUsed && <span className="coupon-used-badge"><FaCheck /> Used</span>}
+                        </div>
+                        <div className="coupon-discount">
+                          {c.discount_value}% OFF
+                          {c.max_discount && <span> (up to ৳{c.max_discount})</span>}
+                        </div>
+                        <p className="coupon-desc">{c.description}</p>
+                        <div className="coupon-code-row">
+                          <code className={`coupon-code ${!isUnlocked ? 'blurred' : ''}`}>
+                            {isUnlocked ? c.code : '••••••••'}
+                          </code>
+                          {isUnlocked && !isUsed && (
+                            <button
+                              className="copy-code-btn"
+                              onClick={() => copyCode(c.code)}
+                              title="Copy to clipboard"
+                            >
+                              {copiedCode === c.code ? <FaCheck style={{ color: '#38a169' }} /> : <FaCopy />}
+                            </button>
+                          )}
+                        </div>
+                        {!isUnlocked && (
+                          <p className="coupon-unlock-hint">Reach <strong>{c.min_points} points</strong> to unlock</p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
             )}
           </div>
         )}
