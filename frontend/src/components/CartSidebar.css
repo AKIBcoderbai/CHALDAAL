@@ -105,20 +105,28 @@
   margin-bottom: 6px;
 }
 
-.coupon-applied {
-  color: #2f855a;
+.coupon-applied-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f0fff4;
+  border: 1px solid #68d391;
+  border-radius: 8px;
+  padding: 8px 12px;
   font-size: 12px;
-  font-weight: 700;
-  margin-bottom: 8px;
+  color: #276749;
+  margin-bottom: 10px;
+  gap: 8px;
 }
 
-.coupon-applied button {
+.remove-coupon-btn {
   border: none;
   background: transparent;
-  color: #d63031;
-  text-decoration: underline;
-  margin-left: 8px;
+  color: #e53e3e;
+  font-weight: 700;
+  font-size: 12px;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .bill-row {

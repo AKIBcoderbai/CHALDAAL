@@ -1059,3 +1059,89 @@ BEGIN
     END IF;
 END;
 $$ LANGUAGE plpgsql;
+
+-- ============================================================
+-- COUPON & LOYALTY TIER SYSTEM
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS loyalty_tiers (
+  tier_id    SERIAL PRIMARY KEY,
+  tier_name  VARCHAR(50) NOT NULL,
+  min_points INT NOT NULL,
+  color      VARCHAR(20) DEFAULT '#888',
+  icon       VARCHAR(10) DEFAULT '🎖️'
+);
+
+CREATE TABLE IF NOT EXISTS coupons (
+  coupon_id        SERIAL PRIMARY KEY,
+  code             VARCHAR(50) UNIQUE NOT NULL,
+  tier_id          INT REFERENCES loyalty_tiers(tier_id) ON DELETE SET NULL,
+  discount_type    VARCHAR(20) NOT NULL CHECK (discount_type IN ('percent', 'flat')),
+  discount_value   DECIMAL(10,2) NOT NULL CHECK (discount_value > 0),
+  min_order_amount DECIMAL(10,2) NOT NULL DEFAULT 0,
+  max_discount     DECIMAL(10,2),
+  description      TEXT,
+  is_active        BOOLEAN DEFAULT TRUE
+);
+
+CREATE TABLE IF NOT EXISTS user_coupons (
+  user_id      INT NOT NULL REFERENCES "users"(user_id) ON DELETE CASCADE,
+  coupon_id    INT NOT NULL REFERENCES coupons(coupon_id) ON DELETE CASCADE,
+  used         BOOLEAN DEFAULT FALSE,
+  assigned_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (user_id, coupon_id)
+);
+
+-- Seed loyalty tiers
+INSERT INTO loyalty_tiers (tier_name, min_points, color, icon) VALUES
+  ('Bronze',   0,    '#cd7f32', '🥉'),
+  ('Silver',   200,  '#a8a9ad', '🥈'),
+  ('Gold',     500,  '#ffd700', '🥇'),
+  ('Platinum', 1000, '#e5e4e2', '💎')
+ON CONFLICT DO NOTHING;
+
+
+INSERT INTO coupons (code, tier_id, discount_type, discount_value, min_order_amount, max_discount, description) VALUES
+  ('BRONZE10', (SELECT tier_id FROM loyalty_tiers WHERE tier_name='Bronze'),   'percent', 10, 200,  50,  '10% off, up to ৳50. Min order ৳200.'),
+  ('SILVER15', (SELECT tier_id FROM loyalty_tiers WHERE tier_name='Silver'),   'percent', 15, 400,  100, '15% off, up to ৳100. Min order ৳400.'),
+  ('GOLD20',   (SELECT tier_id FROM loyalty_tiers WHERE tier_name='Gold'),     'percent', 20, 600,  200, '20% off, up to ৳200. Min order ৳600.'),
+  ('PLAT30',   (SELECT tier_id FROM loyalty_tiers WHERE tier_name='Platinum'), 'percent', 30, 800,  400, '30% off, up to ৳400. Min order ৳800.')
+ON CONFLICT (code) DO NOTHING;
+
+-- Procedure: auto-assign eligible coupons to a user based on their current loyalty_points
+CREATE OR REPLACE PROCEDURE assign_tier_coupons(p_user_id INT)
+LANGUAGE plpgsql AS $$
+DECLARE
+  v_points INT;
+BEGIN
+  SELECT loyalty_points INTO v_points FROM "users" WHERE user_id = p_user_id;
+
+  -- Insert any coupon for tiers the user qualifies for, skip if already assigned
+  INSERT INTO user_coupons (user_id, coupon_id)
+  SELECT p_user_id, c.coupon_id
+  FROM coupons c
+  JOIN loyalty_tiers lt ON c.tier_id = lt.tier_id
+  WHERE lt.min_points <= v_points
+    AND c.is_active = TRUE
+  ON CONFLICT (user_id, coupon_id) DO NOTHING;
+END;
+$$;
+
+
+CREATE OR REPLACE FUNCTION trigger_assign_coupons()
+RETURNS TRIGGER AS $$
+BEGIN
+  CALL assign_tier_coupons(NEW.user_id);
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS auto_assign_coupons ON "users";
+CREATE TRIGGER auto_assign_coupons
+AFTER UPDATE OF loyalty_points ON "users"
+FOR EACH ROW
+EXECUTE FUNCTION trigger_assign_coupons();
+
+-- Index for fast user_coupon lookups
+CREATE INDEX IF NOT EXISTS idx_user_coupons_user ON user_coupons(user_id);
+CREATE INDEX IF NOT EXISTS idx_coupons_tier ON coupons(tier_id);

@@ -27,6 +27,13 @@ import ProductDetails from "./pages/ProductDetails";
 import AdDetailPage from "./pages/AdDetailPage";
 import AdminAdvertisements from "./pages/admin/AdminAdvertisements";
 import AdminReturns from "./pages/admin/AdminReturns";
+import AboutPage from "./pages/AboutPage";
+import ContactPage from "./pages/ContactPage";
+import ShippingPage from "./pages/ShippingPage";
+import ReturnsPage from "./pages/ReturnsPage";
+import PrivacyPage from "./pages/PrivacyPage";
+import AffiliatePage from "./pages/AffiliatePage";
+import OffersPage from "./pages/OffersPage";
 
 export default function AppContent() {
   const navigate = useNavigate();
@@ -185,6 +192,16 @@ export default function AppContent() {
       const responseData = await response.json().catch(() => ({}));
 
       if (response.ok) {
+        // Mark coupon as used if one was applied
+        const appliedCouponData = (() => { try { return JSON.parse(localStorage.getItem('chaldal_coupon_data')); } catch { return null; } })();
+        if (appliedCouponData?.code && token) {
+          fetch('http://localhost:3000/api/coupons/use', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ code: appliedCouponData.code })
+          }).catch(() => {}); // Fire and forget, non-blocking
+          localStorage.removeItem('chaldal_coupon_data');
+        }
         alert("Order Placed Successfully!");
         clearCart();
         navigate("/");
@@ -375,6 +392,16 @@ export default function AppContent() {
           <Route path="ads" element={<AdminAdvertisements />} />
           <Route path="returns" element={<AdminReturns />} />
         </Route>
+
+        {/* STATIC FOOTER PAGES */}
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/contact" element={<ContactPage />} />
+        <Route path="/shipping" element={<ShippingPage />} />
+        <Route path="/returns" element={<ReturnsPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/affiliate" element={<AffiliatePage />} />
+        <Route path="/offers" element={<OffersPage user={user} />} />
+        {/* FAQ redirects to homepage — handled by Footer link */}
       </Routes>
 
       <CartSidebar

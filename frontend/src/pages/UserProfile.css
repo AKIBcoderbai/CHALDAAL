@@ -312,3 +312,224 @@
     border-bottom-color: #0984e3;
   }
 }
+
+/* =========================================
+   REWARDS & COUPONS TAB
+   ========================================= */
+
+.rewards-tier-card {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #fff 100%);
+  border: 2px solid #ddd;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.05);
+}
+
+.tier-icon-big {
+  font-size: 56px;
+  line-height: 1;
+}
+
+.tier-info {
+  flex: 1;
+}
+
+.tier-label {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.points-display {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 6px 0 10px;
+}
+
+.points-num {
+  font-size: 42px;
+  font-weight: 800;
+  color: #1a1a2e;
+  line-height: 1;
+}
+
+.points-label {
+  font-size: 14px;
+  color: #666;
+  font-weight: 600;
+}
+
+.tier-progress-wrap { margin-top: 6px; }
+
+.tier-progress-bar {
+  height: 8px;
+  background: #e9ecef;
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+
+.tier-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.6s ease;
+}
+
+.tier-progress-label {
+  font-size: 12px;
+  color: #666;
+  margin: 0;
+}
+
+.rewards-info-note {
+  background: #fffbeb;
+  border: 1px solid #fcd34d;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: #78350f;
+  margin-bottom: 24px;
+}
+
+.coupons-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.coupon-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 18px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  transition: transform 0.2s, box-shadow 0.2s;
+  position: relative;
+}
+
+.coupon-card.unlocked:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+}
+
+.coupon-card.locked {
+  opacity: 0.65;
+  background: #f8f9fa;
+}
+
+.coupon-card.used {
+  opacity: 0.5;
+}
+
+.coupon-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.coupon-tier-badge {
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  padding: 3px 10px;
+  border-radius: 999px;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.15);
+}
+
+.coupon-lock-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: #999;
+  font-weight: 600;
+}
+
+.coupon-used-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: #38a169;
+  font-weight: 600;
+}
+
+.coupon-discount {
+  font-size: 26px;
+  font-weight: 800;
+  color: #1a1a2e;
+  margin-bottom: 4px;
+}
+
+.coupon-discount span {
+  font-size: 13px;
+  font-weight: 500;
+  color: #666;
+}
+
+.coupon-desc {
+  font-size: 12px;
+  color: #718096;
+  margin: 0 0 12px;
+  line-height: 1.4;
+}
+
+.coupon-code-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f7fafc;
+  border: 1px dashed #cbd5e0;
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+.coupon-code {
+  flex: 1;
+  font-family: 'Courier New', monospace;
+  font-size: 15px;
+  font-weight: 700;
+  color: #2d3748;
+  letter-spacing: 0.08em;
+  background: transparent;
+}
+
+.coupon-code.blurred {
+  filter: blur(4px);
+  user-select: none;
+}
+
+.copy-code-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #4a5568;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: color 0.2s;
+  display: flex;
+  align-items: center;
+}
+
+.copy-code-btn:hover { color: #0984e3; }
+
+.coupon-unlock-hint {
+  font-size: 11px;
+  color: #a0aec0;
+  margin: 8px 0 0;
+  text-align: center;
+}
+
+.empty-state {
+  padding: 40px 20px;
+  text-align: center;
+  color: #aaa;
+  font-size: 15px;
+}
