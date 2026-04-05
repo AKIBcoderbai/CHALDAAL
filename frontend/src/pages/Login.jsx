@@ -30,6 +30,7 @@ if (response.ok) {
       email: data.user.email, 
       id: data.user.user_id,
       role: data.user.role,
+      image_url: data.user.image_url || null,
       address: data.user.address || '',
       address_id: data.user.address_id || null
   });
