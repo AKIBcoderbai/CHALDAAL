@@ -12,10 +12,10 @@ function Footer({ user, handleLogout }) {
           <h2 className="footer-logo">Chaldal<span>Clone</span></h2>
           <p>Your one-stop destination for daily essentials, fresh groceries, and electronics. Fast delivery, trusted service.</p>
           <div className="social-links">
-            <a href="https://www.facebook.com/chaldalcom/"><FaFacebook /></a>
-            <a href="https://x.com/chaldal"><FaTwitter /></a>
-            <a href="https://www.instagram.com/chaldal_bd/"><FaInstagram /></a>
-            <a href="https://www.linkedin.com/company/chaldalcom"><FaLinkedin /></a>
+            <a href="https://www.facebook.com/chaldalcom/" target="_blank" ><FaFacebook /></a>
+            <a href="https://x.com/chaldal" target="_blank" ><FaTwitter /></a>
+            <a href="https://www.instagram.com/chaldal_bd/" target="_blank" ><FaInstagram /></a>
+            <a href="https://www.linkedin.com/company/chaldalcom" target="_blank" ><FaLinkedin /></a>
           </div>
         </div>
 

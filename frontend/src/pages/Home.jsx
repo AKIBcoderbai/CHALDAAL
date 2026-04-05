@@ -181,22 +181,36 @@ function Home({
               </article>
             </section>
 
-            {/* APP STRIP */}
-            <section className="home-app-strip 3d-element">
-              <div className="app-strip-content">
-                <h2>Download the Chaldal App Now</h2>
-                <p>Get exclusive app-only offers and faster repeat checkout. Available on iOS and Android.</p>
-                <div className="app-buttons">
-                  <button className="store-btn">App Store</button>
-                  <button className="store-btn">Google Play</button>
-                </div>
-              </div>
-              <img
-                src="https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=1000&q=80"
-                alt="Chaldal app"
-                className="floating-img"
-              />
-            </section>
+{/* APP STRIP */}
+<section className="home-app-strip 3d-element">
+  <div className="app-strip-content">
+    <h2>Download the Chaldal App Now</h2>
+    <p>Get exclusive app-only offers and faster repeat checkout. Available on iOS and Android.</p>
+    <div className="app-buttons">
+      <a 
+        href="https://apps.apple.com/us/app/chaldal-grocery-delivery/id839174092" 
+        target="_blank" 
+        rel="noopener noreferrer"
+        className="store-btn"
+      >
+        App Store
+      </a>
+      <a 
+        href="https://play.google.com/store/apps/details?id=com.chaldal.client" 
+        target="_blank" 
+        rel="noopener noreferrer"
+        className="store-btn"
+      >
+        Google Play
+      </a>
+    </div>
+  </div>
+  <img
+    src="https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=1000&q=80"
+    alt="Chaldal app"
+    className="floating-img"
+  />
+</section>
 
             {/* Q&A SECTION */}
             <section className="home-faq-section">

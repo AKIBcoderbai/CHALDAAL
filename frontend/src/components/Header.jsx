@@ -34,7 +34,7 @@ function Header({
                             onClick={() => navigate("/")}
                             style={{ marginLeft: "10px" }}
                         >
-                            Chaldal
+                        <h2 className="brand-logo">Chaldal<span>Clone</span></h2>
                         </span>
                     </div>
 

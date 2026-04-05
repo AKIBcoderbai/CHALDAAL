@@ -125,11 +125,16 @@ body[data-theme='dark'] .header {
 }
 
 .brand-logo {
-  font-family: 'Segoe UI', sans-serif;
-  font-size: 26px;
-  font-weight: 700;
-  color: var(--text-color);
-  letter-spacing: -1px;
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: 28px;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 2px;
+  letter-spacing: -0.5px;
+}
+
+.brand-logo span {
+  color: #000000;
 }
 
 .cart-badge {
@@ -2269,4 +2274,4 @@ body[data-theme='dark'] .uo-sub,
 body[data-theme='dark'] .ls-message {
   color: #1e293b !important;
 }
-
+
