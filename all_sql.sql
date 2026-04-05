@@ -78,13 +78,13 @@ create table category (
   foreign key parent_id references category(category_id)
 );
 
-create table product_offer(
-  product_offer_id int primary key serial,
-  offer_type varchar(50),
-  amount decimal(10,2),
-  percentage decimal(10,2),
-  expiry_date date
-);
+-- create table product_offer(
+--   product_offer_id int primary key serial,
+--   offer_type varchar(50),
+--   amount decimal(10,2),
+--   percentage decimal(10,2),
+--   expiry_date date
+-- );
 
 create table products(
   product_id int primary key serial,
@@ -122,15 +122,15 @@ create table Cart_Items (
     foreign key (product_id) references products(product_id) on delete cascade
 );
 
-create table order_offer(
-  offer_id int primary key serial,
-  coupon_code varchar(255) unique,
-  offer_type varchar(50),
-  max_cap decimal(10,2),
-  discount_amount decimal(10,2),
-  percentage decimal(10,2),
-  expires_at date
-);
+-- create table order_offer(
+--   offer_id int primary key serial,
+--   coupon_code varchar(255) unique,
+--   offer_type varchar(50),
+--   max_cap decimal(10,2),
+--   discount_amount decimal(10,2),
+--   percentage decimal(10,2),
+--   expires_at date
+-- );
 
 create table orders(
   order_id int primary key serial,
@@ -383,39 +383,39 @@ CREATE TABLE product_review (
 );
 
 
-INSERT INTO category (category_id, name, image_url,parent_id)
-VALUES (1, 'Main Catalog', 'https://www.pinclipart.com/picdir/big/535-5359859_grocery-icon-png-clipart.png',null)
-ON CONFLICT (category_id) DO NOTHING;
+-- INSERT INTO category (category_id, name, image_url,parent_id)
+-- VALUES (1, 'Main Catalog', 'https://www.pinclipart.com/picdir/big/535-5359859_grocery-icon-png-clipart.png',null)
+-- ON CONFLICT (category_id) DO NOTHING;
 
-insert into category(
-  name,
-  parent_id,
-  image_url
-)
-select 
-  name,
-  1,
-  'https://www.pinclipart.com/picdir/big/535-5359859_grocery-icon-png-clipart.png'
- from backup_catagories;
+-- insert into category(
+--   name,
+--   parent_id,
+--   image_url
+-- )
+-- select 
+--   name,
+--   1,
+--   'https://www.pinclipart.com/picdir/big/535-5359859_grocery-icon-png-clipart.png'
+--  from backup_catagories;
 
- INSERT INTO products (
-  name,
-  unit,
-  unit_price,
-  stock,
-  rating,
-  image_url,
-  category_id
-)
-SELECT 
-  name,
-  unit,
-  price,          
-  stock_quantity, 
-  0,               
-  image_url,
-  1               
-FROM backup_products;
+--  INSERT INTO products (
+--   name,
+--   unit,
+--   unit_price,
+--   stock,
+--   rating,
+--   image_url,
+--   category_id
+-- )
+-- SELECT 
+--   name,
+--   unit,
+--   price,          
+--   stock_quantity, 
+--   0,               
+--   image_url,
+--   1               
+-- FROM backup_products;
 
 alter table person add column password varchar(255);
 alter table person drop column person;
@@ -1115,3 +1115,82 @@ begin
     where product_id = v_product_id;
 end;
 $$ language plpgsql;
+
+CREATE TABLE IF NOT EXISTS loyalty_tiers (
+  tier_id    SERIAL PRIMARY KEY,
+  tier_name  VARCHAR(50) NOT NULL,
+  min_points INT NOT NULL,
+  color      VARCHAR(20) DEFAULT '#888',
+  icon       VARCHAR(10) DEFAULT '🎖️'
+);
+
+CREATE TABLE IF NOT EXISTS coupons (
+  coupon_id        SERIAL PRIMARY KEY,
+  code             VARCHAR(50) UNIQUE NOT NULL,
+  tier_id          INT REFERENCES loyalty_tiers(tier_id) ON DELETE SET NULL,
+  discount_type    VARCHAR(20) NOT NULL CHECK (discount_type IN ('percent', 'flat')),
+  discount_value   DECIMAL(10,2) NOT NULL CHECK (discount_value > 0),
+  min_order_amount DECIMAL(10,2) NOT NULL DEFAULT 0,
+  max_discount     DECIMAL(10,2),
+  description      TEXT,
+  is_active        BOOLEAN DEFAULT TRUE
+);
+
+CREATE TABLE IF NOT EXISTS user_coupons (
+  user_id      INT NOT NULL REFERENCES "users"(user_id) ON DELETE CASCADE,
+  coupon_id    INT NOT NULL REFERENCES coupons(coupon_id) ON DELETE CASCADE,
+  used         BOOLEAN DEFAULT FALSE,
+  assigned_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (user_id, coupon_id)
+);
+
+INSERT INTO loyalty_tiers (tier_name, min_points, color, icon) VALUES
+  ('Bronze',   0,    '#cd7f32', '🥉'),
+  ('Silver',   200,  '#a8a9ad', '🥈'),
+  ('Gold',     500,  '#ffd700', '🥇'),
+  ('Platinum', 1000, '#e5e4e2', '💎')
+ON CONFLICT DO NOTHING;
+
+
+INSERT INTO coupons (code, tier_id, discount_type, discount_value, min_order_amount, max_discount, description) VALUES
+  ('BRONZE10', (SELECT tier_id FROM loyalty_tiers WHERE tier_name='Bronze'),   'percent', 10, 200,  50,  '10% off, up to ৳50. Min order ৳200.'),
+  ('SILVER15', (SELECT tier_id FROM loyalty_tiers WHERE tier_name='Silver'),   'percent', 15, 400,  100, '15% off, up to ৳100. Min order ৳400.'),
+  ('GOLD20',   (SELECT tier_id FROM loyalty_tiers WHERE tier_name='Gold'),     'percent', 20, 600,  200, '20% off, up to ৳200. Min order ৳600.'),
+  ('PLAT30',   (SELECT tier_id FROM loyalty_tiers WHERE tier_name='Platinum'), 'percent', 30, 800,  400, '30% off, up to ৳400. Min order ৳800.')
+ON CONFLICT (code) DO NOTHING;
+
+CREATE OR REPLACE PROCEDURE assign_tier_coupons(p_user_id INT)
+LANGUAGE plpgsql AS $$
+DECLARE
+  v_points INT;
+BEGIN
+  SELECT loyalty_points INTO v_points FROM "users" WHERE user_id = p_user_id;
+
+  -- Insert any coupon for tiers the user qualifies for, skip if already assigned
+  INSERT INTO user_coupons (user_id, coupon_id)
+  SELECT p_user_id, c.coupon_id
+  FROM coupons c
+  JOIN loyalty_tiers lt ON c.tier_id = lt.tier_id
+  WHERE lt.min_points <= v_points
+    AND c.is_active = TRUE
+  ON CONFLICT (user_id, coupon_id) DO NOTHING;
+END;
+$$;
+
+
+CREATE OR REPLACE FUNCTION trigger_assign_coupons()
+RETURNS TRIGGER AS $$
+BEGIN
+  CALL assign_tier_coupons(NEW.user_id);
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS auto_assign_coupons ON "users";
+CREATE TRIGGER auto_assign_coupons
+AFTER UPDATE OF loyalty_points ON "users"
+FOR EACH ROW
+EXECUTE FUNCTION trigger_assign_coupons();
+
+CREATE INDEX IF NOT EXISTS idx_user_coupons_user ON user_coupons(user_id);
+CREATE INDEX IF NOT EXISTS idx_coupons_tier ON coupons(tier_id);
