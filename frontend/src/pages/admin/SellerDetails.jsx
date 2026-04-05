@@ -9,14 +9,14 @@ const API_BASE = "http://localhost:3000";
 export default function SellerDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
-  
+
   const [sellerInfo, setSellerInfo] = useState(null);
   const [stats, setStats] = useState(null);
   const [products, setProducts] = useState([]);
-  
+
   const [loading, setLoading] = useState(true);
-  
-  // Messaging state
+
+
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [selectedProduct, setSelectedProduct] = useState("");
@@ -30,7 +30,7 @@ export default function SellerDetails() {
     try {
       const token = localStorage.getItem("token");
       setLoading(true);
-      
+
       const [statsRes, sellersRes, productsRes] = await Promise.all([
         fetch(`${API_BASE}/api/admin/sellers/${id}/stats`, { headers: { Authorization: `Bearer ${token}` } }),
         fetch(`${API_BASE}/api/admin/sellers`, { headers: { Authorization: `Bearer ${token}` } }),
@@ -38,7 +38,7 @@ export default function SellerDetails() {
       ]);
 
       if (statsRes.ok) setStats(await statsRes.json());
-      
+
       if (sellersRes.ok) {
         const allSellers = await sellersRes.json();
         const me = allSellers.find(s => String(s.seller_id) === String(id));
@@ -176,12 +176,12 @@ export default function SellerDetails() {
           <p className="muted" style={{fontSize: '13px', marginBottom: '15px'}}>
             Send a warning, notice, or compliance alert to <strong>{sellerInfo.company_name}</strong>.
           </p>
-          
+
           <form onSubmit={handleSendMessage} className="admin-form">
             <div className="form-group">
               <label>Related Product (Optional)</label>
-              <select 
-                value={selectedProduct} 
+              <select
+                value={selectedProduct}
                 onChange={e => setSelectedProduct(e.target.value)}
               >
                 <option value="">-- General Notice --</option>
@@ -190,12 +190,12 @@ export default function SellerDetails() {
                 ))}
               </select>
             </div>
-            
+
             <div className="form-group">
               <label>Subject</label>
-              <input 
-                type="text" 
-                required 
+              <input
+                type="text"
+                required
                 value={subject}
                 onChange={e => setSubject(e.target.value)}
                 placeholder="e.g., Immediate action required"
@@ -204,8 +204,8 @@ export default function SellerDetails() {
 
             <div className="form-group">
               <label>Message Body</label>
-              <textarea 
-                rows={5} 
+              <textarea
+                rows={5}
                 required
                 value={message}
                 onChange={e => setMessage(e.target.value)}

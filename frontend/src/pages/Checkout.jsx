@@ -16,7 +16,7 @@ const Checkout = ({ user,cart, placeOrder, shippingAddress, checkoutMeta, isPlac
     return raw ? JSON.parse(raw) : [];
   });
 
-  //new try
+
   const idempotencyKeyRef = useRef(
     typeof crypto !== "undefined" && crypto.randomUUID
       ? crypto.randomUUID()
@@ -174,7 +174,6 @@ const Checkout = ({ user,cart, placeOrder, shippingAddress, checkoutMeta, isPlac
               <option value="Other">Other</option>
             </select>
           </div>
-
 
           <h3>Payment Method</h3>
           <div className="payment-options">

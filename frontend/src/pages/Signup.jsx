@@ -39,9 +39,9 @@ const Signup = ({ onLogin, defaultAddress }) => {
     }
 
     try {
-      const payload = { 
-        ...formData, 
-        address: defaultAddress !== "Locating..." ? defaultAddress : "Dhaka" 
+      const payload = {
+        ...formData,
+        address: defaultAddress !== "Locating..." ? defaultAddress : "Dhaka"
       };
 
       const response = await fetch("http://localhost:3000/api/signup", {
@@ -55,12 +55,12 @@ const Signup = ({ onLogin, defaultAddress }) => {
       if (response.ok) {
         alert("Account Created Successfully!");
         localStorage.setItem("token", data.token);
-        onLogin({ 
-            name: data.user.full_name, 
-            email: data.user.email, 
+        onLogin({
+            name: data.user.full_name,
+            email: data.user.email,
             id: data.user.user_id,
             role: data.user.role,
-            address: data.user.address,       
+            address: data.user.address,
             address_id: data.user.address_id
         });
         if (data.user.role === 'seller') {
@@ -68,7 +68,7 @@ const Signup = ({ onLogin, defaultAddress }) => {
         } else if (data.user.role === 'rider') {
             navigate('/rider-dashboard');
         } else if (data.user.role === 'admin') {
-            navigate('/admin-dashboard'); 
+            navigate('/admin-dashboard');
         } else {
             navigate('/');
         }
@@ -86,7 +86,7 @@ const Signup = ({ onLogin, defaultAddress }) => {
       <div className="auth-card">
         <h2>Sign Up</h2>
         <p className="auth-subtitle">Create your Chaldal account</p>
-        
+
         {error && <p style={{color: 'red', textAlign: 'center'}}>{error}</p>}
 
         <form onSubmit={handleSubmit}>
@@ -107,9 +107,9 @@ const Signup = ({ onLogin, defaultAddress }) => {
 
           <div className="form-group">
             <label>Account Type</label>
-            <select 
-              name="role" 
-              value={formData.role} 
+            <select
+              name="role"
+              value={formData.role}
               onChange={handleChange}
               style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #ccc', marginBottom: '15px' }}
             >
@@ -117,7 +117,7 @@ const Signup = ({ onLogin, defaultAddress }) => {
               <option value="rider">Rider (Deliver Orders)</option>
             </select>
           </div>
-          
+
           <div className="form-group">
             <PasswordInput
               label="Password"

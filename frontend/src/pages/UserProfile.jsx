@@ -69,7 +69,7 @@ export default function UserProfile({ user, onUpdateUser, onLogout }) {
         headers: { "Authorization": `Bearer ${token}` }
       });
       if (res.ok) setRewardsData(await res.json());
-    } catch { /* silent */ } finally { setRewardsLoading(false); }
+    } catch {  } finally { setRewardsLoading(false); }
   };
 
   useEffect(() => {
@@ -110,7 +110,7 @@ export default function UserProfile({ user, onUpdateUser, onLogout }) {
           body: JSON.stringify({ image_url: newImageUrl })
         });
         if (onUpdateUser) {
-              onUpdateUser({ image_url: newImageUrl }); 
+              onUpdateUser({ image_url: newImageUrl });
             }
         alert("Profile image updated successfully!");
         fetchProfileInfo();
@@ -153,10 +153,10 @@ export default function UserProfile({ user, onUpdateUser, onLogout }) {
         setUpdateForm({ ...updateForm, password: "" });
         setConfirmPassword("");
         if (onUpdateUser) {
-          onUpdateUser({ 
-            name: updateForm.name, 
-            full_name: updateForm.name, 
-            phone: updateForm.phone 
+          onUpdateUser({
+            name: updateForm.name,
+            full_name: updateForm.name,
+            phone: updateForm.phone
           });
         }
         fetchProfileInfo();
@@ -177,10 +177,10 @@ export default function UserProfile({ user, onUpdateUser, onLogout }) {
       <div className="profile-sidebar">
         <div className="sidebar-header">
           <div className="avatar-wrapper">
-            <img 
-              src={avatarUrl || "https://cdn-icons-png.flaticon.com/512/149/149071.png"} 
-              alt="Avatar" 
-              className="sidebar-avatar" 
+            <img
+              src={avatarUrl || "https://cdn-icons-png.flaticon.com/512/149/149071.png"}
+              alt="Avatar"
+              className="sidebar-avatar"
             />
             <label htmlFor="avatar-upload" className="avatar-upload-btn">
               <FaCamera />
@@ -205,14 +205,14 @@ export default function UserProfile({ user, onUpdateUser, onLogout }) {
           >
             <FaHome /> Home
           </button>
-          <button 
-            className={activeTab === "orders" ? "active" : ""} 
+          <button
+            className={activeTab === "orders" ? "active" : ""}
             onClick={() => setActiveTab("orders")}
           >
             <FaBox /> My Orders
           </button>
-          <button 
-            className={activeTab === "settings" ? "active" : ""} 
+          <button
+            className={activeTab === "settings" ? "active" : ""}
             onClick={() => setActiveTab("settings")}
           >
             <FaUserEdit /> Settings
@@ -238,8 +238,8 @@ export default function UserProfile({ user, onUpdateUser, onLogout }) {
             ) : (
               <div className="orders-grid">
                 {orders.map(order => (
-                  <div 
-                    key={order.order_id} 
+                  <div
+                    key={order.order_id}
                     className="order-card"
                     onClick={() => navigate(`/order/${order.order_id}`)}
                   >
@@ -281,7 +281,7 @@ export default function UserProfile({ user, onUpdateUser, onLogout }) {
               <div className="empty-state">Could not load rewards. Please try again.</div>
             ) : (
               <>
-                {/* Tier Badge + Points */}
+                {}
                 <div className="rewards-tier-card" style={{ borderColor: rewardsData.current_tier.color }}>
                   <div className="tier-icon-big">{rewardsData.current_tier.icon}</div>
                   <div className="tier-info">
@@ -315,7 +315,7 @@ export default function UserProfile({ user, onUpdateUser, onLogout }) {
 
                 <p className="rewards-info-note">💡 You earn <strong>1 point per ৳100 spent</strong>. Points unlock better coupons automatically!</p>
 
-                {/* Coupons Grid */}
+                {}
                 <div className="coupons-grid">
                   {rewardsData.coupons.map(c => {
                     const isUnlocked = c.unlocked;
@@ -376,21 +376,21 @@ export default function UserProfile({ user, onUpdateUser, onLogout }) {
 
               <div className="form-group">
                 <label>Full Name</label>
-                <input 
-                  type="text" 
-                  value={updateForm.name} 
-                  onChange={(e) => setUpdateForm({...updateForm, name: e.target.value})} 
-                  required 
+                <input
+                  type="text"
+                  value={updateForm.name}
+                  onChange={(e) => setUpdateForm({...updateForm, name: e.target.value})}
+                  required
                 />
               </div>
 
               <div className="form-group">
                 <label>Phone Number</label>
-                <input 
-                  type="text" 
-                  value={updateForm.phone} 
-                  onChange={(e) => setUpdateForm({...updateForm, phone: e.target.value})} 
-                  required 
+                <input
+                  type="text"
+                  value={updateForm.phone}
+                  onChange={(e) => setUpdateForm({...updateForm, phone: e.target.value})}
+                  required
                 />
               </div>
 

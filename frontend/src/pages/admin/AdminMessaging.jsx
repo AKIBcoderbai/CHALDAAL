@@ -63,8 +63,8 @@ export default function AdminMessaging() {
   const filteredComboSellers = useMemo(() => {
     if (!sellerSearch.trim()) return uniqueSellers;
     const q = sellerSearch.toLowerCase();
-    return uniqueSellers.filter(s => 
-      s.seller_name.toLowerCase().includes(q) || 
+    return uniqueSellers.filter(s =>
+      s.seller_name.toLowerCase().includes(q) ||
       (s.seller_email && s.seller_email.toLowerCase().includes(q))
     );
   }, [uniqueSellers, sellerSearch]);
@@ -120,8 +120,8 @@ export default function AdminMessaging() {
             <div className="form-group custom-combo">
               <label>Select Seller</label>
               <div className="combo-input-wrapper">
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   placeholder="Type to search seller by name or email..."
                   value={sellerSearch}
                   onFocus={() => setIsDropdownOpen(true)}
@@ -134,8 +134,8 @@ export default function AdminMessaging() {
                   <div className="combo-dropdown">
                     {filteredComboSellers.length > 0 ? (
                       filteredComboSellers.map((seller) => (
-                        <div 
-                          key={seller.seller_id} 
+                        <div
+                          key={seller.seller_id}
                           className="combo-option"
                           onClick={() => {
                             setSelectedSellerId(seller.seller_id);

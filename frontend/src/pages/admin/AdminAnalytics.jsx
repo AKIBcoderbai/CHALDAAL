@@ -39,7 +39,7 @@ export default function AdminAnalytics() {
             <p>৳ {data.totalRevenue.toLocaleString()}</p>
           </div>
         </div>
-        
+
         <div className="stat-card success">
           <div className="stat-icon"><FaBox /></div>
           <div className="stat-info">
@@ -71,8 +71,8 @@ export default function AdminAnalytics() {
           <div className="sales-chart-mock">
             {data.recentSales.map((sale, idx) => (
               <div key={idx} className="chart-bar-container">
-                <div 
-                  className="chart-bar" 
+                <div
+                  className="chart-bar"
                   style={{ height: `${Math.max(20, sale.order_count * 15)}px` }}
                   title={`${sale.order_count} orders`}
                 >

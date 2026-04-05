@@ -87,7 +87,7 @@ const CartSidebar = ({ isOpen, onClose, cartItems, onUpdateQty, onCheckout }) =>
       </div>
 
       <div className="cart-footer">
-        {/* Coupon Row */}
+        {}
         <div className="coupon-row">
           <input
             type="text"

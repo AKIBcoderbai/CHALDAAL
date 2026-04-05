@@ -11,13 +11,13 @@ export default function RiderDashboard({ user, onLogout, onUpdateUser }) {
   const navigate = useNavigate();
   const { theme } = useTheme();
   const dark = theme === 'dark';
-  
+
   const [activeTab, setActiveTab] = useState('available');
-  
+
   const [availableOrders, setAvailableOrders] = useState([]);
   const [myJobs, setMyJobs] = useState([]);
   const [history, setHistory] = useState({ rating: 0, deliveries: [] });
-  
+
   const [avatarUrl, setAvatarUrl] = useState(user?.image_url || "");
   const [isUploading, setIsUploading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -28,7 +28,7 @@ export default function RiderDashboard({ user, onLogout, onUpdateUser }) {
   const [isMapOpen, setIsMapOpen] = useState(false);
   const defaultloc = "Update your location to see nearby deliveries";
   const [riderLocation, setRiderLocation] = useState(defaultloc);
-  
+
   const fetchAddressName = async (lat, lng) => {
     try {
       const res = await fetch(
@@ -63,7 +63,7 @@ export default function RiderDashboard({ user, onLogout, onUpdateUser }) {
         headers: { "Authorization": `Bearer ${token}` }
       });
       if (myJobsRes.ok) setMyJobs(await myJobsRes.json());
-      
+
       const historyRes = await fetch("http://localhost:3000/api/rider/history", {
         headers: { "Authorization": `Bearer ${token}` }
       });
@@ -91,7 +91,7 @@ export default function RiderDashboard({ user, onLogout, onUpdateUser }) {
     setIsUploading(true);
     const token = localStorage.getItem("token");
     const uploadData = new FormData();
-    uploadData.append("image", file); 
+    uploadData.append("image", file);
 
     try {
         const uploadRes = await fetch('http://localhost:3000/api/upload', {
@@ -103,7 +103,7 @@ export default function RiderDashboard({ user, onLogout, onUpdateUser }) {
         if (uploadRes.ok) {
             const data = await uploadRes.json();
             const newImageUrl = data.image_url;
-            setAvatarUrl(newImageUrl); 
+            setAvatarUrl(newImageUrl);
 
             await fetch("http://localhost:3000/api/users/avatar", {
                 method: "PUT",
@@ -167,7 +167,7 @@ export default function RiderDashboard({ user, onLogout, onUpdateUser }) {
     });
     if (response.ok) {
       alert("Job Accepted! Drive safe.");
-      fetchDashboardData(); 
+      fetchDashboardData();
     } else {
       const data = await response.json();
       alert(data.error || "Failed to accept job.");
@@ -246,17 +246,17 @@ export default function RiderDashboard({ user, onLogout, onUpdateUser }) {
           </div>
       </div>
 
-      <LocationPicker 
-        isOpen={isMapOpen} 
-        onClose={() => setIsMapOpen(false)} 
-        onSelectLocation={async (loc) => { 
+      <LocationPicker
+        isOpen={isMapOpen}
+        onClose={() => setIsMapOpen(false)}
+        onSelectLocation={async (loc) => {
           setRiderLocation("Locating...");
           const address = await fetchAddressName(loc.lat, loc.lng);
-          setRiderLocation(address); 
-        }} 
+          setRiderLocation(address);
+        }}
       />
 
-      {/* Tabs */}
+      {}
       <div style={styles.nav}>
           <div style={styles.navItem(activeTab === 'available')} onClick={() => setActiveTab('available')}>
             <FaMotorcycle /> Available Jobs ({availableOrders.length})
@@ -273,8 +273,8 @@ export default function RiderDashboard({ user, onLogout, onUpdateUser }) {
       </div>
 
       <div style={{ ...styles.card, minHeight: '60vh' }}>
-        
-        {/* AVAILABLE JOBS */}
+
+        {}
         {activeTab === 'available' && (
           <div>
             <h3 style={{ marginTop: 0, color: dark ? '#e2e8f0' : '#2d3436' }}>Jobs near you</h3>
@@ -289,7 +289,7 @@ export default function RiderDashboard({ user, onLogout, onUpdateUser }) {
                     </div>
                     <p style={{ margin: '5px 0', color: dark ? '#94a3b8' : '#2d3436' }}>📍 {order.street}, {order.city}</p>
                     <p style={{ margin: '5px 0', color: dark ? '#64748b' : '#636e72' }}>👤 {order.customer_name} ({order.customer_phone})</p>
-                    <button 
+                    <button
                       onClick={() => handleAcceptOrder(order.order_id)}
                       style={{ width: '100%', padding: '10px', background: '#0984e3', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', marginTop: '15px' }}
                     >
@@ -302,7 +302,7 @@ export default function RiderDashboard({ user, onLogout, onUpdateUser }) {
           </div>
         )}
 
-        {/* ACTIVE DELIVERIES */}
+        {}
         {activeTab === 'active' && (
           <div>
             <h3 style={{ marginTop: 0 }}>Your Assigned Deliveries</h3>
@@ -313,7 +313,7 @@ export default function RiderDashboard({ user, onLogout, onUpdateUser }) {
                     <strong style={{ fontSize: '18px', color: dark ? '#e2e8f0' : '#2d3436' }}>Order #{job.order_id}</strong>
                     <p style={{ margin: '10px 0 5px 0', fontWeight: 'bold', color: dark ? '#e2e8f0' : '#2d3436' }}>📍 {job.street}</p>
                     <p style={{ margin: '5px 0 15px 0', color: dark ? '#94a3b8' : '#636e72' }}>📞 {job.customer_name} - {job.customer_phone}</p>
-                    <button 
+                    <button
                       onClick={() => handleDeliverOrder(job.order_id)}
                       style={{ width: '100%', padding: '10px', background: '#00b894', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
                     >
@@ -326,7 +326,7 @@ export default function RiderDashboard({ user, onLogout, onUpdateUser }) {
           </div>
         )}
 
-        {/* HISTORY & RATING */}
+        {}
         {activeTab === 'history' && (
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '30px', padding: '20px', background: dark ? '#1e293b' : '#f1f2f6', borderRadius: '10px', display: 'inline-flex' }}>
@@ -362,11 +362,11 @@ export default function RiderDashboard({ user, onLogout, onUpdateUser }) {
           </div>
         )}
 
-        {/* SETTINGS */}
+        {}
         {activeTab === 'settings' && (
           <div style={{ maxWidth: '500px' }}>
               <h3 style={{ marginTop: 0 }}>Profile Settings</h3>
-              
+
               <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '30px' }}>
                   <div style={{ position: 'relative', width: '100px', height: '100px' }}>
                       {avatarUrl ? (

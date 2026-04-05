@@ -27,7 +27,7 @@ export default function OrderDetails({ user }) {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Review states
+
   const [activeReviewProdId, setActiveReviewProdId] = useState(null);
   const [riderReviewVisible, setRiderReviewVisible] = useState(false);
   const [reviewForm, setReviewForm] = useState({ rating: 5, comment: "" });
@@ -87,7 +87,7 @@ export default function OrderDetails({ user }) {
     } catch { alert("Failed to submit rider review"); }
   };
 
-  // ---- Return helpers ----
+
   const toggleReturnItem = (product_id) => {
     setReturnSelectedItems(prev => {
       const next = { ...prev };
@@ -175,7 +175,7 @@ export default function OrderDetails({ user }) {
         </div>
       </div>
 
-      {/* Return status banner */}
+      {}
       {existingReturn && (
         <div className="od-return-banner" style={{
           background: returnStatusMap[existingReturn.status]?.bg || '#f5f5f5',
@@ -217,7 +217,7 @@ export default function OrderDetails({ user }) {
               Total: ৳ {order.items.reduce((sum, i) => sum + (i.price * i.qty), 0)}
             </div>
 
-            {/* Return CTA */}
+            {}
             {isDelivered && !existingReturn && (
               <button className="od-return-btn" onClick={() => { setReturnModalOpen(true); setReturnStep(0); }}>
                 <FaUndo /> Request Return
@@ -260,7 +260,7 @@ export default function OrderDetails({ user }) {
         </div>
       </div>
 
-      {/* REVIEW MODAL */}
+      {}
       {(activeReviewProdId !== null || riderReviewVisible) && (
         <div className="od-modal-backdrop">
           <div className="od-modal">
@@ -289,11 +289,11 @@ export default function OrderDetails({ user }) {
         </div>
       )}
 
-      {/* RETURN REQUEST MODAL */}
+      {}
       {returnModalOpen && (
         <div className="od-modal-backdrop">
           <div className="od-modal od-return-modal">
-            {/* Step indicator */}
+            {}
             <div className="ret-step-header">
               <div className="ret-step-title">Request Return</div>
               <div className="ret-steps">
@@ -306,7 +306,7 @@ export default function OrderDetails({ user }) {
               </div>
             </div>
 
-            {/* Step 0: Select items */}
+            {}
             {returnStep === 0 && (
               <div className="ret-form-section">
                 <p className="ret-form-hint">Select the item(s) you want to return:</p>
@@ -331,7 +331,7 @@ export default function OrderDetails({ user }) {
               </div>
             )}
 
-            {/* Step 1: Return details */}
+
             {returnStep === 1 && (
               <div className="ret-form-section">
                 <div className="form-group">
@@ -360,7 +360,7 @@ export default function OrderDetails({ user }) {
               </div>
             )}
 
-            {/* Step 2: Photos */}
+
             {returnStep === 2 && (
               <div className="ret-form-section">
                 <p className="ret-form-hint">Add up to 3 photos as evidence (optional).</p>
@@ -381,7 +381,7 @@ export default function OrderDetails({ user }) {
               </div>
             )}
 
-            {/* Step 3: Review */}
+            {}
             {returnStep === 3 && (
               <div className="ret-form-section">
                 <div className="ret-review-summary">
@@ -395,7 +395,7 @@ export default function OrderDetails({ user }) {
               </div>
             )}
 
-            {/* Navigation buttons */}
+            {}
             <div className="modal-actions" style={{ marginTop: 16 }}>
               {returnStep > 0 && (
                 <button type="button" className="od-cancel-btn" onClick={() => setReturnStep(s => s - 1)}>Back</button>

@@ -36,9 +36,9 @@ export default function AdminSellers() {
   const filteredSellers = useMemo(() => {
     if (!search.trim()) return sellers;
     const lowerSearch = search.toLowerCase();
-    return sellers.filter(s => 
-      (s.name && s.name.toLowerCase().includes(lowerSearch)) || 
-      (s.company_name && s.company_name.toLowerCase().includes(lowerSearch)) || 
+    return sellers.filter(s =>
+      (s.name && s.name.toLowerCase().includes(lowerSearch)) ||
+      (s.company_name && s.company_name.toLowerCase().includes(lowerSearch)) ||
       (s.email && s.email.toLowerCase().includes(lowerSearch)) ||
       (s.phone && s.phone.includes(lowerSearch))
     );
@@ -53,9 +53,9 @@ export default function AdminSellers() {
           <h3>Registered Sellers</h3>
           <div className="search-bar">
             <FaSearch className="search-icon" />
-            <input 
-              type="text" 
-              placeholder="Search by name, company, email or phone..." 
+            <input
+              type="text"
+              placeholder="Search by name, company, email or phone..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />

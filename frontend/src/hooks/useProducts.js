@@ -41,21 +41,19 @@ export default function useProducts() {
         fetchProducts();
     }, []);
 
-    //logic for maxPrice among products
-    //passed products as dependency array bcz it changes on update of products array
+
+
     const maxProductPrice = useMemo(
         () => Math.max(...products.map((p) => Number(p.price) || 0), 0),
         [products]
     );
 
-    //Price Cap setting 
+
     useEffect(() => {
         if (maxProductPrice > 0 && priceCap === 0) {
             setPriceCap(maxProductPrice);
         }
     }, [maxProductPrice, priceCap]);
-
-
 
     const suggestions = useMemo(() => {
         const keyword = inputValue.trim().toLowerCase();
@@ -94,7 +92,6 @@ export default function useProducts() {
         return list;
     }, [products, searchTerm, selectedCategory, inStockOnly, priceCap, sortBy]);
 
-
     const handleInputChange = (e) => setInputValue(e.target.value);
     const handleSearchKeyBtn = () => {
         setSearchTerm(inputValue);
@@ -112,7 +109,6 @@ export default function useProducts() {
         setInputValue("");
         setShowSuggestions(false);
     };
-
 
     return {
     isLoading,

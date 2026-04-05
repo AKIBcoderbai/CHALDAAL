@@ -25,9 +25,9 @@ const Login = ({ onLogin }) => {
 if (response.ok) {
   localStorage.setItem("token", data.token);
   window.dispatchEvent(new Event('login_success'));
-  onLogin({ 
-      name: data.user.full_name, 
-      email: data.user.email, 
+  onLogin({
+      name: data.user.full_name,
+      email: data.user.email,
       id: data.user.user_id,
       role: data.user.role,
       image_url: data.user.image_url || null,
@@ -58,26 +58,26 @@ if (response.ok) {
       <div className="auth-card">
         <h2>Login</h2>
         <p className="auth-subtitle">Welcome back to Chaldal Clone</p>
-        
+
         {error && <p style={{color: 'red', textAlign: 'center'}}>{error}</p>}
-        
+
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label>Email</label>
-            <input 
-              type="email" 
-              placeholder="Enter your email" 
+            <input
+              type="email"
+              placeholder="Enter your email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
           </div>
-          
+
           <div className="form-group">
             <label>Password</label>
-            <input 
-              type="password" 
-              placeholder="Enter password" 
+            <input
+              type="password"
+              placeholder="Enter password"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}

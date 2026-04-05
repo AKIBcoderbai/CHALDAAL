@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './Auth.css'; 
+import './Auth.css';
 
 const SellerLogin = ({ onLogin }) => {
     const navigate = useNavigate();
     const [isSignup, setIsSignup] = useState(false);
-    
+
     const [formData, setFormData] = useState({
         full_name: '', email: '', phone: '', password: ''
     });
@@ -17,8 +17,8 @@ const SellerLogin = ({ onLogin }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         const endpoint = isSignup ? '/api/seller/signup' : '/api/login';
-        
-       
+
+
         const payload = isSignup ? { ...formData, fullName: formData.full_name } : formData;
 
         try {
@@ -41,11 +41,11 @@ const SellerLogin = ({ onLogin }) => {
                 onLogin({
                     name: data.user.full_name,
                     email: data.user.email,
-                    id: data.user.user_id, 
+                    id: data.user.user_id,
                     role: data.user.role
-                }); 
+                });
                 navigate('/seller-dashboard');
-                
+
             } else {
                 alert(data.error || "Authentication failed");
             }
@@ -60,7 +60,7 @@ const SellerLogin = ({ onLogin }) => {
             <div className="auth-card">
                 <h2>{isSignup ? 'Seller Registration' : 'Seller Portal'}</h2>
                 <p className="auth-subtitle">Manage your business on Chaldal</p>
-                
+
                 <form onSubmit={handleSubmit} className="auth-form">
                     {isSignup && (
                         <>
@@ -74,12 +74,12 @@ const SellerLogin = ({ onLogin }) => {
                             </div>
                         </>
                     )}
-                    
+
                     <div className="form-group">
                         <label>Email Address</label>
                         <input type="email" name="email" required onChange={handleChange} placeholder="seller@example.com" />
                     </div>
-                    
+
                     <div className="form-group">
                         <label>Password</label>
                         <input type="password" name="password" required onChange={handleChange} placeholder="Enter password" />
@@ -91,7 +91,7 @@ const SellerLogin = ({ onLogin }) => {
                 </form>
 
                 <p className="switch-auth">
-                    {isSignup ? "Already a seller?" : "Want to sell with us?"} 
+                    {isSignup ? "Already a seller?" : "Want to sell with us?"}
                     <span onClick={() => setIsSignup(!isSignup)} style={{ cursor: 'pointer', marginLeft: '5px', color: '#e91e63', fontWeight: 'bold' }}>
                         {isSignup ? "Login" : "Apply Now"}
                     </span>

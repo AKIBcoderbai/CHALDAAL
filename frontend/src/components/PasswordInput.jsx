@@ -41,7 +41,7 @@ export default function PasswordInput({
 
   return (
     <div className="pi-root">
-      {/* Password field */}
+      {}
       <label className="pi-label">{label}{optional && <span className="pi-optional"> (optional)</span>}</label>
       <div className="pi-wrap">
         <input
@@ -59,7 +59,7 @@ export default function PasswordInput({
         </button>
       </div>
 
-      {/* Strength bar — only shown when user is typing */}
+      {}
       {value.length > 0 && (
         <div className="pi-strength">
           <div className="pi-bars">
@@ -77,12 +77,12 @@ export default function PasswordInput({
         </div>
       )}
 
-      {/* Min-length hint */}
+      {}
       {tooShort && (
         <p className="pi-hint pi-error">⚠ At least {minLength} characters required</p>
       )}
 
-      {/* Confirm field */}
+      {}
       {confirm && (
         <>
           <label className="pi-label" style={{ marginTop: '12px' }}>{confirmLabel}</label>

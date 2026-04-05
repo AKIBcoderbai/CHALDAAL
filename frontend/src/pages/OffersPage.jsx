@@ -34,7 +34,7 @@ export default function OffersPage({ user }) {
         💡 You earn <strong>1 point for every ৳100 spent</strong>. Points accumulate automatically and unlock coupons instantly!
       </div>
 
-      {/* Customer-only CTA — admins/sellers/riders see a notice instead */}
+      {}
       {isCustomer ? (
         <button
           style={{ marginTop: '20px', background: '#ffd645', border: 'none', padding: '12px 24px', borderRadius: '8px', fontWeight: '700', cursor: 'pointer' }}

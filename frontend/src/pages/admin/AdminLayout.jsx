@@ -11,7 +11,7 @@ export default function AdminLayout({ user, onLogout }) {
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token || !user || user.role !== 'admin') {
-      // If we don't know the role or it's not admin
+
       setForbidden(true);
     } else {
       setForbidden(false);
@@ -38,38 +38,38 @@ export default function AdminLayout({ user, onLogout }) {
           <p>Logged in as {user?.name}</p>
         </div>
         <nav className="admin-nav">
-          <Link 
-            to="/admin/analytics" 
+          <Link
+            to="/admin/analytics"
             className={(location.pathname === "/admin/analytics" || location.pathname === "/admin") ? "active": ""}
           >
            <FaChartBar /> Analytics
           </Link>
-          <Link 
-            to="/admin/messaging" 
+          <Link
+            to="/admin/messaging"
             className={location.pathname === "/admin/messaging" ? "active": ""}
           >
            <FaEnvelope /> Contact Sellers
           </Link>
-          <Link 
-            to="/admin/products" 
+          <Link
+            to="/admin/products"
             className={location.pathname === "/admin/products" ? "active": ""}
           >
            <FaBoxOpen /> Manage Products
           </Link>
-          <Link 
-            to="/admin/sellers" 
+          <Link
+            to="/admin/sellers"
             className={(location.pathname === "/admin/sellers" || location.pathname.includes("/admin/sellers/")) ? "active": ""}
           >
            <FaUsers /> Sellers
           </Link>
-          <Link 
-            to="/admin/ads" 
+          <Link
+            to="/admin/ads"
             className={location.pathname === "/admin/ads" ? "active": ""}
           >
            <FaBullhorn /> Advertisements
           </Link>
-          <Link 
-            to="/admin/returns" 
+          <Link
+            to="/admin/returns"
             className={location.pathname === "/admin/returns" ? "active": ""}
           >
            <FaUndo /> Returns
@@ -90,11 +90,11 @@ export default function AdminLayout({ user, onLogout }) {
           </button>
         </nav>
       </aside>
-      
+
       <main className="admin-main">
         <header className="admin-topbar">
           <h3>
-            {location.pathname.includes("analytics") ? "Platform Analytics" : 
+            {location.pathname.includes("analytics") ? "Platform Analytics" :
              location.pathname.includes("messaging") ? "Seller Communications" :
              location.pathname.includes("sellers") ? "Seller Management" :
              location.pathname.includes("products") ? "Product Moderation" :

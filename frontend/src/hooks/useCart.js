@@ -14,7 +14,6 @@ export default function useCart() {
     total: 0,
   });
 
-
   useEffect(() => {
     const fetchCart = async () => {
       const token = localStorage.getItem("token");
@@ -50,17 +49,17 @@ export default function useCart() {
         console.error("Failed to fetch cart:", err);
         setCart([]);
       } finally {
-        setIsLoaded(true); // Always unlock after the first fetch!
+        setIsLoaded(true);
       }
     };
     fetchCart();
   }, []);
 
- 
-  useEffect(() => {
-    if (!isLoaded) return; 
 
-    // Wait 500ms after the user STOPS clicking before saving to the DB
+  useEffect(() => {
+    if (!isLoaded) return;
+
+
     const timer = setTimeout(() => {
       const token = localStorage.getItem("token");
       if (token) {
@@ -70,12 +69,12 @@ export default function useCart() {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${token}`
           },
-          body: JSON.stringify({ cart }) 
+          body: JSON.stringify({ cart })
         }).catch(err => console.error("Sync failed:", err));
       }
     }, 500);
 
-    return () => clearTimeout(timer); 
+    return () => clearTimeout(timer);
   }, [cart, isLoaded]);
 
   const handleAddToCart = (product) => {

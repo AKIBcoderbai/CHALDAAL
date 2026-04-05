@@ -3,7 +3,7 @@ const morgan = require('morgan');
 const helmet = require('helmet');
 const cors = require('cors');
 const dotenv = require('dotenv');
-const pool = require('./database/db'); 
+const pool = require('./database/db');
 const bcrypt=require('bcrypt');
 const jwt=require('jsonwebtoken');
 
@@ -24,17 +24,15 @@ const cleanupProcessedOrderRequests = () => {
     }
 };
 
-// Middleware
 app.use(express.json());
 app.use(morgan('dev'));
 app.use(helmet());
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 
-// --- CLOUDINARY UPLOAD SETUP ---
 const multer = require('multer');
-const cloudinaryRoot = require('cloudinary');         // ROOT object — multer-storage-cloudinary needs this
-const cloudinary = cloudinaryRoot.v2;                 // v2 instance — used for .config()
+const cloudinaryRoot = require('cloudinary');
+const cloudinary = cloudinaryRoot.v2;
 const CloudinaryStorage = require('multer-storage-cloudinary');
 
 cloudinary.config({
@@ -44,7 +42,7 @@ cloudinary.config({
 });
 
 const storage = new CloudinaryStorage({
-    cloudinary: cloudinaryRoot,   // Pass ROOT — lib does cloudinaryRoot.v2.uploader internally
+    cloudinary: cloudinaryRoot,
     params: {
         folder: 'chaaldaal_uploads',
         allowed_formats: ['jpg', 'png', 'jpeg', 'webp']
@@ -53,28 +51,24 @@ const storage = new CloudinaryStorage({
 
 const upload = multer({ storage: storage });
 
-// --- ROUTES ---
-
-// 1. Home Route
 app.get('/', (req, res) => {
     res.send('Welcome to ChaalDaal Backend (Chen Schema Version)');
 });
 
-// 2. GET ALL PRODUCTS
 app.get('/api/products', async (req, res) => {
     try {
         const query = `
-            SELECT 
+            SELECT
                 p.product_id as id,
                 p.name,
-                p.unit_price as price, 
+                p.unit_price as price,
                 p.stock,
                 p.unit,
                 p.image_url as image,
                 p.rating as rating,
                 c.name as category
-            FROM products p 
-            JOIN category c ON p.category_id = c.category_id 
+            FROM products p
+            JOIN category c ON p.category_id = c.category_id
             WHERE p.is_active=true
             ORDER BY p.product_id ASC
         `;
@@ -104,38 +98,28 @@ const authenticateToken = (req, res, next) => {
     });
 };
 
-// const requireRole = (allowedRoles) => (req, res, next) => {
-//     if (!req.user || !allowedRoles.includes(req.user.role)) {
-//         return res.status(403).json({ error: "Access denied." });
-//     }
-//     next();
-// };
-
-// Remove the existing 'for now' block and replace it with this:
 const requireRole = (allowedRoles) => (req, res, next) => {
     if (!req.user) {
         return res.status(401).json({ error: "Authentication required." });
     }
-    
-    // Check if the authenticated user's role is in the allowedRoles array
+
+
     if (!allowedRoles.includes(req.user.role)) {
         return res.status(403).json({ error: "Access denied. Insufficient permissions." });
     }
-    
-    next(); 
+
+    next();
 };
 
-
-// --- PRODUCT DETAILS & REVIEWS ROUTES ---
 app.get('/api/products/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const query = `
-            SELECT 
-                p.product_id as id, p.name, p.description, p.unit_price as price, 
+            SELECT
+                p.product_id as id, p.name, p.description, p.unit_price as price,
                 p.stock, p.unit, p.image_url as image, p.rating,
                 c.name as category, s.company_name as seller_name
-            FROM products p 
+            FROM products p
             LEFT JOIN category c ON p.category_id = c.category_id
             LEFT JOIN seller s ON p.seller_id = s.seller_id
             WHERE p.product_id = $1 AND p.is_active = true
@@ -178,9 +162,9 @@ app.post('/api/products/:id/reviews', authenticateToken, async (req, res) => {
             return res.status(400).json({ error: "Rating must be between 1 and 5." });
         }
 
-        // Calls the stored PL/pgSQL function to submit or update the user's review
+
         await pool.query('SELECT submit_review($1, $2, $3, $4)', [user_id, id, rating, comment || null]);
-        
+
         res.status(201).json({ message: "Review submitted successfully" });
     } catch (err) {
         console.error("ADD REVIEW ERROR:", err.message);
@@ -188,12 +172,10 @@ app.post('/api/products/:id/reviews', authenticateToken, async (req, res) => {
     }
 });
 
-// --- USER AUTHENTICATION ROUTES ---
-
 const performSignup = async ({ fullName, email, password, phone, role, address,companyName }, res) => {
     const client = await pool.connect();
     try {
-      
+
         const validRoles = ['user', 'admin', 'seller', 'rider'];
         if (!validRoles.includes(role)) return res.status(400).json({ error: "Invalid role specified." });
 
@@ -201,16 +183,14 @@ const performSignup = async ({ fullName, email, password, phone, role, address,c
 
         await client.query('BEGIN');
 
-      
+
         const personResult = await client.query(
             `INSERT INTO person (name, email, phone, role, password) VALUES ($1, $2, $3, $4, $5) RETURNING person_id, name, email, role`,
             [fullName, email, phone, role, hashedPassword]
         );
-        
+
         const newPerson = personResult.rows[0];
         const pId = newPerson.person_id;
-
-
 
         if (role === 'user') {
             await client.query(`INSERT INTO "users" (user_id) VALUES ($1)`, [pId]);
@@ -229,12 +209,12 @@ const performSignup = async ({ fullName, email, password, phone, role, address,c
 
         let addressId = null;
         if (address) {
-           
+
             let defaultAreaId = 1;
             const areaCheck = await client.query(`SELECT area_id FROM area LIMIT 1`);
-            
+
             if (areaCheck.rows.length === 0) {
-              
+
                 const newArea = await client.query(
                     `INSERT INTO area (name, delivery_fee) VALUES ('Dhaka', 60) RETURNING area_id`
                 );
@@ -243,14 +223,14 @@ const performSignup = async ({ fullName, email, password, phone, role, address,c
                 defaultAreaId = areaCheck.rows[0].area_id;
             }
 
-            
+
             const addressResult = await client.query(
                 `INSERT INTO address (street, area_id) VALUES ($1, $2) RETURNING address_id`,
                 [address, defaultAreaId]
             );
             addressId = addressResult.rows[0].address_id;
 
-           
+
             await client.query(
                 `INSERT INTO person_address (person_id, address_id, label, is_default) VALUES ($1, $2, 'Home', TRUE)`,
                 [pId, addressId]
@@ -258,9 +238,9 @@ const performSignup = async ({ fullName, email, password, phone, role, address,c
         }
 
         await client.query('COMMIT');
-        
-        res.status(201).json({ 
-            message: `${role} registered successfully!`, 
+
+        res.status(201).json({
+            message: `${role} registered successfully!`,
             token: token,
             user: {
                 user_id: pId,
@@ -284,7 +264,6 @@ const performSignup = async ({ fullName, email, password, phone, role, address,c
     }
 };
 
-// 4. PUBLIC SIGNUP (ONLY user/rider)
 app.post('/api/signup', async (req, res) => {
     const { fullName, email, password, phone, role = 'user', address } = req.body;
     const allowedPublicRoles = ['user', 'rider'];
@@ -294,13 +273,11 @@ app.post('/api/signup', async (req, res) => {
     return performSignup({ fullName, email, password, phone, role, address }, res);
 });
 
-// 4b. SELLER SIGNUP (dedicated)
 app.post('/api/seller/signup', async (req, res) => {
     const { fullName, email, password, phone, address } = req.body;
     return performSignup({ fullName, email, password, phone, role: 'seller', address,fullName}, res);
 });
 
-// 4c. ADMIN SIGNUP (TEST) 
 app.post('/api/admin/signup-test', async (req, res) => {
     const secret = req.headers['x-admin-signup-secret'];
     if (!process.env.ADMIN_SIGNUP_SECRET || secret !== process.env.ADMIN_SIGNUP_SECRET) {
@@ -310,18 +287,16 @@ app.post('/api/admin/signup-test', async (req, res) => {
     return performSignup({ fullName, email, password, phone, role: 'admin', address }, res);
 });
 
-// 5. LOGIN
 app.post('/api/login',async (req, res) => {
     try {
         const { email, password } = req.body;
 
-
         const query = `
-            SELECT 
-                p.*, 
-                a.address_id, 
-                a.street, 
-                a.city, 
+            SELECT
+                p.*,
+                a.address_id,
+                a.street,
+                a.city,
                 a.area_id
             FROM person p
             LEFT JOIN person_address pa ON p.person_id = pa.person_id AND pa.is_default = TRUE
@@ -339,7 +314,6 @@ app.post('/api/login',async (req, res) => {
         if (!match) {
             return res.status(401).json({ error: "Invalid Password" });
         }
-       
 
 
         let formattedAddress = '';
@@ -353,18 +327,18 @@ app.post('/api/login',async (req, res) => {
         };
 
         const accessToken = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
-        res.json({ 
-            message: "Login successful", 
+        res.json({
+            message: "Login successful",
             token: accessToken,
-            user: { 
-                user_id: user.person_id, 
-                full_name: user.name, 
-                email: user.email, 
+            user: {
+                user_id: user.person_id,
+                full_name: user.name,
+                email: user.email,
                 role: user.role,
                 image_url: user.image_url || null,
-                address_id: user.address_id || null,     
-                address: formattedAddress || null        
-            } 
+                address_id: user.address_id || null,
+                address: formattedAddress || null
+            }
         });
 
     } catch (err) {
@@ -373,9 +347,8 @@ app.post('/api/login',async (req, res) => {
     }
 });
 
-// 6. PLACE ORDER (Transactional)
 app.post('/api/orders', authenticateToken, async (req, res) => {
-    const client = await pool.connect(); 
+    const client = await pool.connect();
     const idempotencyKey = req.headers['x-idempotency-key'];
 
     if (idempotencyKey) {
@@ -398,26 +371,26 @@ app.post('/api/orders', authenticateToken, async (req, res) => {
 
         processingOrderRequests.add(idempotencyKey);
     }
-    
+
     try {
         const { customer, items, total, address_id } = req.body;
 
         const userId=req.user.user_id;
-        
+
         await client.query('BEGIN');
-        
+
         let finalAddressId = address_id;
 
-      
+
         if (!finalAddressId) {
             const addressText = customer.address || 'Address not provided';
-            const addressLabel = customer.label || 'Home'; 
-            
+            const addressLabel = customer.label || 'Home';
+
 
             const lowerAddress = addressText.toLowerCase();
             const divisions = ['dhaka', 'chattogram', 'sylhet', 'khulna', 'rajshahi', 'barishal', 'rangpur', 'mymensingh'];
-            
-            let detectedArea = 'Dhaka'; 
+
+            let detectedArea = 'Dhaka';
             let i = 0;
             let foundMatch = false;
 
@@ -430,18 +403,17 @@ app.post('/api/orders', authenticateToken, async (req, res) => {
                 i++;
             }
 
-
             if (!foundMatch) {
                 i = 0;
             }
 
             let finalAreaId;
-            let money = (i === 0) ? 60 : i * 60; 
+            let money = (i === 0) ? 60 : i * 60;
             let found_div = divisions[i];
             let city = found_div;
 
             const areaCheck = await client.query(`SELECT area_id FROM area WHERE name ILIKE $1 LIMIT 1`, [detectedArea]);
-            
+
             if (areaCheck.rows.length === 0) {
                 const newArea = await client.query(
                     `INSERT INTO area (name, delivery_fee) VALUES ($1,$2) RETURNING area_id`,
@@ -457,7 +429,7 @@ app.post('/api/orders', authenticateToken, async (req, res) => {
                 [addressText, finalAreaId, city, found_div]
             );
             finalAddressId = newAddressResult.rows[0].address_id;
-            
+
             await client.query(
                 `DELETE FROM person_address WHERE person_id = $1 AND label = $2`,
                 [userId, addressLabel]
@@ -469,24 +441,24 @@ app.post('/api/orders', authenticateToken, async (req, res) => {
                 insertingDefault=true;
             }
             await client.query(
-                `INSERT INTO person_address (person_id, address_id, label, is_default) 
+                `INSERT INTO person_address (person_id, address_id, label, is_default)
                  VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING`,
                 [userId, finalAddressId, addressLabel,insertingDefault]
             );
         }
 
         const query = `SELECT place_order($1, $2, $3, $4, $5, $6, $7::jsonb) AS new_order_id`;
-        
+
         const result = await client.query(query, [
-            userId, 
-            finalAddressId, 
-            total, 
-            customer.paymentMethod, 
+            userId,
+            finalAddressId,
+            total,
+            customer.paymentMethod,
             customer.name,
             customer.phone,
-            JSON.stringify(items) 
+            JSON.stringify(items)
         ]);
-        
+
         const orderId = result.rows[0].new_order_id;
 
         if (idempotencyKey) {
@@ -498,9 +470,9 @@ app.post('/api/orders', authenticateToken, async (req, res) => {
 
         await client.query('COMMIT');
 
-        res.status(201).json({ 
-            message: "Order placed successfully!", 
-            orderId: orderId 
+        res.status(201).json({
+            message: "Order placed successfully!",
+            orderId: orderId
         });
 
     } catch (err) {
@@ -515,9 +487,6 @@ app.post('/api/orders', authenticateToken, async (req, res) => {
     }
 });
 
-// --- SELLER DASHBOARD ROUTES ---
-
-// 7. GET SELLER PRODUCTS
 app.get('/api/seller/products/:seller_id',authenticateToken, async (req, res) => {
     try {
         const seller_id=req.user.user_id;
@@ -526,15 +495,15 @@ app.get('/api/seller/products/:seller_id',authenticateToken, async (req, res) =>
             return res.status(403).json({ error: "Access denied. Not a seller account." });
         }
         const query = `
-            SELECT 
-                product_id, 
-                name, 
-                unit_price as price, 
-                stock as stock_quantity, 
+            SELECT
+                product_id,
+                name,
+                unit_price as price,
+                stock as stock_quantity,
                 image_url,
-                is_active 
-            FROM products 
-            WHERE seller_id = $1 
+                is_active
+            FROM products
+            WHERE seller_id = $1
             ORDER BY product_id DESC
         `;
         const result = await pool.query(query, [seller_id]);
@@ -543,8 +512,6 @@ app.get('/api/seller/products/:seller_id',authenticateToken, async (req, res) =>
         res.status(500).send('Server Error');
     }
 });
-
-// 8. ADD NEW PRODUCT
 
 app.post('/api/products', authenticateToken, async (req, res) => {
     try {
@@ -556,18 +523,18 @@ app.post('/api/products', authenticateToken, async (req, res) => {
         }
 
         const query = `
-            INSERT INTO products (name, unit, unit_price, stock, image_url, category_id, seller_id) 
-            VALUES ($1, $2, $3, $4, $5, $6, $7) 
+            INSERT INTO products (name, unit, unit_price, stock, image_url, category_id, seller_id)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
             RETURNING product_id
         `;
-        
+
         const result = await pool.query(query, [
-            name, 
-            unit || '1 pcs', 
-            price, 
-            stock_quantity, 
-            image_url, 
-            category_id, 
+            name,
+            unit || '1 pcs',
+            price,
+            stock_quantity,
+            image_url,
+            category_id,
             seller_id
         ]);
 
@@ -578,7 +545,6 @@ app.post('/api/products', authenticateToken, async (req, res) => {
     }
 });
 
-// 9. GET SELLER STATS
 app.get('/api/seller/stats/:seller_id', authenticateToken, async (req, res) => {
     try {
         const seller_id = req.user.user_id;
@@ -586,7 +552,7 @@ app.get('/api/seller/stats/:seller_id', authenticateToken, async (req, res) => {
         if (req.user.role !== 'seller') {
             return res.status(403).json({ error: "Access denied. Not a seller account." });
         }
-        
+
         const prodQuery = `SELECT COUNT(*) FROM products WHERE seller_id = $1`;
         const prodResult = await pool.query(prodQuery, [seller_id]);
 
@@ -599,7 +565,7 @@ app.get('/api/seller/stats/:seller_id', authenticateToken, async (req, res) => {
             total_products: parseInt(prodResult.rows[0].count),
             total_profit: parseInt(stats.totalprofit || 0),
             total_sales: parseInt(stats.totalsales || 0),
-            rating: parseFloat(stats.sellerrating || 0).toFixed(1) 
+            rating: parseFloat(stats.sellerrating || 0).toFixed(1)
         });
         console.log(stats)
 
@@ -608,7 +574,6 @@ app.get('/api/seller/stats/:seller_id', authenticateToken, async (req, res) => {
     }
 });
 
-// 9b. GET MESSAGES FROM ADMIN (seller inbox)
 app.get('/api/seller/admin-messages', authenticateToken, async (req, res) => {
     try {
         if (req.user.role !== 'seller') {
@@ -639,8 +604,6 @@ app.get('/api/seller/admin-messages', authenticateToken, async (req, res) => {
     }
 });
 
-// 10. GET ALL CATEGORIES
-
 app.get('/api/categories', async (req, res) => {
     try {
         const result = await pool.query('SELECT category_id, name FROM category ORDER BY category_id ASC');
@@ -650,27 +613,23 @@ app.get('/api/categories', async (req, res) => {
     }
 });
 
-// --- ADMIN ROUTES ---
-// --- ADMIN ROUTES ---
-
-// 1. FIXED ANALYTICS ROUTE
 app.get('/api/admin/analytics', authenticateToken, requireRole(['admin']), async (req, res) => {
     try {
         const usersCountRes = await pool.query("SELECT COUNT(*) FROM person WHERE role = 'user'");
         const sellersCountRes = await pool.query("SELECT COUNT(*) FROM person WHERE role = 'seller'");
         const ridersCountRes = await pool.query("SELECT COUNT(*) FROM person WHERE role = 'rider'");
-        
+
         const productsCountRes = await pool.query("SELECT COUNT(*) FROM products");
-        
+
         const productsSoldRes = await pool.query(`
-            SELECT COALESCE(SUM(od.quantity), 0) as total_sold 
+            SELECT COALESCE(SUM(od.quantity), 0) as total_sold
             FROM order_details od
             JOIN orders o ON o.order_id = od.order_id
             WHERE o.status = 'delivered'
         `);
-        
+
         const ordersCountRes = await pool.query("SELECT COUNT(*) FROM orders");
-        
+
 
         let query=`
             SELECT COALESCE(SUM(od.quantity * od.price), 0) as total_revenue
@@ -713,11 +672,11 @@ app.get('/api/admin/analytics', authenticateToken, requireRole(['admin']), async
 app.get('/api/admin/sellers', authenticateToken, requireRole(['admin']), async (req, res) => {
     try {
         const query = `
-            SELECT 
+            SELECT
                 per.person_id AS seller_id,
-                per.name, 
-                per.email, 
-                per.phone, 
+                per.name,
+                per.email,
+                per.phone,
                 s.company_name,
                 COALESCE(SUM(od.quantity), 0) AS total_products_sold
             FROM person per
@@ -735,24 +694,23 @@ app.get('/api/admin/sellers', authenticateToken, requireRole(['admin']), async (
     }
 });
 
-// Admin endpoint to view a specific seller's statistics
 app.get('/api/admin/sellers/:id/stats', authenticateToken, requireRole(['admin']), async (req, res) => {
     try {
         const { id } = req.params;
-        
+
         const prodQuery = `SELECT COUNT(*) FROM products WHERE seller_id = $1`;
         const prodResult = await pool.query(prodQuery, [id]);
 
         const sellerQuery = `CALL get_seller_stats($1, NULL, NULL, NULL)`;
         const sellerStatsResult = await pool.query(sellerQuery, [id]);
-        
+
         const stats = sellerStatsResult.rows[0];
-        
+
         res.json({
             total_products: parseInt(prodResult.rows[0].count),
             total_profit: parseInt(stats.totalprofit || 0),
             total_sales: parseInt(stats.totalsales || 0),
-            rating: parseFloat(stats.sellerrating || 0).toFixed(1) 
+            rating: parseFloat(stats.sellerrating || 0).toFixed(1)
         });
     } catch (err) {
         console.error("ADMIN SELLER STATS ERROR:", err.message);
@@ -760,8 +718,6 @@ app.get('/api/admin/sellers/:id/stats', authenticateToken, requireRole(['admin']
     }
 });
 
-
-// 12. GET ALL PRODUCTS FOR ADMIN MONITORING
 app.get('/api/admin/products', authenticateToken, requireRole(['admin']), async (req, res) => {
     try {
         const query = `
@@ -796,7 +752,7 @@ const toggleProduct = async (req, res, status, actionWord) => {
         const { id } = req.params;
         await pool.query('CALL admin_toggle_product($1, $2)', [id, status]);
 
-        // Procedures don't return rows easily, so we fetch the update or assume success
+
         res.json({
             message: `Product ${actionWord} by admin successfully.`,
             product_id: id,
@@ -814,7 +770,6 @@ app.patch('/api/admin/products/:id/deactivate', authenticateToken, requireRole([
 app.patch('/api/admin/products/:id/reactivate', authenticateToken, requireRole(['admin']),
     (req, res) => toggleProduct(req, res, true, 'reactivated'));
 
-// 14. ADMIN CONTACT SELLER
 app.post('/api/admin/seller-contact', authenticateToken, requireRole(['admin']), async (req, res) => {
     try {
         const admin_id = req.user.user_id;
@@ -842,7 +797,6 @@ app.post('/api/admin/seller-contact', authenticateToken, requireRole(['admin']),
     }
 });
 
-// 15. GET ADMIN CONTACT LOGS
 app.get('/api/admin/seller-contact', authenticateToken, requireRole(['admin']), async (req, res) => {
     try {
         const query = `
@@ -869,9 +823,6 @@ app.get('/api/admin/seller-contact', authenticateToken, requireRole(['admin']), 
     }
 });
 
-
-
-// PUBLIC: Get all active, non-expired APPROVED ads with product + seller info (respects limit)
 app.get('/api/advertisements', async (req, res) => {
     try {
         const settingsRes = await pool.query(`SELECT max_display_limit FROM ad_settings WHERE id = 1`);
@@ -914,7 +865,6 @@ app.get('/api/advertisements', async (req, res) => {
     }
 });
 
-// PUBLIC: Get single ad detail by id
 app.get('/api/advertisements/:id', async (req, res) => {
     try {
         const { id } = req.params;
@@ -957,7 +907,6 @@ app.get('/api/advertisements/:id', async (req, res) => {
     }
 });
 
-// SELLER: Create a new advertisement
 app.post('/api/seller/advertisements', authenticateToken, async (req, res) => {
     try {
         if (req.user.role !== 'seller') {
@@ -970,7 +919,7 @@ app.post('/api/seller/advertisements', authenticateToken, async (req, res) => {
             return res.status(400).json({ error: "product_id, title, budget, and duration_days are required." });
         }
 
-        // Verify the product belongs to this seller
+
         const ownerCheck = await pool.query(
             `SELECT product_id FROM products WHERE product_id = $1 AND seller_id = $2`,
             [product_id, seller_id]
@@ -1000,7 +949,6 @@ app.post('/api/seller/advertisements', authenticateToken, async (req, res) => {
     }
 });
 
-// SELLER: Get own advertisements
 app.get('/api/seller/advertisements', authenticateToken, async (req, res) => {
     try {
         if (req.user.role !== 'seller') {
@@ -1034,7 +982,6 @@ app.get('/api/seller/advertisements', authenticateToken, async (req, res) => {
     }
 });
 
-// SELLER: Cancel/deactivate an advertisement
 app.delete('/api/seller/advertisements/:id', authenticateToken, async (req, res) => {
     try {
         if (req.user.role !== 'seller') {
@@ -1058,11 +1005,6 @@ app.delete('/api/seller/advertisements/:id', authenticateToken, async (req, res)
     }
 });
 
-// ==========================================
-// --- ADMIN ADVERTISEMENT MODERATION ---
-// ==========================================
-
-// GET ad display settings
 app.get('/api/admin/ad-settings', authenticateToken, requireRole(['admin']), async (req, res) => {
     try {
         const result = await pool.query(`SELECT max_display_limit FROM ad_settings WHERE id = 1`);
@@ -1073,7 +1015,6 @@ app.get('/api/admin/ad-settings', authenticateToken, requireRole(['admin']), asy
     }
 });
 
-// UPDATE ad display limit
 app.put('/api/admin/ad-settings', authenticateToken, requireRole(['admin']), async (req, res) => {
     try {
         const { max_display_limit } = req.body;
@@ -1091,7 +1032,6 @@ app.put('/api/admin/ad-settings', authenticateToken, requireRole(['admin']), asy
     }
 });
 
-// GET all advertisements for admin
 app.get('/api/admin/advertisements', authenticateToken, requireRole(['admin']), async (req, res) => {
     try {
         const query = `
@@ -1117,7 +1057,6 @@ app.get('/api/admin/advertisements', authenticateToken, requireRole(['admin']), 
     }
 });
 
-// ADMIN: Approve advertisement
 app.patch('/api/admin/advertisements/:id/approve', authenticateToken, requireRole(['admin']), async (req, res) => {
     try {
         const { id } = req.params;
@@ -1133,7 +1072,6 @@ app.patch('/api/admin/advertisements/:id/approve', authenticateToken, requireRol
     }
 });
 
-// ADMIN: Reject advertisement
 app.patch('/api/admin/advertisements/:id/reject', authenticateToken, requireRole(['admin']), async (req, res) => {
     try {
         const { id } = req.params;
@@ -1150,7 +1088,6 @@ app.patch('/api/admin/advertisements/:id/reject', authenticateToken, requireRole
     }
 });
 
-// ADMIN: Cancel an active approved advertisement
 app.patch('/api/admin/advertisements/:id/cancel', authenticateToken, requireRole(['admin']), async (req, res) => {
     try {
         const { id } = req.params;
@@ -1166,11 +1103,6 @@ app.patch('/api/admin/advertisements/:id/cancel', authenticateToken, requireRole
     }
 });
 
-// ==========================================
-// --- PRODUCT RETURN SYSTEM ---
-// ==========================================
-
-// USER: Submit a return request
 app.post('/api/returns', authenticateToken, async (req, res) => {
     const client = await pool.connect();
     try {
@@ -1184,7 +1116,7 @@ app.post('/api/returns', authenticateToken, async (req, res) => {
             return res.status(400).json({ error: "order_id, reason, and at least one item are required." });
         }
 
-        // Verify the order belongs to this user and is delivered
+
         const orderCheck = await client.query(
             `SELECT order_id FROM orders WHERE order_id = $1 AND user_id = $2 AND UPPER(status) = 'DELIVERED'`,
             [order_id, user_id]
@@ -1193,7 +1125,7 @@ app.post('/api/returns', authenticateToken, async (req, res) => {
             return res.status(403).json({ error: "Order not found, not delivered, or does not belong to you." });
         }
 
-        // Check no existing return for this order
+
         const existing = await client.query(`SELECT return_id FROM return_requests WHERE order_id = $1 AND user_id = $2`, [order_id, user_id]);
         if (existing.rows.length > 0) {
             return res.status(409).json({ error: "A return request for this order already exists." });
@@ -1208,7 +1140,7 @@ app.post('/api/returns', authenticateToken, async (req, res) => {
         );
         const return_id = returnResult.rows[0].return_id;
 
-        // Insert return items
+
         for (const item of items) {
             await client.query(
                 `INSERT INTO return_items (return_id, product_id, quantity) VALUES ($1, $2, $3)`,
@@ -1216,7 +1148,7 @@ app.post('/api/returns', authenticateToken, async (req, res) => {
             );
         }
 
-        // Insert images
+
         if (images && images.length > 0) {
             for (const url of images) {
                 await client.query(`INSERT INTO return_images (return_id, image_url) VALUES ($1, $2)`, [return_id, url]);
@@ -1234,7 +1166,6 @@ app.post('/api/returns', authenticateToken, async (req, res) => {
     }
 });
 
-// USER: Get return status for a specific order
 app.get('/api/returns/order/:orderId', authenticateToken, async (req, res) => {
     try {
         const user_id = req.user.user_id;
@@ -1260,7 +1191,6 @@ app.get('/api/returns/order/:orderId', authenticateToken, async (req, res) => {
     }
 });
 
-// ADMIN: Get all return requests
 app.get('/api/admin/returns', authenticateToken, requireRole(['admin']), async (req, res) => {
     try {
         const result = await pool.query(`
@@ -1287,7 +1217,6 @@ app.get('/api/admin/returns', authenticateToken, requireRole(['admin']), async (
     }
 });
 
-// ADMIN: Approve return
 app.patch('/api/admin/returns/:id/approve', authenticateToken, requireRole(['admin']), async (req, res) => {
     try {
         const { id } = req.params;
@@ -1303,7 +1232,6 @@ app.patch('/api/admin/returns/:id/approve', authenticateToken, requireRole(['adm
     }
 });
 
-// ADMIN: Reject return
 app.patch('/api/admin/returns/:id/reject', authenticateToken, requireRole(['admin']), async (req, res) => {
     try {
         const { id } = req.params;
@@ -1320,16 +1248,12 @@ app.patch('/api/admin/returns/:id/reject', authenticateToken, requireRole(['admi
     }
 });
 
-// Start Server
 app.listen(PORT, async () => {
     console.log(`Server is running on port ${PORT}`);
-    //await ensureAdminTables();
+
 });
 
-
-// 11. DELETE (DEACTIVATE) PRODUCT
-
-app.delete('/api/products/:id', authenticateToken, async (req, res) => { 
+app.delete('/api/products/:id', authenticateToken, async (req, res) => {
     try {
         if (req.user.role !== 'seller') {
             return res.status(403).json({ error: "Access denied." });
@@ -1338,7 +1262,7 @@ app.delete('/api/products/:id', authenticateToken, async (req, res) => {
         const { id } = req.params;
         const seller_id = req.user.user_id;
 
-     
+
         const query = 'UPDATE products SET is_active = FALSE WHERE product_id = $1 AND seller_id = $2 RETURNING *';
         const result = await pool.query(query, [id, seller_id]);
 
@@ -1353,7 +1277,6 @@ app.delete('/api/products/:id', authenticateToken, async (req, res) => {
     }
 });
 
-// update product price / image and status
 app.put('/api/products/:id', authenticateToken, async (req, res) => {
     try {
         if (req.user.role !== 'seller') {
@@ -1365,12 +1288,12 @@ app.put('/api/products/:id', authenticateToken, async (req, res) => {
         const { price, image_url, is_active } = req.body;
 
         const query = `
-            UPDATE products 
-            SET 
+            UPDATE products
+            SET
                 unit_price = COALESCE($1, unit_price),
                 image_url = COALESCE($2, image_url),
                 is_active = COALESCE($3, is_active)
-            WHERE product_id = $4 AND seller_id = $5 
+            WHERE product_id = $4 AND seller_id = $5
             RETURNING *;
         `;
 
@@ -1387,8 +1310,6 @@ app.put('/api/products/:id', authenticateToken, async (req, res) => {
     }
 });
 
-//cart logic database added
-
 app.get('/api/cart',authenticateToken, async (req, res) => {
     try {
         const user_id=req.user.user_id;
@@ -1400,67 +1321,65 @@ app.get('/api/cart',authenticateToken, async (req, res) => {
         res.status(500).send('Server Error');
         console.log(err.message);
     } finally {
-        //client.release();
+
     }
 });
-
 
 app.post('/api/cart/add',authenticateToken, async (req, res) => {
     try{
         const user_id=req.user.user_id;
         const {product_id,quantity,price}=req.body;
-        //either user has a cart or not 
-        //has cart 
+
+
         const cartResult=await pool.query('SELECT cart_id from cart WHERE user_id=$1', [user_id]);
         let cart_id;
         if(cartResult.rows.length==0)
         {
-            //no cart for this.
-            //need to create 
+
+
             let newCart=await pool.query('INSERT INTO cart(user_id) values ($1) RETURNING cart_id',[user_id])
             cart_id=newCart.rows[0].cart_id;
-        } 
-        else 
+        }
+        else
         {
             cart_id=cartResult.rows[0].cart_id;
         }
-        //now we have cart_id
-        //check if product already in cart then just update qty
+
+
         const cartItemResult=await pool.query('SELECT * from cart_items WHERE cart_id=$1 AND product_id=$2',[cart_id,product_id]);
         if(cartItemResult.rows.length==0)
         {
-            //not in cart, need to insert
+
             await pool.query('INSERT INTO cart_items(cart_id,product_id,quantity,price) VALUES($1,$2,$3,$4)',[cart_id,product_id,quantity,price]);
         }
         else
         {
-            //already in cart, just update qty
+
             await pool.query('UPDATE cart_items SET quantity=quantity+$1 WHERE cart_id=$2 AND product_id=$3',[quantity,cart_id,product_id]);
         }
-        res.json({message:"Product added to cart"});  
+        res.json({message:"Product added to cart"});
     }
     catch(err){
         res.status(500).send('Server Error');
     }
     finally {
-        //client.release();
+
     }
 });
 
-//this is needed when we already have product and press plus or minus button
 app.put('/api/cart/update', authenticateToken, async (req, res) => {
     try {
         const userId = req.user.user_id;
-        const { product_id, amount } = req.body; 
+        const { product_id, amount } = req.body;
 
         const cartResult = await pool.query(`SELECT cart_id FROM cart WHERE user_id = $1 LIMIT 1`, [userId]);
         if (cartResult.rows.length === 0) return res.status(404).json({ error: "Cart not found" });
         const cartId = cartResult.rows[0].cart_id;
 
         const updateResult = await pool.query(`
-            UPDATE cart_items 
-            SET quantity = quantity + $1 
-            WHERE cart_id = $2 AND product_id = $3 
+            UPDATE cart_items
+            SET quantity = quantity + $1
+            WHERE cart_id = $2 AND product_id = $3
             RETURNING quantity
         `, [amount, cartId, product_id]);
 
@@ -1474,12 +1393,11 @@ app.put('/api/cart/update', authenticateToken, async (req, res) => {
     }
 });
 
-
 app.delete('/api/cart/clear', authenticateToken, async (req, res) => {
     try {
         const userId = req.user.user_id;
         await pool.query(`
-            DELETE FROM cart_items 
+            DELETE FROM cart_items
             WHERE cart_id = (SELECT cart_id FROM cart WHERE user_id = $1 LIMIT 1)
         `, [userId]);
         res.json({ message: "Cart cleared" });
@@ -1487,7 +1405,6 @@ app.delete('/api/cart/clear', authenticateToken, async (req, res) => {
         res.status(500).json({ error: "Failed to clear cart" });
     }
 });
-
 
 app.put('/api/cart/sync', authenticateToken, async (req, res) => {
     const client = await pool.connect();
@@ -1502,7 +1419,7 @@ app.put('/api/cart/sync', authenticateToken, async (req, res) => {
 
         await client.query('BEGIN');
 
-        // 1. Find or create the user's cart ID
+
         const cartResult = await client.query(`SELECT cart_id FROM cart WHERE user_id = $1 LIMIT 1`, [userId]);
         let cartId;
         if (cartResult.rows.length === 0) {
@@ -1512,7 +1429,7 @@ app.put('/api/cart/sync', authenticateToken, async (req, res) => {
             cartId = cartResult.rows[0].cart_id;
         }
 
-        // 2. Wipe the old cart slate clean
+
         console.log(cartId)
         await client.query(`DELETE FROM cart_items WHERE cart_id = $1`, [cartId]);
         const cartNow = await client.query(
@@ -1520,7 +1437,7 @@ app.put('/api/cart/sync', authenticateToken, async (req, res) => {
             [cartId]
         )
 
-        // 3. Insert the perfectly accurate new items
+
         console.log(req.user);
         console.log(cartNow)
         console.log(cart);
@@ -1550,21 +1467,13 @@ app.put('/api/cart/sync', authenticateToken, async (req, res) => {
     }
 });
 
-//user profile logic now
-
-// ============================================================
-// COUPON / LOYALTY ROUTES
-// ============================================================
-
-// GET /api/users/my-coupons  — returns loyalty points, tier, and all coupons (unlocked + locked)
 app.get('/api/users/my-coupons', authenticateToken, async (req, res) => {
     try {
         const userId = req.user.user_id;
 
-        // Retroactively award unlocked coupons (if user got points before the coupon system was added)
         await pool.query(`CALL assign_tier_coupons($1)`, [userId]);
 
-        // Get user's loyalty points
+
         const userResult = await pool.query(
             `SELECT loyalty_points FROM "users" WHERE user_id = $1`,
             [userId]
@@ -1572,7 +1481,6 @@ app.get('/api/users/my-coupons', authenticateToken, async (req, res) => {
         if (userResult.rows.length === 0) return res.status(404).json({ error: 'User not found' });
         const loyalty_points = userResult.rows[0].loyalty_points;
 
-        // Get all tiers and coupons, with user's unlock/used status
         const tiersResult = await pool.query(`
             SELECT
                 lt.tier_id, lt.tier_name, lt.min_points, lt.color, lt.icon,
@@ -1588,7 +1496,7 @@ app.get('/api/users/my-coupons', authenticateToken, async (req, res) => {
             ORDER BY lt.min_points ASC
         `, [loyalty_points, userId]);
 
-        // Determine current tier (highest tier user qualifies for)
+
         const tiersQuery = await pool.query(
             `SELECT tier_id, tier_name, min_points, color, icon FROM loyalty_tiers
              WHERE min_points <= $1 ORDER BY min_points DESC LIMIT 1`,
@@ -1596,7 +1504,7 @@ app.get('/api/users/my-coupons', authenticateToken, async (req, res) => {
         );
         const currentTier = tiersQuery.rows[0] || { tier_name: 'Bronze', min_points: 0, color: '#cd7f32', icon: '🥉' };
 
-        // Next tier info
+
         const nextTierQuery = await pool.query(
             `SELECT tier_name, min_points, color, icon FROM loyalty_tiers
              WHERE min_points > $1 ORDER BY min_points ASC LIMIT 1`,
@@ -1616,17 +1524,16 @@ app.get('/api/users/my-coupons', authenticateToken, async (req, res) => {
     }
 });
 
-// POST /api/coupons/validate  — validates a coupon code for the current user
 app.post('/api/coupons/validate', authenticateToken, async (req, res) => {
     try {
         const userId = req.user.user_id;
         const { code, subtotal } = req.body;
         if (!code) return res.status(400).json({ error: 'Coupon code is required.' });
 
-        // Retroactively award unlocked coupons
+
         await pool.query(`CALL assign_tier_coupons($1)`, [userId]);
 
-        // Find coupon
+
         const couponResult = await pool.query(
             `SELECT c.*, uc.used, uc.user_id as owner_id
              FROM coupons c
@@ -1641,17 +1548,17 @@ app.post('/api/coupons/validate', authenticateToken, async (req, res) => {
 
         const coupon = couponResult.rows[0];
 
-        // Check ownership (must be in user_coupons)
+
         if (coupon.owner_id === null) {
             return res.status(400).json({ valid: false, error: 'You have not unlocked this coupon yet.' });
         }
 
-        // Check if already used
+
         if (coupon.used) {
             return res.status(400).json({ valid: false, error: 'This coupon has already been used.' });
         }
 
-        // Check minimum order amount
+
         const orderSubtotal = parseFloat(subtotal) || 0;
         if (orderSubtotal < parseFloat(coupon.min_order_amount)) {
             return res.status(400).json({
@@ -1660,7 +1567,7 @@ app.post('/api/coupons/validate', authenticateToken, async (req, res) => {
             });
         }
 
-        // Calculate discount
+
         let discount = 0;
         if (coupon.discount_type === 'percent') {
             discount = Math.round(orderSubtotal * (parseFloat(coupon.discount_value) / 100));
@@ -1685,8 +1592,6 @@ app.post('/api/coupons/validate', authenticateToken, async (req, res) => {
     }
 });
 
-// Mark a coupon as used (called after successful order placement)
-// This is called internally — triggered from the place_order flow if a coupon code is included
 app.post('/api/coupons/use', authenticateToken, async (req, res) => {
     try {
         const userId = req.user.user_id;
@@ -1729,7 +1634,6 @@ app.get('/api/profile/me',authenticateToken, async (req, res) => {
     }
 });
 
-
 app.post('/api/profile/reviews', authenticateToken, async (req, res) => {
     try {
         const userId = req.user.user_id;
@@ -1744,7 +1648,6 @@ app.post('/api/profile/reviews', authenticateToken, async (req, res) => {
         res.status(500).json({ error: "Failed to submit review" });
     }
 });
-
 
 app.put('/api/users/avatar', authenticateToken, async (req, res) => {
     try {
@@ -1763,7 +1666,7 @@ app.put('/api/profile/update', authenticateToken, async (req, res) => {
     try {
         const userId = req.user.user_id;
         const { name, phone, password } = req.body;
-        
+
         let hashedPassword = null;
         if (password && password.trim() !== "") {
             hashedPassword = await bcrypt.hash(password, 10);
@@ -1789,29 +1692,29 @@ app.get('/api/orders/:id', authenticateToken, async (req, res) => {
     try {
         const { id } = req.params;
         const userId = req.user.user_id;
-        
-        // Ensure user owns this order
+
+
         const orderCheck = await pool.query(`SELECT order_id FROM orders WHERE order_id = $1 AND user_id = $2`, [id, userId]);
         if (orderCheck.rows.length === 0) {
             return res.status(404).json({ error: "Order not found" });
         }
 
         const query = `
-            SELECT 
+            SELECT
                 o.order_id, o.order_time, o.status,
-                d.pickup_time, 
+                d.pickup_time,
                 d.arrival_time AS estimated_arrival,
-                o.rider_id, 
+                o.rider_id,
                 r_person.name as rider_name, r_person.image_url as rider_image, r_rider.rating as rider_rating,
                 COALESCE(
                     (SELECT json_agg(json_build_object(
                         'product_id', od.product_id,
-                        'name', pr.name,             
-                        'price', od.price,    
+                        'name', pr.name,
+                        'price', od.price,
                         'qty', od.quantity,
-                        'image', pr.image_url        
+                        'image', pr.image_url
                     ))
-                    FROM order_details od 
+                    FROM order_details od
                     JOIN products pr ON od.product_id = pr.product_id
                     WHERE od.order_id = o.order_id), '[]'::json
                 ) as items
@@ -1868,9 +1771,9 @@ app.put('/api/rider/orders/:order_id/accept', authenticateToken, async (req, res
         const { order_id } = req.params;
 
         const query = `
-            UPDATE orders 
-            SET rider_id = $1, status = 'ontheway' 
-            WHERE order_id = $2 AND rider_id IS NULL 
+            UPDATE orders
+            SET rider_id = $1, status = 'ontheway'
+            WHERE order_id = $2 AND rider_id IS NULL
             RETURNING order_id;
         `;
         const result = await pool.query(query, [riderId, order_id]);
@@ -1884,7 +1787,6 @@ app.put('/api/rider/orders/:order_id/accept', authenticateToken, async (req, res
         console.error("ACCEPT ORDER ERROR:", err.message);
     }
 });
-
 
 app.get('/api/rider/orders/my-deliveries', authenticateToken, async (req, res) => {
     try {
@@ -1909,9 +1811,9 @@ app.put('/api/rider/orders/:order_id/deliver', authenticateToken, async (req, re
         const { order_id } = req.params;
 
         const query = `
-            UPDATE orders 
-            SET status = 'delivered' 
-            WHERE order_id = $1 AND rider_id = $2 
+            UPDATE orders
+            SET status = 'delivered'
+            WHERE order_id = $1 AND rider_id = $2
             RETURNING order_id;
         `;
         const orderId=await pool.query(query, [order_id, riderId]);
@@ -1929,7 +1831,7 @@ app.get('/api/rider/profile', authenticateToken, async (req, res) => {
     try {
         const riderId = req.user.user_id;
         const query = `
-            SELECT name, email, phone, image_url 
+            SELECT name, email, phone, image_url
             FROM person
             WHERE person_id = $1
         `;
@@ -1960,7 +1862,7 @@ app.get('/api/rider/history', authenticateToken, async (req, res) => {
             ORDER BY d.arrival_time DESC;
         `;
         const historyResult = await pool.query(query, [riderId]);
-        
+
         res.json({ rating: parseFloat(rating), deliveries: historyResult.rows });
     } catch (err) {
         console.error("FETCH RIDER HISTORY ERROR:", err.message);
@@ -1979,10 +1881,6 @@ app.put('/api/rider/profileupdate', authenticateToken, async (req, res) => {
         console.error("UPDATE RIDER PROFILE ERROR:", err.message);
     }
 });
-
-
-
-
 
 app.post('/api/upload', authenticateToken, upload.single('image'), (req, res) => {
     try {

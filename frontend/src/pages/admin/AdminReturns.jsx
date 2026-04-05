@@ -76,7 +76,7 @@ export default function AdminReturns() {
 
     return (
         <div className="admin-ret-page">
-            {/* Summary */}
+            {}
             <div className="ret-summary-bar">
                 <div className="ret-summary-card ret-summary-total">
                     <div className="ret-sum-num">{returns.length}</div>
@@ -96,7 +96,7 @@ export default function AdminReturns() {
                 </div>
             </div>
 
-            {/* Filter tabs */}
+            {}
             <div className="ret-filter-tabs">
                 {['pending', 'approved', 'rejected', 'all'].map(f => (
                     <button
@@ -125,7 +125,7 @@ export default function AdminReturns() {
                         const images = Array.isArray(r.images) ? r.images.filter(Boolean) : [];
                         return (
                             <div key={r.return_id} className={`ret-card ${isOpen ? 'open' : ''}`}>
-                                {/* Card header */}
+                                {}
                                 <div className="ret-card-header" onClick={() => setExpanded(isOpen ? null : r.return_id)}>
                                     <div className="ret-card-left">
                                         <div className="ret-order-id">Order #{r.order_id}</div>
@@ -149,7 +149,7 @@ export default function AdminReturns() {
                                     </div>
                                 </div>
 
-                                {/* Expanded details */}
+                                {}
                                 {isOpen && (
                                     <div className="ret-card-body">
                                         <div className="ret-details-grid">
@@ -237,7 +237,7 @@ export default function AdminReturns() {
                 </div>
             )}
 
-            {/* Reject Modal */}
+            {}
             {rejectModal && (
                 <div className="ret-modal-backdrop">
                     <div className="ret-modal">

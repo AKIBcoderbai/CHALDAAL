@@ -24,7 +24,7 @@ export default function AdminAdvertisements() {
     const [limit, setLimit] = useState(5);
     const [limitInput, setLimitInput] = useState(5);
     const [limitSaving, setLimitSaving] = useState(false);
-    const [rejectModal, setRejectModal] = useState(null); // { ad_id, title }
+    const [rejectModal, setRejectModal] = useState(null);
     const [rejectNote, setRejectNote]   = useState('');
     const [expandedId, setExpandedId]   = useState(null);
 
@@ -101,7 +101,7 @@ export default function AdminAdvertisements() {
     return (
         <div className="admin-ads-page">
 
-            {/* Settings Header */}
+            {}
             <div className="admin-ads-settings-bar">
                 <div className="ads-settings-left">
                     <div className="ads-settings-icon"><FaCog /></div>
@@ -127,14 +127,14 @@ export default function AdminAdvertisements() {
                 </div>
             </div>
 
-            {/* Summary chips */}
+            {}
             <div className="ads-summary-chips">
                 <div className="ads-chip ads-chip--total">{ads.length} Total Requests</div>
                 <div className="ads-chip ads-chip--pending">{pendingCount} Pending Review</div>
                 <div className="ads-chip ads-chip--approved">{approvedCount} Live on Carousel</div>
             </div>
 
-            {/* Filter tabs */}
+            {}
             <div className="ads-filter-tabs">
                 {STATUS_FILTERS.map(f => (
                     <button
@@ -150,7 +150,7 @@ export default function AdminAdvertisements() {
                 ))}
             </div>
 
-            {/* Ads Table */}
+            {}
             {filtered.length === 0 ? (
                 <div className="ads-empty">No advertisements in this category.</div>
             ) : (
@@ -274,7 +274,7 @@ export default function AdminAdvertisements() {
                 </div>
             )}
 
-            {/* Reject Modal */}
+            {}
             {rejectModal && (
                 <div className="ads-modal-backdrop">
                     <div className="ads-modal">

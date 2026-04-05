@@ -74,8 +74,8 @@ function Home({
       />
 
       <main className="main-content">
-        
-        {/* Floating Cart - Hidden when cart sidebar is open */}
+
+        {}
         {!isCartOpen && (
           <div className="floating-cart-wrapper">
             <button className="floating-cart-pill" onClick={() => setIsCartOpen(true)}>
@@ -92,7 +92,7 @@ function Home({
 
         {!showCatalog ? (
           <div className="beast-homepage">
-            {/* HERO BENTO GRID */}
+            {}
             <section className="hero-bento-grid">
               <div className="home-hero 3d-element">
                 <div className="home-hero-copy">
@@ -104,20 +104,20 @@ function Home({
                     Explore Catalog
                   </button>
                 </div>
-                
-                {/* Overlapping Image Stack */}
+
+                {}
                 <div className="hero-image-stack">
                   <img src="https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=600&q=80" alt="Fresh Produce" className="hero-img-main" />
                   <img src="https://images.unsplash.com/photo-1583258292688-d0213dc5a3a8?auto=format&fit=crop&w=600&q=80" alt="Supermarket" className="hero-img-secondary" />
                 </div>
               </div>
-              
+
               <div className="home-side-banner 3d-element">
                 <BannerCarousel />
               </div>
             </section>
 
-            {/* BRAND MARQUEE */}
+            {}
             <section className="brands-section 3d-element">
               <p className="brands-title">Trusted by Global & Local Brands</p>
               <div className="marquee-container">
@@ -140,7 +140,7 @@ function Home({
               </div>
             </section>
 
-            {/* CATEGORIES */}
+            {}
             <section className="home-categories">
               <div className="home-section-head">
                 <h2>Explore Categories</h2>
@@ -162,7 +162,7 @@ function Home({
               </div>
             </section>
 
-            {/* FEATURE ROW */}
+            {}
             <section className="home-feature-row">
               <article className="3d-element glass-card">
                 <div className="feature-icon">💎</div>
@@ -181,23 +181,23 @@ function Home({
               </article>
             </section>
 
-{/* APP STRIP */}
+{}
 <section className="home-app-strip 3d-element">
   <div className="app-strip-content">
     <h2>Download the Chaldal App Now</h2>
     <p>Get exclusive app-only offers and faster repeat checkout. Available on iOS and Android.</p>
     <div className="app-buttons">
-      <a 
-        href="https://apps.apple.com/us/app/chaldal-grocery-delivery/id839174092" 
-        target="_blank" 
+      <a
+        href="https://apps.apple.com/us/app/chaldal-grocery-delivery/id839174092"
+        target="_blank"
         rel="noopener noreferrer"
         className="store-btn"
       >
         App Store
       </a>
-      <a 
-        href="https://play.google.com/store/apps/details?id=com.chaldal.client" 
-        target="_blank" 
+      <a
+        href="https://play.google.com/store/apps/details?id=com.chaldal.client"
+        target="_blank"
         rel="noopener noreferrer"
         className="store-btn"
       >
@@ -212,15 +212,15 @@ function Home({
   />
 </section>
 
-            {/* Q&A SECTION */}
+            {}
             <section className="home-faq-section">
               <div className="home-section-head">
                 <h2>Frequently Asked Questions</h2>
               </div>
               <div className="faq-container 3d-element">
                 {faqs.map((faq, index) => (
-                  <div 
-                    key={index} 
+                  <div
+                    key={index}
                     className={`faq-item ${activeFaq === index ? 'active' : ''}`}
                     onClick={() => toggleFaq(index)}
                   >
@@ -237,7 +237,7 @@ function Home({
             </section>
           </div>
         ) : (
-          /* CATALOG VIEW */
+
           <div className="catalog-view">
             <section className="discovery-toolbar">
               <div className="discover-left">

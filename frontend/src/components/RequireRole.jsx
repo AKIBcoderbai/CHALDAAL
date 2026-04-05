@@ -19,7 +19,7 @@ const ROLE_DESTINATIONS = {
 export default function RequireRole({ user, allowedRoles, children }) {
   const navigate = useNavigate();
 
-  // Not logged in
+
   if (!user) {
     return (
       <div className="ad-page">
@@ -42,7 +42,7 @@ export default function RequireRole({ user, allowedRoles, children }) {
     );
   }
 
-  // Logged in but wrong role
+
   const allowed = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];
   if (!allowed.includes(user.role)) {
     const dest = ROLE_DESTINATIONS[user.role] || { label: 'Home', path: '/' };

@@ -106,9 +106,9 @@ const ProductDetails = ({ cart, onAddToCart, onUpdateQty, user }) => {
       </button>
 
       <div className="pd-top-section">
-        {/* Left Side: Image with Zoom */}
+
         <div className="pd-image-section">
-          <div 
+          <div
             className="pd-image-wrapper"
             ref={imageRef}
             onMouseMove={handleMouseMove}
@@ -117,7 +117,7 @@ const ProductDetails = ({ cart, onAddToCart, onUpdateQty, user }) => {
           >
             <img src={product.image} alt={product.name} className="pd-main-image" />
             {zoomPos.show && (
-              <div 
+              <div
                 className="pd-zoom-lens"
                 style={{
                   backgroundImage: `url(${product.image})`,
@@ -128,7 +128,7 @@ const ProductDetails = ({ cart, onAddToCart, onUpdateQty, user }) => {
           </div>
         </div>
 
-        {/* Right Side: Product Info & Cart Action */}
+
         <div className="pd-info-section">
           <p className="pd-category">{product.category}</p>
           <h1 className="pd-title">{product.name}</h1>
@@ -157,8 +157,8 @@ const ProductDetails = ({ cart, onAddToCart, onUpdateQty, user }) => {
 
           <div className="pd-cart-action">
             {quantity === 0 ? (
-              <button 
-                className="pd-add-btn" 
+              <button
+                className="pd-add-btn"
                 disabled={isOutOfStock}
                 onClick={() => !isOutOfStock && onAddToCart(product)}
               >
@@ -175,11 +175,11 @@ const ProductDetails = ({ cart, onAddToCart, onUpdateQty, user }) => {
         </div>
       </div>
 
-      {/* Bottom Section: Reviews */}
+
       <div className="pd-bottom-section">
         <div className="pd-reviews-container">
           <h2>Customer Reviews</h2>
-          
+
           {user ? (
             <form className="pd-review-form" onSubmit={submitReview}>
               <h3>Write a Review</h3>
@@ -195,9 +195,9 @@ const ProductDetails = ({ cart, onAddToCart, onUpdateQty, user }) => {
               </div>
               <div className="form-group">
                 <label>Comment:</label>
-                <textarea 
+                <textarea
                   required
-                  placeholder="What did you like or dislike?" 
+                  placeholder="What did you like or dislike?"
                   rows="3"
                   value={newReview.comment}
                   onChange={(e) => setNewReview({...newReview, comment: e.target.value})}

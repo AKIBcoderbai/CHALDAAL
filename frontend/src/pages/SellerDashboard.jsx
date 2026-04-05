@@ -17,7 +17,7 @@ const SellerDashboard = ({ user, onLogout, onUpdateUser }) => {
     const [isUploading, setIsUploading] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
-    // Profile Settings state
+
     const [avatarUrl, setAvatarUrl] = useState(user?.image_url || "");
     const [updateForm, setUpdateForm] = useState({
         name: user?.name || "",
@@ -31,7 +31,7 @@ const SellerDashboard = ({ user, onLogout, onUpdateUser }) => {
         unit: '1 pcs', category_id: '', image_url: ''
     });
 
-   
+
     const [editingProduct, setEditingProduct] = useState(null);
     const [editForm, setEditForm] = useState({ price: '', image_url: '', is_active: true });
 
@@ -114,7 +114,7 @@ const SellerDashboard = ({ user, onLogout, onUpdateUser }) => {
         }
     };
 
-    // Universal Cloudinary Uploader
+
     const handleImageUpload = async (e, isEditMode = false) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -175,7 +175,7 @@ const SellerDashboard = ({ user, onLogout, onUpdateUser }) => {
                 });
 
                 if (onUpdateUser) {
-                    onUpdateUser({ image_url: newImageUrl }); 
+                    onUpdateUser({ image_url: newImageUrl });
                 }
                 alert("Profile image updated successfully!");
             } else {
@@ -328,7 +328,7 @@ const SellerDashboard = ({ user, onLogout, onUpdateUser }) => {
     return (
         <div className="sd-container">
             <UploadOverlay isUploading={isUploading} />
-            {/* Header */}
+            {}
             <div className="sd-header">
                 <div>
                     <h2>Welcome, {user?.full_name || user?.name}</h2>
@@ -344,7 +344,7 @@ const SellerDashboard = ({ user, onLogout, onUpdateUser }) => {
                 </div>
             </div>
 
-            {/* Stats Cards */}
+            {}
             <div className="sd-stats-grid">
                 <div className="sd-stat-card">
                     <div className="sd-icon-box" style={{ background: '#eafaf1', color: '#2ecc71' }}><FaBox /></div>
@@ -364,7 +364,7 @@ const SellerDashboard = ({ user, onLogout, onUpdateUser }) => {
                 </div>
             </div>
 
-            {/* Navigation Tabs */}
+            {}
             <div className="sd-nav">
                 <div className={`sd-nav-item ${activeTab === 'my-products' ? 'active' : ''}`} onClick={() => setActiveTab('my-products')}>My Products</div>
                 <div className={`sd-nav-item ${activeTab === 'add-product' ? 'active' : ''}`} onClick={() => setActiveTab('add-product')}>+ Add New Product</div>
@@ -379,10 +379,10 @@ const SellerDashboard = ({ user, onLogout, onUpdateUser }) => {
                 </div>
             </div>
 
-            {/* Content Area */}
+            {}
             <div className="sd-content-area">
 
-                {/* --- MY PRODUCTS TAB --- */}
+                {}
                 {activeTab === 'my-products' && (
                     <div>
                         <h3>My Inventory</h3>
@@ -405,10 +405,10 @@ const SellerDashboard = ({ user, onLogout, onUpdateUser }) => {
                                         <td>৳ {p.price}</td>
                                         <td>{p.stock_quantity}</td>
                                         <td>
-                                            <span style={{ 
-                                                color: p.is_active ? '#27ae60' : '#e74c3c', 
-                                                backgroundColor: p.is_active ? '#eafaf1' : '#fadbd8', 
-                                                padding: '4px 8px', borderRadius: '4px', fontWeight: 'bold', fontSize: '12px' 
+                                            <span style={{
+                                                color: p.is_active ? '#27ae60' : '#e74c3c',
+                                                backgroundColor: p.is_active ? '#eafaf1' : '#fadbd8',
+                                                padding: '4px 8px', borderRadius: '4px', fontWeight: 'bold', fontSize: '12px'
                                             }}>
                                                 {p.is_active ? "Active" : "Inactive"}
                                             </span>
@@ -431,7 +431,7 @@ const SellerDashboard = ({ user, onLogout, onUpdateUser }) => {
                     </div>
                 )}
 
-                {/* --- ADD PRODUCT TAB --- */}
+                {}
                 {activeTab === 'add-product' && (
                     <div style={{ maxWidth: '600px' }}>
                         <h3>Add New Product</h3>
@@ -460,7 +460,7 @@ const SellerDashboard = ({ user, onLogout, onUpdateUser }) => {
                     </div>
                 )}
 
-                {/* --- ADMIN MESSAGES TAB --- */}
+                {}
                 {activeTab === 'admin-messages' && (
                     <div>
                         <h3><FaEnvelopeOpenText /> Messages from Admin</h3>
@@ -473,7 +473,7 @@ const SellerDashboard = ({ user, onLogout, onUpdateUser }) => {
                     </div>
                 )}
 
-                {/* --- ADVERTISE TAB --- */}
+                {}
                 {activeTab === 'advertise' && (
                     <div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
@@ -483,13 +483,13 @@ const SellerDashboard = ({ user, onLogout, onUpdateUser }) => {
                             </div>
                         </div>
 
-                        {/* === CREATE AD FORM === */}
+                        {}
                         <div style={{ border: '1px solid #eaeaea', background: '#fafbfc', borderRadius: '12px', padding: '28px', marginBottom: '32px' }}>
                             <h4 style={{ color: '#333', marginBottom: '25px', fontSize: '18px', fontWeight: '800', letterSpacing: '-0.01em' }}>Create New Advertisement</h4>
                             <form onSubmit={handleCreateAd}>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
 
-                                    {/* Product Select */}
+                                    {}
                                     <div className="form-group" style={{ gridColumn: '1 / -1', marginBottom: 0 }}>
                                         <label>Select Product to Advertise *</label>
                                         <select
@@ -506,7 +506,7 @@ const SellerDashboard = ({ user, onLogout, onUpdateUser }) => {
                                         </select>
                                     </div>
 
-                                    {/* Ad Title */}
+
                                     <div className="form-group" style={{ gridColumn: '1 / -1', marginBottom: 0 }}>
                                         <label>Ad Title * <span style={{ color: '#888', fontWeight: '400' }}>(shown on banner)</span></label>
                                         <input
@@ -519,7 +519,7 @@ const SellerDashboard = ({ user, onLogout, onUpdateUser }) => {
                                         />
                                     </div>
 
-                                    {/* Tagline */}
+                                    {}
                                     <div className="form-group" style={{ gridColumn: '1 / -1', marginBottom: 0 }}>
                                         <label>Tagline <span style={{ color: '#888', fontWeight: '400' }}>(optional subtitle)</span></label>
                                         <input
@@ -531,7 +531,7 @@ const SellerDashboard = ({ user, onLogout, onUpdateUser }) => {
                                         />
                                     </div>
 
-                                    {/* Budget */}
+                                    {}
                                     <div className="form-group" style={{ marginBottom: 0 }}>
                                         <label>Ad Budget (৳) *</label>
                                         <input
@@ -545,7 +545,7 @@ const SellerDashboard = ({ user, onLogout, onUpdateUser }) => {
                                         <p style={{ fontSize: '11px', color: '#888', marginTop: '6px' }}>Budget is recorded for accounting purposes.</p>
                                     </div>
 
-                                    {/* Duration */}
+                                    {}
                                     <div className="form-group" style={{ marginBottom: 0 }}>
                                         <label>Duration (days) *</label>
                                         <select
@@ -559,7 +559,7 @@ const SellerDashboard = ({ user, onLogout, onUpdateUser }) => {
                                         </select>
                                     </div>
 
-                                    {/* Gradient Color */}
+                                    {}
                                     <div className="form-group" style={{ gridColumn: '1 / -1', marginBottom: 0, marginTop: '10px' }}>
                                         <label>Banner Theme Color</label>
                                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '5px' }}>
@@ -579,7 +579,7 @@ const SellerDashboard = ({ user, onLogout, onUpdateUser }) => {
                                                 />
                                             ))}
                                         </div>
-                                        {/* Preview */}
+                                        {}
                                         <div style={{ marginTop: '20px', height: '60px', borderRadius: '10px', background: adForm.gradient, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '15px', fontWeight: '700', color: 'white', textShadow: '0 1px 4px rgba(0,0,0,0.3)', boxShadow: 'inset 0 0 20px rgba(0,0,0,0.05)' }}>
                                             Preview: {adForm.title || 'Your Ad Title'}
                                         </div>
@@ -599,7 +599,7 @@ const SellerDashboard = ({ user, onLogout, onUpdateUser }) => {
                             </form>
                         </div>
 
-                        {/* === MY ADS LIST === */}
+                        {}
                         <h4 style={{ marginBottom: '16px', color: '#333', fontWeight: '700', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Your Submitted Advertisements ({myAds.length})</h4>
                         {myAds.length === 0 ? (
                             <div style={{ padding: '40px', textAlign: 'center', background: '#f9f9f9', borderRadius: '10px', color: '#bbb' }}>
@@ -621,13 +621,13 @@ const SellerDashboard = ({ user, onLogout, onUpdateUser }) => {
                                         const expiresStr = ad.expires_at ? new Date(ad.expires_at).toLocaleDateString('en-BD') : 'No expiry';
                                     return (
                                         <div key={ad.ad_id} style={{ display: 'flex', alignItems: 'center', gap: '16px', background: 'white', border: '1px solid #eee', borderRadius: '10px', padding: '14px 18px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-                                            {/* Gradient swatch */}
+                                            {}
                                             <div style={{ width: '48px', height: '48px', borderRadius: '10px', background: ad.gradient, flexShrink: 0 }} />
 
-                                            {/* Product image */}
+                                            {}
                                             <img src={ad.product_image} alt={ad.product_name} style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #eee' }} />
 
-                                            {/* Info */}
+                                            {}
                                             <div style={{ flex: 1, minWidth: 0 }}>
                                                 <div style={{ fontWeight: '700', fontSize: '15px', color: '#222', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{ad.title}</div>
                                                 <div style={{ fontSize: '12px', color: '#888', marginTop: '2px' }}>{ad.product_name} · ৳{ad.price}</div>
@@ -641,7 +641,7 @@ const SellerDashboard = ({ user, onLogout, onUpdateUser }) => {
                                                 </div>
                                             </div>
 
-                                            {/* Actions */}
+                                            {}
                                             <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
                                                 <button
                                                     onClick={() => window.open(`/ad/${ad.ad_id}`, '_blank')}
@@ -666,11 +666,11 @@ const SellerDashboard = ({ user, onLogout, onUpdateUser }) => {
                     </div>
                 )}
 
-                {/* --- SETTINGS TAB --- */}
+                {}
                 {activeTab === 'settings' && (
                     <div style={{ maxWidth: '600px' }}>
                         <h3>Profile Settings</h3>
-                        
+
                         <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '30px' }}>
                             <div style={{ position: 'relative', width: '100px', height: '100px' }}>
                                 {avatarUrl ? (
@@ -721,7 +721,7 @@ const SellerDashboard = ({ user, onLogout, onUpdateUser }) => {
                     </div>
                 )}
 
-                {/* --- EDIT MODAL OVERLAY --- */}
+                {}
                 {editingProduct && (
                     <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
                         <div style={{ background: 'white', padding: '30px', borderRadius: '10px', width: '100%', maxWidth: '400px' }}>
@@ -733,8 +733,8 @@ const SellerDashboard = ({ user, onLogout, onUpdateUser }) => {
                                 </div>
                                 <div className="form-group">
                                     <label>Visibility Status</label>
-                                    <select 
-                                        value={editForm.is_active} 
+                                    <select
+                                        value={editForm.is_active}
                                         onChange={(e) => setEditForm({...editForm, is_active: e.target.value === 'true'})}
                                         style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }}
                                     >
@@ -745,10 +745,10 @@ const SellerDashboard = ({ user, onLogout, onUpdateUser }) => {
                                 <div className="form-group">
                                     <label>Update Image</label>
                                     <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, true)} />
-    
+
                                     {editForm.image_url && <img src={editForm.image_url} alt="preview" style={{ height: '60px', marginTop: '10px', borderRadius: '4px' }} />}
                                 </div>
-                                
+
                                 <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
                                     <button type="submit" style={{ flex: 1, padding: '10px', background: '#2ecc71', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Save Changes</button>
                                     <button type="button" onClick={() => setEditingProduct(null)} style={{ flex: 1, padding: '10px', background: '#e74c3c', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Cancel</button>
@@ -757,7 +757,7 @@ const SellerDashboard = ({ user, onLogout, onUpdateUser }) => {
                         </div>
                     </div>
                 )}
-                
+
             </div>
         </div>
     );
